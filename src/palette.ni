@@ -10,6 +10,9 @@ if %() !(); else !();
 while %() !();
 repeat until %() !();
 forever %() !();
+repeat #() times, possibly infinitely !();
+// If the repetition count is not a real number, the loop does not run at all.
+repeat #() times !();
 
 // ## Variables
 

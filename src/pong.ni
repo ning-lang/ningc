@@ -23,7 +23,7 @@ var [down down] = (false);
 
 var [last time] = (0);
 
-func (render) {
+command (render) {
     resize canvas to width (width) height (height);
     draw image ('background.png') at x (0) y (0) with width (width) height (height);
     draw image ('left_paddle.png') at x (paddle margin) y (left paddle top) with width (paddle width) height (paddle height);
@@ -31,7 +31,7 @@ func (render) {
     draw image ('ball.png') at x (ball left) y (ball top) with width (ball width) height (ball height);
 }
 
-func (update) {
+command (update) {
     let [current time] = (milliseconds since unix epoch);
     if ((last time) = (0)) {
         set [last time] to (current time);
@@ -83,12 +83,12 @@ func (update) {
     if ball is colliding with top or bottom wall, bounce;
 }
 
-func (reset ball and paddles) {
+command (reset ball and paddles) {
     set [left paddle top] to (((height) / (2)) - ((paddle height) / (2)));
     set [right paddle top] to (((height) / (2)) - ((paddle height) / (2)));
 }
 
-func (reset ball) {
+command (reset ball) {
     set [ball left] to (((width) / (2)) - ((ball width) / (2)));
     set [ball top] to (((height) / (2)) - ((ball height) / (2)));
     let [angle] = (pick random from (0) up to but not including (360))
@@ -96,7 +96,7 @@ func (reset ball) {
     set [y speed] to ((sine of (angle) degrees) * (ball speed magnitude));
 }
 
-func (if ball is out of bounds, update score and reset ball) {
+command (if ball is out of bounds, update score and reset ball) {
     let [ball right] = ((ball left) + (ball width));
     if ((ball right) < (0)) {
         change [right score] by (1);
@@ -110,13 +110,13 @@ func (if ball is out of bounds, update score and reset ball) {
     };
 }
 
-func (if ball is colliding with paddle, bounce) {
+command (if ball is colliding with paddle, bounce) {
     if ((ball is touching left paddle?) or (ball is touching right paddle?)) {
         set [x speed] to ((-1) * (x speed));
     };
 }
 
-func (ball is touching left paddle?) {
+query (ball is touching left paddle?) {
     let [ball right] = ((ball left) + (ball width));
     let [ball bottom] = ((ball top) + (ball height));
 
@@ -130,7 +130,7 @@ func (ball is touching left paddle?) {
     return ((in horizontal bounds?) and (in vertical bounds?));
 }
 
-func (ball is touching right paddle?) {
+query (ball is touching right paddle?) {
     let [ball right] = ((ball left) + (ball width));
     let [ball bottom] = ((ball top) + (ball height));
 
@@ -144,7 +144,7 @@ func (ball is touching right paddle?) {
     return ((in horizontal bounds?) and (in vertical bounds?));
 }
 
-func (if ball is colliding with top or bottom wall, bounce) {
+command (if ball is colliding with top or bottom wall, bounce) {
     let [ball bottom] = ((ball top) + (ball height));
     let [is touching top wall?] = ((ball top) <= (0));
     let [is touching bottom wall?] = ((ball bottom) >= (height));
@@ -152,3 +152,22 @@ func (if ball is colliding with top or bottom wall, bounce) {
         set [y speed] to ((-1) * (y speed));
     };
 }
+
+// Difference between commands and queries:
+// - Commands have side effects, but do not return a value.
+     Commands may not terminate.
+// - Queries return a value, and have no side effects.
+     Queries always terminate.
+     However, queries may not be "pure" in the sense that they
+     may return different outputs for the same inputs.
+//   You can only use a limited subset of commands within a query:
+//   * `let` and `var`
+//   * `create <number|string|boolean> list`
+//   * LOCAL variable and list mutations
+//   * `repeat #() times` (the finite version)
+//   * `if` and `else`
+//   * `return`
+//   Queries have the additional following restrictions:
+//   * Queries cannot circularly depend on each other.
+//   * Queries must have a return statement covering the end of
+//     every possible branch.
