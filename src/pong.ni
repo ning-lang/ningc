@@ -111,7 +111,37 @@
 }
 
 @func (if ball is colliding with paddle, bounce) {
-    TODO
+    if ((ball is touching left paddle?) or (ball is touching right paddle?)) {
+        set [x speed] to ((-1) * (x speed));
+    };
+}
+
+@func (ball is touching left paddle?) {
+    @let [ball right] = ((ball left) + (ball width));
+    @let [ball bottom] = ((ball top) + (ball height));
+
+    @let [paddle left] = (paddle margin);
+    @let [paddle right] = ((paddle margin) + (paddle width));
+    @let [paddle top] = (left paddle top);
+    @let [paddle bottom] = ((left paddle top) + (paddle height));
+
+    @let [in horizontal bounds?] = (((ball left) <= (paddle right)) and ((ball right) >= (paddle left)))
+    @let [in vertical bounds?] = (((ball top) <= (paddle bottom)) and ((ball bottom) >= (paddle top)))
+    return ((in horizontal bounds?) and (in vertical bounds?));
+}
+
+@func (ball is touching right paddle?) {
+    @let [ball right] = ((ball left) + (ball width));
+    @let [ball bottom] = ((ball top) + (ball height));
+
+    @let [paddle right] = ((width) - (paddle margin));
+    @let [paddle left] = ((paddle right) - (paddle width));
+    @let [paddle top] = (right paddle top);
+    @let [paddle bottom] = ((right paddle top) + (paddle height));
+
+    @let [in horizontal bounds?] = (((ball left) <= (paddle right)) and ((ball right) >= (paddle left)))
+    @let [in vertical bounds?] = (((ball top) <= (paddle bottom)) and ((ball bottom) >= (paddle top)))
+    return ((in horizontal bounds?) and (in vertical bounds?));
 }
 
 @func (if ball is colliding with top or bottom wall, bounce) {
