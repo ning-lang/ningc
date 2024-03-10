@@ -1,11 +1,11 @@
-@const [width] = (480);
-@const [height] = (360);
-@const [paddle width] = (20);
-@const [paddle height] = ((height) / (5));
-@const [paddle margin] = (paddle width);
-@const [ball width] = (paddle width);
-@const [ball height] = (ball width);
-@const [ball speed magnitude] = ((ball width) * (3));
+@let [width] = (480);
+@let [height] = (360);
+@let [paddle width] = (20);
+@let [paddle height] = ((height) / (5));
+@let [paddle margin] = (paddle width);
+@let [ball width] = (paddle width);
+@let [ball height] = (ball width);
+@let [ball speed magnitude] = ((ball width) * (3));
 
 @var [left paddle top] = (((height) / (2)) - ((paddle height) / (2)));
 @var [right paddle top] = (((height) / (2)) - ((paddle height) / (2)));
@@ -32,19 +32,19 @@
 }
 
 @func (update) {
-    @const [current time] = (milliseconds since unix epoch);
+    @let [current time] = (milliseconds since unix epoch);
     if ((last time) = (0)) {
         set [last time] to (current time);
         reset ball and paddles;
         return;
     };
-    @const [elapsed time in seconds] = (((current time) - (last time)) / (1000));
+    @let [elapsed time in seconds] = (((current time) - (last time)) / (1000));
     set [last time] to (current time);
 
-    @const [w was down] = (w down);
-    @const [s was down] = (s down);
-    @const [up was down] = (up down);
-    @const [down was down] = (down down);
+    @let [w was down] = (w down);
+    @let [s was down] = (s down);
+    @let [up was down] = (up down);
+    @let [down was down] = (down down);
 
     set [w down] to (is key down ('w'));
     set [s down] to (is key down ('s'));
@@ -72,8 +72,8 @@
     change [left paddle top] by (left dy);
     change [right paddle top] by (right dy);
 
-    @const [ball dx] = ((x speed) * (elapsed time in seconds));
-    @const [ball dy] = ((y speed) * (elapsed time in seconds));
+    @let [ball dx] = ((x speed) * (elapsed time in seconds));
+    @let [ball dy] = ((y speed) * (elapsed time in seconds));
 
     change [ball left] by (ball dx);
     change [ball top] by (ball dy);
@@ -91,13 +91,23 @@
 @func (reset ball) {
     set [ball left] to (((width) / (2)) - ((ball width) / (2)));
     set [ball top] to (((height) / (2)) - ((ball height) / (2)));
-    @const [angle] = (pick random from (0) up to but not including (360))
+    @let [angle] = (pick random from (0) up to but not including (360))
     set [x speed] to ((cosine of (angle) degrees) * (ball speed magnitude));
     set [y speed] to ((sine of (angle) degrees) * (ball speed magnitude));
 }
 
 @func (if ball is out of bounds, update score and reset ball) {
-    TODO
+    @let [ball right] = ((ball left) + (ball width));
+    if ((ball right) < (0)) {
+        change [right score] by (1);
+        reset ball;
+        return;
+    };
+    if ((ball left) > (width)) {
+        change [left score] by (1);
+        reset ball;
+        return;
+    };
 }
 
 @func (if ball is colliding with paddle, bounce) {
