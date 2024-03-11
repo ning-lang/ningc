@@ -44,31 +44,24 @@ function highlight(code: string): React.ReactElement[] {
 
 enum NodeKind {
   Doc,
-  QueryDef,
-  CommandDef,
+  TopLevelDef,
   Label,
+  Phrase,
   Param,
-  Subval,
-  Ref,
+  BlockCommand,
+  Command,
+  Expression,
+  MutRef,
 }
 
 interface Doc {
   kind: NodeKind.Doc;
-  defs: Def[];
+  defs: TopLevelDef[];
 }
 
-type Def = QueryDef | CommandDef;
-
-interface QueryDef {
-  kind: NodeKind.QueryDef;
-  queryKeywordSpan: Span;
-  signature: SignaturePart[];
-  body: BlockCommand;
-}
-
-interface CommandDef {
-  kind: NodeKind.CommandDef;
-  commandKeywordSpan: Span;
+interface TopLevelDef {
+  kind: NodeKind.TopLevelDef;
+  defKind: Phrase;
   signature: SignaturePart[];
   body: BlockCommand;
 }
@@ -81,6 +74,8 @@ interface Label {
 }
 
 interface Phrase {
+  kind: NodeKind.Phrase;
+  originalValue: string;
   normalizedValue: string;
   span: Span;
 }
@@ -105,27 +100,31 @@ interface Param {
 }
 
 interface BlockCommand {
+  kind: NodeKind.BlockCommand;
   leftCurlySpan: Span;
   commands: Command[];
   rightCurlySpan: Span;
 }
 
 interface Command {
-  parts: ExpressionPart[];
+  kind: NodeKind.Command;
+  parts: CommandPart[];
   semicolonSpan: Span;
 }
 
-type ExpressionPart = Label | Subval | Ref;
+type CommandPart = Label | Expression | MutRef | BlockCommand;
 
-interface Subval {
-  kind: NodeKind.Subval;
+interface Expression {
+  kind: NodeKind.Expression;
   leftParenSpan: Span;
   parts: ExpressionPart[];
   rightParenSpan: Span;
 }
 
-interface Ref {
-  kind: NodeKind.Ref;
+type ExpressionPart = Label | Expression;
+
+interface MutRef {
+  kind: NodeKind.MutRef;
   leftSquareSpan: Span;
   name: Phrase;
   rightSquareSpan: Span;
