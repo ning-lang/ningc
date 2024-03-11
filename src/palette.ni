@@ -31,23 +31,23 @@ create number list ##[];
 create string list $$[];
 create boolean list %%[];
 
-length of ##[];
-length of $$[];
-length of %%[];
+length of ##();
+length of $$();
+length of %%();
 
 // If a list index is invalid, returns the default value (0, "", or false, respectively).
-item #() of ##[];
-item #() of $$[];
-item #() of %%[];
+item #() of ##();
+item #() of $$();
+item #() of %%();
 
 // If the item is not in the list, returns -1.
-index of #() in ##[];
-index of $() in $$[];
-index of %() in %%[];
+index of #() in ##();
+index of $() in $$();
+index of %() in %%();
 
-##[] contains #()?;
-$$[] contains $()?;
-%%[] contains %()?;
+##() contains #()?;
+$$() contains $()?;
+%%() contains %()?;
 
 // If a list index is invalid, the operation is a no-op.
 replace item #() of ##[] with #();
