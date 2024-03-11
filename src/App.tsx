@@ -42,35 +42,41 @@ function highlight(code: string): React.ReactElement[] {
   return [<span>{code}</span>];
 }
 
+enum NodeKind {
+  Doc,
+  QueryDef,
+  CommandDef,
+  Label,
+  Param,
+  Subval,
+  Ref,
+}
+
 interface Doc {
-  defs: Def;
+  kind: NodeKind.Doc;
+  defs: Def[];
 }
 
 type Def = QueryDef | CommandDef;
 
-enum DefKind {
-  Query,
-  Command,
-}
-
 interface QueryDef {
-  kind: DefKind.Query;
+  kind: NodeKind.QueryDef;
+  queryKeywordSpan: Span;
   signature: SignaturePart[];
-  body: Expression[];
-  span: Span;
+  body: BlockCommand;
 }
 
 interface CommandDef {
-  kind: DefKind.Command;
+  kind: NodeKind.CommandDef;
+  commandKeywordSpan: Span;
   signature: SignaturePart[];
-  body: Expression[];
-  span: Span;
+  body: BlockCommand;
 }
 
 type SignaturePart = Label | Param;
 
 interface Label {
-  isLabel: true;
+  kind: NodeKind.Label;
   name: Phrase;
 }
 
@@ -90,33 +96,39 @@ enum Type {
 }
 
 interface Param {
-  isLabel: false;
-  name: Phrase;
+  kind: NodeKind.Param;
+  typeSigilSpan: Span;
   type: Type;
-  span: Span;
+  leftDelimiterSpan: Span;
+  name: Phrase;
+  rightDelimiterSpan: Span;
+}
+
+interface BlockCommand {
+  leftCurlySpan: Span;
+  commands: Command[];
+  rightCurlySpan: Span;
 }
 
 interface Command {
   parts: ExpressionPart[];
-  semicolonStart: TextPosition;
+  semicolonSpan: Span;
 }
 
-interface Expression {
+type ExpressionPart = Label | Subval | Ref;
+
+interface Subval {
+  kind: NodeKind.Subval;
+  leftParenSpan: Span;
   parts: ExpressionPart[];
+  rightParenSpan: Span;
 }
 
-type ExpressionPart = Label | Subexpression;
-
-interface Subexpression {
-  isLabel: false;
-  expression: Expression;
-  bracketKind: SubexpressionBracketKind;
-  span: Span;
-}
-
-enum SubexpressionBracketKind {
-  Paren = "paren",
-  Square = "square",
+interface Ref {
+  kind: NodeKind.Ref;
+  leftSquareSpan: Span;
+  name: Phrase;
+  rightSquareSpan: Span;
 }
 
 interface Span {
