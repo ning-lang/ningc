@@ -27,6 +27,8 @@ export class App extends React.Component<{}, State> {
           value={this.state.code}
           onChange={this.onCodeChanged}
         ></textarea>
+
+        <div>{highlight(this.state.code)}</div>
       </div>
     );
   }
@@ -34,4 +36,8 @@ export class App extends React.Component<{}, State> {
   onCodeChanged(event: React.ChangeEvent<HTMLTextAreaElement>) {
     this.setState({ code: event.target.value });
   }
+}
+
+function highlight(code: string): React.ReactElement[] {
+  return [<span>{code}</span>];
 }
