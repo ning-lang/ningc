@@ -150,66 +150,96 @@ interface Def_Signature_State {
   leftParenSpan: Span;
 }
 
+interface PositionedChar {
+  value: string;
+  position: TextPosition;
+}
+
 function parse(src: string): Doc {
   let index = 0;
   let line = 0;
   let col = 0;
 
-  let state: ParseState = {
-    kind: ParseStateKind.Def_Kind,
-    start: {
-      byteIndex: index,
-      line,
-      column: col,
-    },
-  };
+  function consumeChar(): null | PositionedChar {
+    if (index >= src.length) {
+      return null;
+    }
 
-  while (index < src.length) {
     const firstCode = src.charCodeAt(index);
     const isSurrogate = 0xd800 <= firstCode && firstCode <= 0xdfff;
     const char = isSurrogate ? src.slice(index, index + 2) : src.charAt(index);
 
-    switch (state.kind) {
-      case ParseStateKind.Def_Kind: {
-        if (char === "(") {
-          state = {
-            kind: ParseStateKind.Def_Signature,
-            defKind: {
-              kind: NodeKind.Phrase,
-              originalValue: src.slice(state.start.byteIndex, index),
-              span: {
-                start: state.start,
-                end: {
-                  byteIndex: index,
-                  line,
-                  column: col,
-                },
-              },
-            },
-            leftParenSpan: {
-              start: {
-                byteIndex: index,
-                line,
-                column: col,
-              },
-              end: {
-                byteIndex: index + 1,
-                line,
-                column: col + 1,
-              },
-            },
-          };
-          break;
-        }
-      }
-    }
+    const out = {
+      char: char,
+      position: {
+        byteIndex: index,
+        line,
+        column: col,
+      },
+    };
 
     index += isSurrogate ? 2 : 1;
+    ++col;
     if (char === "\n") {
       ++line;
       col = 0;
     }
+
+    return out;
+  }
+
+  let state: ParseState = {
+    kind: ParseStateKind.Def_Kind,
+    start: {
+      byteIndex: 0,
+      line: 0,
+      column: 0,
+    },
+  };
+  let current = consumeChar();
+
+  while (true) {
+    if (current === null) {
+      break;
+    }
+
+    const lookahead = consumeChar();
+    state = handleChar(state, current, lookahead, src);
+    current = lookahead;
   }
 
   throw new Error("todo");
+}
+
+function handleChar(
+  state: ParseState,
+  current: PositionedChar,
+  lookahead: null | PositionedChar,
+  src: string
+): ParseState {
+  switch (state.kind) {
+    case ParseStateKind.Def_Kind: {
+      if (current.value === "(") {
+        state = {
+          kind: ParseStateKind.Def_Signature,
+          defKind: {
+            kind: NodeKind.Phrase,
+            originalValue: src.slice(
+              state.start.byteIndex,
+              current.position.byteIndex
+            ),
+            span: {
+              start: state.start,
+              end: current.position,
+            },
+          },
+          leftParenSpan: {
+            start: state.start,
+            end: lookahead!.position,
+          },
+        };
+        break;
+      }
+    }
+  }
 }
