@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { App } from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { parse } from "./parser";
+import * as parser from "./parser/parser.generated";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -19,4 +19,4 @@ root.render(
 reportWebVitals();
 
 // TODO: Delete
-(window as any).parse = parse;
+(window as any).parser = parser;
