@@ -1,8 +1,16 @@
 /* Builds AST from Sand source. */
 
-/* Uses custom scanner */
+%lex
 
-/* operator associations and precedence */
+%%
+\s+                   /* skip whitespace */
+[0-9]+("."[0-9]+)?\b  return '1';
+"<"                   return '<';
+"%"                   return '%';
+">"                   return '>';
+<<EOF>>               return 'EOF';
+
+/lex
 
 /* TODO Delete
 
