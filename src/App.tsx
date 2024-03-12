@@ -85,7 +85,6 @@ interface Param {
   typeSigilSpan: Span;
   leftDelimiterSpan: Span;
   name: Phrase;
-  colon: Phrase;
   type: Phrase;
   rightDelimiterSpan: Span;
 }
@@ -132,6 +131,18 @@ interface TextPosition {
   column: number;
 }
 
-function parse(code: string): Doc {
-  throw new Error("Todo");
+function parse(src: string): Doc {
+  let index = 0;
+  while (index < src.length) {
+    const firstCode = src.charCodeAt(index);
+    const isSurrogate = 0xd800 <= firstCode && firstCode <= 0xdfff;
+    const char = isSurrogate ? src.slice(index, index + 2) : src.charAt(index);
+    index += isSurrogate ? 2 : 1;
+
+    // todo
+  }
+
+  throw new Error("todo");
 }
+
+type ParseState = never;
