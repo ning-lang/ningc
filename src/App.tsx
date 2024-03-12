@@ -80,22 +80,13 @@ interface Phrase {
   span: Span;
 }
 
-enum Type {
-  Number,
-  String,
-  Boolean,
-  NumberListRef,
-  StringListRef,
-  BooleanListRef,
-  Command,
-}
-
 interface Param {
   kind: NodeKind.Param;
   typeSigilSpan: Span;
-  type: Type;
   leftDelimiterSpan: Span;
   name: Phrase;
+  colon: Phrase;
+  type: Phrase;
   rightDelimiterSpan: Span;
 }
 
