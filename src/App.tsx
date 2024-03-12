@@ -62,7 +62,9 @@ interface Doc {
 interface TopLevelDef {
   kind: NodeKind.TopLevelDef;
   defKind: Phrase;
+  leftParenSpan: Span;
   signature: SignaturePart[];
+  rightParenSpan: Span;
   body: BlockCommand;
 }
 
@@ -76,7 +78,6 @@ interface Label {
 interface Phrase {
   kind: NodeKind.Phrase;
   originalValue: string;
-  normalizedValue: string;
   span: Span;
 }
 
@@ -131,18 +132,84 @@ interface TextPosition {
   column: number;
 }
 
+enum ParseStateKind {
+  Def_Kind,
+  Def_Signature,
+}
+
+type ParseState = Def_Kind_State | Def_Signature_State;
+
+interface Def_Kind_State {
+  kind: ParseStateKind.Def_Kind;
+  start: TextPosition;
+}
+
+interface Def_Signature_State {
+  kind: ParseStateKind.Def_Signature;
+  defKind: Phrase;
+  leftParenSpan: Span;
+}
+
 function parse(src: string): Doc {
   let index = 0;
+  let line = 0;
+  let col = 0;
+
+  let state: ParseState = {
+    kind: ParseStateKind.Def_Kind,
+    start: {
+      byteIndex: index,
+      line,
+      column: col,
+    },
+  };
+
   while (index < src.length) {
     const firstCode = src.charCodeAt(index);
     const isSurrogate = 0xd800 <= firstCode && firstCode <= 0xdfff;
     const char = isSurrogate ? src.slice(index, index + 2) : src.charAt(index);
-    index += isSurrogate ? 2 : 1;
 
-    // todo
+    switch (state.kind) {
+      case ParseStateKind.Def_Kind: {
+        if (char === "(") {
+          state = {
+            kind: ParseStateKind.Def_Signature,
+            defKind: {
+              kind: NodeKind.Phrase,
+              originalValue: src.slice(state.start.byteIndex, index),
+              span: {
+                start: state.start,
+                end: {
+                  byteIndex: index,
+                  line,
+                  column: col,
+                },
+              },
+            },
+            leftParenSpan: {
+              start: {
+                byteIndex: index,
+                line,
+                column: col,
+              },
+              end: {
+                byteIndex: index + 1,
+                line,
+                column: col + 1,
+              },
+            },
+          };
+          break;
+        }
+      }
+    }
+
+    index += isSurrogate ? 2 : 1;
+    if (char === "\n") {
+      ++line;
+      col = 0;
+    }
   }
 
   throw new Error("todo");
 }
-
-type ParseState = never;
