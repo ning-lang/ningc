@@ -50,7 +50,9 @@ enum NodeKind {
   Param,
   BlockCommand,
   Command,
-  Expression,
+  ParenthesizedExpression,
+  ExpressionKebab,
+  Literal,
   MutRef,
 }
 
@@ -103,16 +105,29 @@ interface Command {
   semicolonSpan: Span;
 }
 
-type CommandPart = Label | Expression | MutRef | BlockCommand;
+type CommandPart = Label | ParenthesizedExpression | MutRef | BlockCommand;
 
-interface Expression {
-  kind: NodeKind.Expression;
+interface ParenthesizedExpression {
+  kind: NodeKind.ParenthesizedExpression;
   leftParenSpan: Span;
-  parts: ExpressionPart[];
+  expression: Expression;
   rightParenSpan: Span;
 }
 
-type ExpressionPart = Label | Expression;
+type Expression = ExpressionKebab | Literal;
+
+interface ExpressionKebab {
+  kind: NodeKind.ExpressionKebab;
+  parts: ExpressionPart[];
+}
+
+interface Literal {
+  kind: NodeKind.Literal;
+  originalValue: string;
+  span: Span;
+}
+
+type ExpressionPart = Label | ParenthesizedExpression;
 
 interface MutRef {
   kind: NodeKind.MutRef;
