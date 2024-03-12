@@ -52,7 +52,7 @@ enum NodeKind {
   Command,
   ParenthesizedExpression,
   ExpressionKebab,
-  Literal,
+  StringlLiteral,
   MutRef,
 }
 
@@ -114,15 +114,15 @@ interface ParenthesizedExpression {
   rightParenSpan: Span;
 }
 
-type Expression = ExpressionKebab | Literal;
+type Expression = ExpressionKebab | StringLiteral;
 
 interface ExpressionKebab {
   kind: NodeKind.ExpressionKebab;
   parts: ExpressionPart[];
 }
 
-interface Literal {
-  kind: NodeKind.Literal;
+interface StringLiteral {
+  kind: NodeKind.StringlLiteral;
   originalValue: string;
   span: Span;
 }
@@ -260,7 +260,7 @@ function handleChar(
         };
       }
 
-      if (/^[)[\]{}A-Z]$/.test(current.value)) {
+      if (/^[)[\]{}A-Z"']$/.test(current.value)) {
         console.log("TODO: Unexpected character", current.value);
       }
 
