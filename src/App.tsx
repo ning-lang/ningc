@@ -47,13 +47,13 @@ enum NodeKind {
   TopLevelDef,
   Label,
   Phrase,
-  Param,
+  BracketedParam,
   BlockCommand,
   Command,
   ParenthesizedExpression,
   ExpressionKebab,
   StringlLiteral,
-  MutRef,
+  BracketedMutRef,
 }
 
 interface Doc {
@@ -67,10 +67,11 @@ interface TopLevelDef {
   leftParenSpan: Span;
   signature: SignaturePart[];
   rightParenSpan: Span;
+  returnType: null | Phrase;
   body: BlockCommand;
 }
 
-type SignaturePart = Label | Param;
+type SignaturePart = Label | BracketedParam;
 
 interface Label {
   kind: NodeKind.Label;
@@ -83,8 +84,8 @@ interface Phrase {
   span: Span;
 }
 
-interface Param {
-  kind: NodeKind.Param;
+interface BracketedParam {
+  kind: NodeKind.BracketedParam;
   typeSigilSpan: Span;
   leftDelimiterSpan: Span;
   name: Phrase;
@@ -105,7 +106,11 @@ interface Command {
   semicolonSpan: Span;
 }
 
-type CommandPart = Label | ParenthesizedExpression | MutRef | BlockCommand;
+type CommandPart =
+  | Label
+  | ParenthesizedExpression
+  | BracketedMutRef
+  | BlockCommand;
 
 interface ParenthesizedExpression {
   kind: NodeKind.ParenthesizedExpression;
@@ -129,8 +134,8 @@ interface StringLiteral {
 
 type ExpressionPart = Label | ParenthesizedExpression;
 
-interface MutRef {
-  kind: NodeKind.MutRef;
+interface BracketedMutRef {
+  kind: NodeKind.BracketedMutRef;
   leftSquareSpan: Span;
   name: Phrase;
   rightSquareSpan: Span;
@@ -149,20 +154,46 @@ interface TextPosition {
 
 enum ParseStateKind {
   Def_Kind,
-  Def_Signature,
+  Def_SignatureLabel,
+  Def_SignatureParam,
+  Def_ReturnType,
 }
 
-type ParseState = Def_Kind_State | Def_Signature_State;
+type ParseState =
+  | Def_Kind_State
+  | Def_SignatureLabel_State
+  | Def_SignatureParam_State
+  | Def_ReturnType_State;
 
 interface Def_Kind_State {
   kind: ParseStateKind.Def_Kind;
-  start: TextPosition;
+
+  defKindStart: TextPosition;
 }
 
-interface Def_Signature_State {
-  kind: ParseStateKind.Def_Signature;
+interface Def_SignatureLabel_State {
+  kind: ParseStateKind.Def_SignatureLabel;
   defKind: Phrase;
   leftParenSpan: Span;
+  pendingSignature: SignaturePart[];
+
+  labelStart: TextPosition;
+}
+
+interface Def_SignatureParam_State {
+  kind: ParseStateKind.Def_SignatureParam;
+  defKind: Phrase;
+  leftParenSpan: Span;
+  pendingSignature: SignaturePart[];
+  leftDelimiterStart: TextPosition;
+}
+
+interface Def_ReturnType_State {
+  kind: ParseStateKind.Def_ReturnType;
+  defKind: Phrase;
+  leftParenSpan: Span;
+  signature: SignaturePart[];
+  returnTypeStart: TextPosition;
 }
 
 interface PositionedChar {
@@ -210,7 +241,7 @@ function parse(src: string): Doc {
 
   let state: ParseState = {
     kind: ParseStateKind.Def_Kind,
-    start: {
+    defKindStart: {
       byteIndex: 0,
       line: 0,
       column: 0,
@@ -239,35 +270,77 @@ function handleChar(
 ): ParseState {
   switch (state.kind) {
     case ParseStateKind.Def_Kind: {
-      if (current.value === "(") {
-        return {
-          kind: ParseStateKind.Def_Signature,
-          defKind: {
-            kind: NodeKind.Phrase,
-            originalValue: src.slice(
-              state.start.byteIndex,
-              current.position.byteIndex
-            ),
-            span: {
-              start: state.start,
-              end: current.position,
-            },
-          },
-          leftParenSpan: {
-            start: state.start,
-            end: lookahead.position,
-          },
-        };
-      }
-
-      if (/^[)[\]{}A-Z"']$/.test(current.value)) {
-        console.log("TODO: Unexpected character", current.value);
-      }
-
-      return {
-        kind: ParseStateKind.Def_Kind,
-        start: state.start,
-      };
+      return handleCharIn_Def_Kind(state, current, lookahead, src);
     }
+
+    case ParseStateKind.Def_SignatureLabel: {
+      return handleCharIn_Def_SignatureLabel(state, current, lookahead, src);
+    }
+  }
+}
+
+function handleCharIn_Def_Kind(
+  state: Def_Kind_State,
+  current: PositionedChar,
+  lookahead: PositionedChar | PositionedEndOfInput,
+  src: string
+): ParseState {
+  if (current.value === "(") {
+    return {
+      kind: ParseStateKind.Def_SignatureLabel,
+      defKind: {
+        kind: NodeKind.Phrase,
+        originalValue: src.slice(
+          state.defKindStart.byteIndex,
+          current.position.byteIndex
+        ),
+        span: {
+          start: state.defKindStart,
+          end: current.position,
+        },
+      },
+      leftParenSpan: {
+        start: state.defKindStart,
+        end: lookahead.position,
+      },
+      pendingSignature: [],
+      labelStart: lookahead.position,
+    };
+  }
+
+  if (/^[)[\]{}A-Z"']$/.test(current.value)) {
+    console.log("TODO: Unexpected character", current.value);
+  }
+
+  return {
+    kind: ParseStateKind.Def_Kind,
+    defKindStart: state.defKindStart,
+  };
+}
+
+function handleCharIn_Def_SignatureLabel(
+  state: Def_SignatureLabel_State,
+  current: PositionedChar,
+  lookahead: PositionedChar | PositionedEndOfInput,
+  src: string
+): ParseState {
+  if (current.value === ")") {
+    return {
+      kind: ParseStateKind.Def_ReturnType,
+      defKind: state.defKind,
+      leftParenSpan: state.leftParenSpan,
+      signature: state.pendingSignature.concat([todo]),
+      returnTypeStart: lookahead.position,
+    };
+  }
+
+  if (current.value === "(" || current.value === "[") {
+    return {
+      kind: ParseStateKind.Def_SignatureParam,
+      defKind: state.defKind,
+      leftParenSpan: state.leftParenSpan,
+      pendingSignature: state.pendingSignature.concat([todo]),
+      leftDelimiterStart: current.position,
+    };
   }
 }
