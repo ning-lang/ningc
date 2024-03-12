@@ -155,14 +155,19 @@ interface PositionedChar {
   position: TextPosition;
 }
 
+interface PositionedEndOfInput {
+  value: null;
+  position: TextPosition;
+}
+
 function parse(src: string): Doc {
   let index = 0;
   let line = 0;
   let col = 0;
 
-  function consumeChar(): null | PositionedChar {
+  function consumeChar(): PositionedChar | PositionedEndOfInput {
     if (index >= src.length) {
-      return null;
+      return { value: null, position: { byteIndex: index, line, column: col } };
     }
 
     const firstCode = src.charCodeAt(index);
@@ -170,7 +175,7 @@ function parse(src: string): Doc {
     const char = isSurrogate ? src.slice(index, index + 2) : src.charAt(index);
 
     const out = {
-      char: char,
+      value: char,
       position: {
         byteIndex: index,
         line,
@@ -199,7 +204,7 @@ function parse(src: string): Doc {
   let current = consumeChar();
 
   while (true) {
-    if (current === null) {
+    if (current.value === null) {
       break;
     }
 
@@ -214,13 +219,13 @@ function parse(src: string): Doc {
 function handleChar(
   state: ParseState,
   current: PositionedChar,
-  lookahead: null | PositionedChar,
+  lookahead: PositionedChar | PositionedEndOfInput,
   src: string
 ): ParseState {
   switch (state.kind) {
     case ParseStateKind.Def_Kind: {
       if (current.value === "(") {
-        state = {
+        return {
           kind: ParseStateKind.Def_Signature,
           defKind: {
             kind: NodeKind.Phrase,
@@ -235,10 +240,9 @@ function handleChar(
           },
           leftParenSpan: {
             start: state.start,
-            end: lookahead!.position,
+            end: lookahead.position,
           },
         };
-        break;
       }
     }
   }
