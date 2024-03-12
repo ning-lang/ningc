@@ -244,6 +244,15 @@ function handleChar(
           },
         };
       }
+
+      if (/^[)[\]{}A-Z]$/.test(current.value)) {
+        console.log("TODO: Unexpected character", current.value);
+      }
+
+      return {
+        kind: ParseStateKind.Def_Kind,
+        start: state.start,
+      };
     }
   }
 }
