@@ -206,141 +206,141 @@ interface PositionedEndOfInput {
   position: TextPosition;
 }
 
-function parse(src: string): Doc {
-  let index = 0;
-  let line = 0;
-  let col = 0;
+// function parse(src: string): Doc {
+//   let index = 0;
+//   let line = 0;
+//   let col = 0;
 
-  function consumeChar(): PositionedChar | PositionedEndOfInput {
-    if (index >= src.length) {
-      return { value: null, position: { byteIndex: index, line, column: col } };
-    }
+//   function consumeChar(): PositionedChar | PositionedEndOfInput {
+//     if (index >= src.length) {
+//       return { value: null, position: { byteIndex: index, line, column: col } };
+//     }
 
-    const firstCode = src.charCodeAt(index);
-    const isSurrogate = 0xd800 <= firstCode && firstCode <= 0xdfff;
-    const char = isSurrogate ? src.slice(index, index + 2) : src.charAt(index);
+//     const firstCode = src.charCodeAt(index);
+//     const isSurrogate = 0xd800 <= firstCode && firstCode <= 0xdfff;
+//     const char = isSurrogate ? src.slice(index, index + 2) : src.charAt(index);
 
-    const out = {
-      value: char,
-      position: {
-        byteIndex: index,
-        line,
-        column: col,
-      },
-    };
+//     const out = {
+//       value: char,
+//       position: {
+//         byteIndex: index,
+//         line,
+//         column: col,
+//       },
+//     };
 
-    index += isSurrogate ? 2 : 1;
-    ++col;
-    if (char === "\n") {
-      ++line;
-      col = 0;
-    }
+//     index += isSurrogate ? 2 : 1;
+//     ++col;
+//     if (char === "\n") {
+//       ++line;
+//       col = 0;
+//     }
 
-    return out;
-  }
+//     return out;
+//   }
 
-  let state: ParseState = {
-    kind: ParseStateKind.Def_Kind,
-    defKindStart: {
-      byteIndex: 0,
-      line: 0,
-      column: 0,
-    },
-  };
-  let current = consumeChar();
+//   let state: ParseState = {
+//     kind: ParseStateKind.Def_Kind,
+//     defKindStart: {
+//       byteIndex: 0,
+//       line: 0,
+//       column: 0,
+//     },
+//   };
+//   let current = consumeChar();
 
-  while (true) {
-    if (current.value === null) {
-      break;
-    }
+//   while (true) {
+//     if (current.value === null) {
+//       break;
+//     }
 
-    const lookahead = consumeChar();
-    state = handleChar(state, current, lookahead, src);
-    current = lookahead;
-  }
+//     const lookahead = consumeChar();
+//     state = handleChar(state, current, lookahead, src);
+//     current = lookahead;
+//   }
 
-  throw new Error("todo");
-}
+//   throw new Error("todo");
+// }
 
-function handleChar(
-  state: ParseState,
-  current: PositionedChar,
-  lookahead: PositionedChar | PositionedEndOfInput,
-  src: string
-): ParseState {
-  switch (state.kind) {
-    case ParseStateKind.Def_Kind: {
-      return handleCharIn_Def_Kind(state, current, lookahead, src);
-    }
+// function handleChar(
+//   state: ParseState,
+//   current: PositionedChar,
+//   lookahead: PositionedChar | PositionedEndOfInput,
+//   src: string
+// ): ParseState {
+//   switch (state.kind) {
+//     case ParseStateKind.Def_Kind: {
+//       return handleCharIn_Def_Kind(state, current, lookahead, src);
+//     }
 
-    case ParseStateKind.Def_SignatureLabel: {
-      return handleCharIn_Def_SignatureLabel(state, current, lookahead, src);
-    }
-  }
-}
+//     case ParseStateKind.Def_SignatureLabel: {
+//       return handleCharIn_Def_SignatureLabel(state, current, lookahead, src);
+//     }
+//   }
+// }
 
-function handleCharIn_Def_Kind(
-  state: Def_Kind_State,
-  current: PositionedChar,
-  lookahead: PositionedChar | PositionedEndOfInput,
-  src: string
-): ParseState {
-  if (current.value === "(") {
-    return {
-      kind: ParseStateKind.Def_SignatureLabel,
-      defKind: {
-        kind: NodeKind.Phrase,
-        originalValue: src.slice(
-          state.defKindStart.byteIndex,
-          current.position.byteIndex
-        ),
-        span: {
-          start: state.defKindStart,
-          end: current.position,
-        },
-      },
-      leftParenSpan: {
-        start: state.defKindStart,
-        end: lookahead.position,
-      },
-      pendingSignature: [],
-      labelStart: lookahead.position,
-    };
-  }
+// function handleCharIn_Def_Kind(
+//   state: Def_Kind_State,
+//   current: PositionedChar,
+//   lookahead: PositionedChar | PositionedEndOfInput,
+//   src: string
+// ): ParseState {
+//   if (current.value === "(") {
+//     return {
+//       kind: ParseStateKind.Def_SignatureLabel,
+//       defKind: {
+//         kind: NodeKind.Phrase,
+//         originalValue: src.slice(
+//           state.defKindStart.byteIndex,
+//           current.position.byteIndex
+//         ),
+//         span: {
+//           start: state.defKindStart,
+//           end: current.position,
+//         },
+//       },
+//       leftParenSpan: {
+//         start: state.defKindStart,
+//         end: lookahead.position,
+//       },
+//       pendingSignature: [],
+//       labelStart: lookahead.position,
+//     };
+//   }
 
-  if (/^[)[\]{}A-Z"']$/.test(current.value)) {
-    console.log("TODO: Unexpected character", current.value);
-  }
+//   if (/^[)[\]{}A-Z"']$/.test(current.value)) {
+//     console.log("TODO: Unexpected character", current.value);
+//   }
 
-  return {
-    kind: ParseStateKind.Def_Kind,
-    defKindStart: state.defKindStart,
-  };
-}
+//   return {
+//     kind: ParseStateKind.Def_Kind,
+//     defKindStart: state.defKindStart,
+//   };
+// }
 
-function handleCharIn_Def_SignatureLabel(
-  state: Def_SignatureLabel_State,
-  current: PositionedChar,
-  lookahead: PositionedChar | PositionedEndOfInput,
-  src: string
-): ParseState {
-  if (current.value === ")") {
-    return {
-      kind: ParseStateKind.Def_ReturnType,
-      defKind: state.defKind,
-      leftParenSpan: state.leftParenSpan,
-      signature: state.pendingSignature.concat([todo]),
-      returnTypeStart: lookahead.position,
-    };
-  }
+// function handleCharIn_Def_SignatureLabel(
+//   state: Def_SignatureLabel_State,
+//   current: PositionedChar,
+//   lookahead: PositionedChar | PositionedEndOfInput,
+//   src: string
+// ): ParseState {
+//   if (current.value === ")") {
+//     return {
+//       kind: ParseStateKind.Def_ReturnType,
+//       defKind: state.defKind,
+//       leftParenSpan: state.leftParenSpan,
+//       signature: state.pendingSignature.concat([todo]),
+//       returnTypeStart: lookahead.position,
+//     };
+//   }
 
-  if (current.value === "(" || current.value === "[") {
-    return {
-      kind: ParseStateKind.Def_SignatureParam,
-      defKind: state.defKind,
-      leftParenSpan: state.leftParenSpan,
-      pendingSignature: state.pendingSignature.concat([todo]),
-      leftDelimiterStart: current.position,
-    };
-  }
-}
+//   if (current.value === "(" || current.value === "[") {
+//     return {
+//       kind: ParseStateKind.Def_SignatureParam,
+//       defKind: state.defKind,
+//       leftParenSpan: state.leftParenSpan,
+//       pendingSignature: state.pendingSignature.concat([todo]),
+//       leftDelimiterStart: current.position,
+//     };
+//   }
+// }
