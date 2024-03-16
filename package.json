@@ -26,9 +26,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "jison": "jison src/grammar/sand.jison --outfile src/parser/parser.generated.js && npm run fix-jison-error-report-line-numbers && npm run tyson",
+    "jison": "echo \"WARNING: You may need to manually edit the Jison-generated parser. Specifically, you may need to remove \\`exports.main\\`.\"; jison src/grammar/ning.jison --outfile src/parser/parser.generated.js && npm run fix-jison-error-report-line-numbers && npm run tyson",
     "fix-jison-error-report-line-numbers": "node ./bin/fixJisonErrorReportLineNumbers.js",
-    "tyson": "tyson src/grammar/sand.jison src/types/tysonTypeDict.ts --type-dict-interface TysonTypeDict --out src/parser/verification/semanticActions.generated.ts"
+    "tyson": "tyson src/grammar/ning.jison src/types/tysonTypeDict.ts --type-dict-interface TysonTypeDict --out src/parser/verification/semanticActions.generated.ts"
   },
   "eslintConfig": {
     "extends": [

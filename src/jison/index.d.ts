@@ -33,11 +33,13 @@ export interface Scanner<TokenType = string> {
   showPosition(): string;
 }
 
-export interface JisonSymbolLocation {
+export interface JisonTokenLocation {
   first_line: number;
   last_line: number;
   first_column: number;
   last_column: number;
+  /** `parser.options.ranges` must be set to `true`, or else this property will be missing. */
+  range: [number, number];
 }
 
 export interface JisonUnexpectedTokenError<TokenType = string> extends Error {
