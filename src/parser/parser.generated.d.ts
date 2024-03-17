@@ -1,9 +1,8 @@
 import { TysonTypeDict } from "../types/tysonTypeDict";
 import { ParserGeneratedByJison } from "../jison";
 
-export declare const parser: SandParserGeneratedByJison;
+export declare const parser: NingParserGeneratedByJison;
 
-export interface SandParserGeneratedByJison extends ParserGeneratedByJison {
-  // TODO
+export interface NingParserGeneratedByJison extends ParserGeneratedByJison {
   parse(src: string): TysonTypeDict["file"];
 }
