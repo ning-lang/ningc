@@ -1,6 +1,7 @@
 import React from "react";
 import "./App.css";
 import { parse } from "./parser";
+import { typecheck } from "./typecheck";
 
 export interface State {
   readonly code: string;
@@ -19,6 +20,7 @@ export class App extends React.Component<{}, State> {
 
   bindMethods() {
     this.onCodeChanged = this.onCodeChanged.bind(this);
+    this.onRunButtonClicked = this.onRunButtonClicked.bind(this);
   }
 
   render() {
@@ -30,6 +32,8 @@ export class App extends React.Component<{}, State> {
         ></textarea>
 
         <div>{highlight(this.state.code)}</div>
+
+        <button onClick={this.onRunButtonClicked}>Run</button>
       </div>
     );
   }
@@ -37,9 +41,23 @@ export class App extends React.Component<{}, State> {
   onCodeChanged(event: React.ChangeEvent<HTMLTextAreaElement>) {
     this.setState({ code: event.target.value });
   }
+
+  onRunButtonClicked(): void {
+    const parseResult = parse(this.state.code);
+    if (!parseResult.succeeded) {
+      return;
+    }
+
+    const typecheckResult = typecheck(parseResult.value);
+    if (!typecheckResult.succeeded) {
+      return;
+    }
+
+    // TODO: Run the program
+  }
 }
 
 function highlight(code: string): React.ReactElement[] {
-  const file = parse(code);
-  return [<span style={{ color: file.succeeded ? "" : "red" }}>{code}</span>];
+  const result = parse(code);
+  return [<span style={{ color: result.succeeded ? "" : "red" }}>{code}</span>];
 }
