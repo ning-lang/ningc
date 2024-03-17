@@ -1,3 +1,4 @@
+import { JisonUnexpectedTokenError } from "../jison";
 import { TysonTypeDict } from "../types/tysonTypeDict";
 import {
   parser as generatedParser,
@@ -6,8 +7,25 @@ import {
 
 const wrappedParser = wrapParser(generatedParser);
 
-export function parse(src: string): TysonTypeDict["file"] {
-  return wrappedParser.parse(src);
+export type ParseResult = ParseOk | ParseErr;
+
+export interface ParseOk {
+  succeeded: true;
+  value: TysonTypeDict["file"];
+}
+
+export interface ParseErr {
+  succeeded: false;
+  error: JisonUnexpectedTokenError;
+}
+
+export function parse(src: string): ParseResult {
+  try {
+    const value = wrappedParser.parse(src);
+    return { succeeded: true, value };
+  } catch (error) {
+    return { succeeded: false, error: error as JisonUnexpectedTokenError };
+  }
 }
 
 function wrapParser(
