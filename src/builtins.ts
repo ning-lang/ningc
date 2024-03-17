@@ -598,4 +598,30 @@ export const BUILTINS = {
     returnType: BOOLEAN_SENTRY,
     signature: ["key", STRING_SENTRY, "pressed?"],
   },
+
+  // Looks
+  resizeCanvas: {
+    returnType: null,
+    signature: [
+      "resize canvas to width",
+      NUMBER_SENTRY,
+      "height",
+      NUMBER_SENTRY,
+    ],
+  },
+  drawImage: {
+    returnType: null,
+    signature: [
+      "draw image",
+      STRING_SENTRY,
+      "at x",
+      NUMBER_SENTRY,
+      "y",
+      NUMBER_SENTRY,
+      "with width",
+      NUMBER_SENTRY,
+      "height",
+      NUMBER_SENTRY,
+    ],
+  },
 } as const;

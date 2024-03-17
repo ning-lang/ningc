@@ -1,8 +1,3 @@
-// ## Looks
-
-resize canvas to width #() height #();
-draw image ^() at x #() y #() with width #() height #();
-
 // ## Control
 
 if %() !();
@@ -157,6 +152,11 @@ current minute;
 current second;
 
 key ^() pressed?;
+
+// ## Looks
+
+resize canvas to width #() height #();
+draw image ^() at x #() y #() with width #() height #();
 
 // ## Sigil explanation
 //
