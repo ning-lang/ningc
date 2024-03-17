@@ -1,3 +1,4 @@
+import { BUILTINS } from "./builtins";
 import { TysonTypeDict } from "./types/tysonTypeDict";
 import type * as ast from "./types/tysonTypeDict";
 
@@ -76,10 +77,19 @@ class Typechecker {
   }
 
   checkGlobalBodyCommand(command: ast.Command) {
-    // TODO
+    if (commandMatches(command, BUILTINS.numberVar.signature)) {
+      // TODO check for name conflict, and if there is none, define the variable.
+    }
   }
 }
 
 function isGlobalDef(def: ast.Def): def is ast.GlobalDef {
   return def.kind === "global_def";
+}
+
+function commandMatches(
+  command: ast.Command,
+  signature: readonly string[]
+): boolean {
+  // TODO
 }
