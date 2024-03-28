@@ -2,6 +2,7 @@
 
 %%
 \s+ /* skip whitespace */
+\/\/[^\n]* /* skip comments */
 "(" return "LPAREN";
 ")" return "RPAREN";
 "[" return "LSQUARE";
