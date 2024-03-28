@@ -31,7 +31,7 @@ export class App extends React.Component<{}, State> {
           onChange={this.onCodeChanged}
         ></textarea>
 
-        <div>{highlight(this.state.code)}</div>
+        <div className="highlightedCode">{highlight(this.state.code)}</div>
 
         <button onClick={this.onRunButtonClicked}>Run</button>
       </div>
