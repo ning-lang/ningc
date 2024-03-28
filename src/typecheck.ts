@@ -62,7 +62,9 @@ class Typechecker {
 
   typecheck(): TypecheckResult {
     this.checkGlobalDefs();
-    throw new Error("TODO: Finish implementation.");
+
+    // TODO: Properly implement this.
+    return { succeeded: false, errors: [] };
   }
 
   checkGlobalDefs() {
@@ -114,7 +116,8 @@ class Typechecker {
       return true;
     }
 
-    throw new Error("TODO: Finish implementation.");
+    // TODO: Properly implement this.
+    return true;
 
     // TODO check for name conflict, and if there is none, define the variable.
   }
@@ -139,7 +142,8 @@ function checkCommandMatch(
   command: ast.Command,
   signature: readonly string[]
 ): CommandMatchResult {
-  throw new Error("TODO: Finish implementation.");
+  // TODO: Properly implement this.
+  return { succeeded: false };
 }
 
 interface VariableInfo {

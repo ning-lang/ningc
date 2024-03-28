@@ -1,18 +1,27 @@
 import React from "react";
 import "./App.css";
-import { parse } from "./parser";
-import { typecheck } from "./typecheck";
+import { ParseResult, parse } from "./parser";
+import { TypecheckResult, typecheck } from "./typecheck";
 
 export interface State {
   readonly code: string;
+  readonly parseResultCache: ParseResult;
+  readonly typecheckResultCache: null | TypecheckResult;
 }
 
 export class App extends React.Component<{}, State> {
   constructor(props: {}) {
     super(props);
 
+    const defaultCode = "";
+    const parseResult = parse(defaultCode);
+    const typecheckResult = parseResult.succeeded
+      ? typecheck(parseResult.value)
+      : null;
     this.state = {
-      code: "",
+      code: defaultCode,
+      parseResultCache: parseResult,
+      typecheckResultCache: typecheckResult,
     };
 
     this.bindMethods();
@@ -33,23 +42,32 @@ export class App extends React.Component<{}, State> {
 
         <div className="highlightedCode">{highlight(this.state.code)}</div>
 
-        <button onClick={this.onRunButtonClicked}>Run</button>
+        <button
+          disabled={!this.state.typecheckResultCache?.succeeded}
+          onClick={this.onRunButtonClicked}
+        >
+          Run
+        </button>
       </div>
     );
   }
 
   onCodeChanged(event: React.ChangeEvent<HTMLTextAreaElement>) {
-    this.setState({ code: event.target.value });
+    const code = event.target.value;
+    const parseResult = parse(code);
+    const typecheckResult = parseResult.succeeded
+      ? typecheck(parseResult.value)
+      : null;
+    this.setState({
+      code,
+      parseResultCache: parseResult,
+      typecheckResultCache: typecheckResult,
+    });
   }
 
   onRunButtonClicked(): void {
-    const parseResult = parse(this.state.code);
-    if (!parseResult.succeeded) {
-      return;
-    }
-
-    const typecheckResult = typecheck(parseResult.value);
-    if (!typecheckResult.succeeded) {
+    const typecheckResult = this.state.typecheckResultCache;
+    if (typecheckResult === null || !typecheckResult.succeeded) {
       return;
     }
 
