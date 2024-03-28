@@ -136,6 +136,8 @@ export type CommandPart =
   | SquareBracketedExpression
   | BlockCommand;
 
+export type NonIdentifierCommandPart = Exclude<CommandPart, Identifier>;
+
 export interface ParenthesizedExpression {
   location: JisonTokenLocation;
   kind: "parenthesized_expression";

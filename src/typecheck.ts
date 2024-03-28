@@ -23,11 +23,15 @@ export interface TypecheckErr {
   errors: TypeError[];
 }
 
-export type TypeError = GlobalDefNotFirstError | MultipleGlobalDefsError;
+export type TypeError =
+  | GlobalDefNotFirstError
+  | MultipleGlobalDefsError
+  | InvalidVariableNameError;
 
 export enum TypeErrorKind {
   GlobalDefNotFirst = "global_def_not_first",
   MultipleGlobalDefs = "multiple_global_defs",
+  InvalidVariableName = "invalid_variable_name",
 }
 
 export interface GlobalDefNotFirstError {
@@ -38,15 +42,22 @@ export interface MultipleGlobalDefsError {
   kind: TypeErrorKind.MultipleGlobalDefs;
 }
 
+export interface InvalidVariableNameError {
+  kind: TypeErrorKind.InvalidVariableName;
+  attemptedName: ast.NonIdentifierCommandPart;
+}
+
 export function typecheck(file: TysonTypeDict["file"]): TypecheckResult {
   return new Typechecker(file).typecheck();
 }
 
 class Typechecker {
-  errors: TypeError[] = [];
+  errors: TypeError[];
+  globals: VariableInfo[];
 
   constructor(private file: TysonTypeDict["file"]) {
     this.errors = [];
+    this.globals = [];
   }
 
   typecheck(): TypecheckResult {
@@ -77,9 +88,33 @@ class Typechecker {
   }
 
   checkGlobalBodyCommand(command: ast.Command) {
-    if (commandMatches(command, BUILTINS.numberVar.signature)) {
-      // TODO check for name conflict, and if there is none, define the variable.
+    if (this.checkGlobalBodyCommandNumberLetCase(command)) {
+      return;
     }
+
+    // TODO
+  }
+
+  // Returns true if the command is a (possibly malformed) number let command, false otherwise.
+  checkGlobalBodyCommandNumberLetCase(command: ast.Command): boolean {
+    const commandMatch = checkCommandMatch(
+      command,
+      BUILTINS.numberLet.signature
+    );
+    if (!commandMatch.succeeded) {
+      return false;
+    }
+
+    const square = checkStaticSquare(commandMatch.args[0]);
+    if (!square.succeeded) {
+      this.errors.push({
+        kind: TypeErrorKind.InvalidVariableName,
+        attemptedName: commandMatch.args[0],
+      });
+      return true;
+    }
+
+    // TODO check for name conflict, and if there is none, define the variable.
   }
 }
 
@@ -87,9 +122,58 @@ function isGlobalDef(def: ast.Def): def is ast.GlobalDef {
   return def.kind === "global_def";
 }
 
-function commandMatches(
+type CommandMatchResult = CommandMatchOk | CommandMatchErr;
+
+export interface CommandMatchOk {
+  succeeded: true;
+  args: ast.NonIdentifierCommandPart[];
+}
+
+export interface CommandMatchErr {
+  succeeded: false;
+}
+
+function checkCommandMatch(
   command: ast.Command,
   signature: readonly string[]
-): boolean {
+): CommandMatchResult {
   // TODO
+}
+
+interface VariableInfo {
+  name: string;
+  mutable: boolean;
+}
+
+type StaticSquareResult = StaticSquareOk | StaticSquareErr;
+
+export interface StaticSquareOk {
+  succeeded: true;
+  nameParts: ast.Identifier[];
+}
+
+export interface StaticSquareErr {
+  succeeded: false;
+}
+
+function checkStaticSquare(part: ast.CommandPart): StaticSquareResult {
+  if (
+    !(
+      part.kind === "square_bracketed_expression" &&
+      part.expression.kind === "compound_expression"
+    )
+  ) {
+    return { succeeded: false };
+  }
+
+  const nameParts = part.expression.parts;
+  if (
+    !nameParts.every(
+      (part): part is ast.Identifier => part.kind === "identifier"
+    )
+  ) {
+    return { succeeded: false };
+  }
+
+  return { succeeded: true, nameParts };
 }
