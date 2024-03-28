@@ -12,7 +12,7 @@ export const NUMBER_LIST_REF_SENTRY = "[Number List]";
 export const STRING_LIST_REF_SENTRY = "[String List]";
 export const BOOLEAN_LIST_REF_SENTRY = "[Boolean List]";
 
-export const BUILTINS = {
+export const TYPED_BUILTINS = {
   // Control
   if_: {
     returnType: null,

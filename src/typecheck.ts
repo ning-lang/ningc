@@ -1,15 +1,7 @@
-import { BUILTINS } from "./builtins";
+import { TYPED_BUILTINS } from "./typedBuiltins";
+import { Program } from "./program";
 import { TysonTypeDict } from "./types/tysonTypeDict";
 import type * as ast from "./types/tysonTypeDict";
-
-export interface Program {
-  execute(env: ExecutionEnvironment): void;
-  stop(): void;
-}
-
-export interface ExecutionEnvironment {
-  canvas: HTMLCanvasElement;
-}
 
 export type TypecheckResult = TypecheckOk | TypecheckErr;
 
@@ -101,7 +93,7 @@ class Typechecker {
   checkGlobalBodyCommandNumberLetCase(command: ast.Command): boolean {
     const commandMatch = checkCommandMatch(
       command,
-      BUILTINS.numberLet.signature
+      TYPED_BUILTINS.numberLet.signature
     );
     if (!commandMatch.succeeded) {
       return false;
