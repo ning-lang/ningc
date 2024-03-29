@@ -20,12 +20,14 @@ class ProgramImpl implements Program {
   animationFrameId: number | null;
   ctx: CanvasRenderingContext2D;
   stack: Map<string, NingPrimitive>[];
+  queryDefs: Map<string, ast.QueryDef>;
 
   constructor(private readonly defs: ast.Def[]) {
     this.bindMethods();
     this.animationFrameId = null;
     this.ctx = document.createElement("canvas").getContext("2d")!;
     this.stack = [new Map()];
+    this.queryDefs = new Map();
   }
 
   bindMethods(): void {
@@ -65,6 +67,7 @@ class ProgramImpl implements Program {
 
   reset(): void {
     this.stack = [new Map()];
+    this.queryDefs = new Map();
   }
 
   initGlobals(): void {
@@ -143,7 +146,7 @@ class ProgramImpl implements Program {
       }
     }
 
-    return this.evalQuery(expr);
+    return this.evalQueryApplication(expr);
   }
 
   getVarValOrNull(name: string): null | NingPrimitive {
@@ -156,7 +159,26 @@ class ProgramImpl implements Program {
     return null;
   }
 
-  evalQuery(expr: ast.CompoundExpression): NingPrimitive {
+  evalQueryApplication(expr: ast.CompoundExpression): NingPrimitive {
+    const signature = getUntypedQueryApplicationSignature(expr);
+    const queryDef = this.queryDefs.get(signature);
+    if (queryDef === undefined) {
+      throw new Error(
+        "Attempted to evaluate " +
+          stringifyExpression(expr) +
+          " but could not find a query with signature `" +
+          signature +
+          "`"
+      );
+    }
+    const args = getQueryApplicationArgs(expr);
+    return this.evalQueryApplicationUsingArgs(queryDef, args);
+  }
+
+  evalQueryApplicationUsingArgs(
+    def: ast.QueryDef,
+    args: ast.Expression[]
+  ): NingPrimitive {
     // TODO
     return 0;
   }
@@ -321,4 +343,46 @@ function parseNingStringEscapeCodeWithoutCurlyBraces(escape: string): string {
   }
 
   return String.fromCodePoint(parsed);
+}
+
+function getUntypedQueryApplicationSignature(
+  expr: ast.CompoundExpression
+): string {
+  return (
+    expr.parts
+      // eslint-disable-next-line array-callback-return
+      .map((p) => {
+        switch (p.kind) {
+          case "identifier":
+            return p.name;
+          case "parenthesized_expression":
+          case "square_bracketed_expression":
+            return UNTYPED_SENTINEL;
+        }
+      })
+      .join(" ")
+  );
+}
+
+function stringifyExpression(expr: ast.Expression): string {
+  return "TODO IMPLEMENT stringifyExpression";
+}
+
+function getQueryApplicationArgs(
+  expr: ast.CompoundExpression
+): ast.Expression[] {
+  return (
+    expr.parts
+      // eslint-disable-next-line array-callback-return
+      .map((p): ast.Expression | null => {
+        switch (p.kind) {
+          case "identifier":
+            return null;
+          case "parenthesized_expression":
+          case "square_bracketed_expression":
+            return p.expression;
+        }
+      })
+      .filter((arg): arg is ast.Expression => arg !== null)
+  );
 }
