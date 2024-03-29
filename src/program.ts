@@ -180,7 +180,30 @@ class ProgramImpl implements Program {
     args: ast.Expression[]
   ): NingPrimitive {
     // TODO
-    return 0;
+    const argMap = getStackEntryWithArgs(def.signature, args);
+    this.stack.push(argMap);
+
+    for (const command of def.body.commands) {
+      const returnVal = this.executeCommandAndGetReturnValue(command);
+      if (returnVal !== null) {
+        this.stack.pop();
+        return returnVal;
+      }
+    }
+    throw new Error(
+      "Attempted to evaluate the query `" +
+        getUntypedQueryDefSignature(def) +
+        "` with args " +
+        args.map(stringifyExpression).join(", ") +
+        " but no `return` command was executed."
+    );
+  }
+
+  // If a `return` command is reached, this function will stop execution and return the value.
+  // Otherwise, it will return `null`.
+  executeCommandAndGetReturnValue(command: ast.Command): null | NingPrimitive {
+    // TODO
+    return null;
   }
 
   createVariable(name: string, value: NingPrimitive): void {
@@ -384,5 +407,21 @@ function getQueryApplicationArgs(
         }
       })
       .filter((arg): arg is ast.Expression => arg !== null)
+  );
+}
+
+function getUntypedQueryDefSignature(def: ast.QueryDef): string {
+  return (
+    def.signature
+      // eslint-disable-next-line array-callback-return
+      .map((p) => {
+        switch (p.kind) {
+          case "identifier":
+            return p.name;
+          case "func_param_def":
+            return UNTYPED_SENTINEL;
+        }
+      })
+      .join(" ")
   );
 }
