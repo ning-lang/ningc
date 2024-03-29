@@ -10,7 +10,7 @@ export interface ExecutionEnvironment {
   canvas: HTMLCanvasElement;
 }
 
-type NingPrimitive = number | string | boolean;
+type NingVal = number | string | boolean | number[] | string[] | boolean[];
 
 export function buildUncheckedProgram(file: ast.Def[]): Program {
   return new ProgramImpl(file);
@@ -19,7 +19,7 @@ export function buildUncheckedProgram(file: ast.Def[]): Program {
 class ProgramImpl implements Program {
   animationFrameId: number | null;
   ctx: CanvasRenderingContext2D;
-  stack: Map<string, NingPrimitive>[];
+  stack: Map<string, NingVal>[];
   queryDefs: Map<string, ast.QueryDef>;
 
   constructor(private readonly defs: ast.Def[]) {
@@ -116,7 +116,7 @@ class ProgramImpl implements Program {
     // TODO
   }
 
-  evalExpr(expr: ast.Expression): NingPrimitive {
+  evalExpr(expr: ast.Expression): NingVal {
     if (expr.kind === "string_literal") {
       return parseNingString(expr.source);
     }
@@ -129,7 +129,7 @@ class ProgramImpl implements Program {
     return expr;
   }
 
-  evalCompoundExpr(expr: ast.CompoundExpression): NingPrimitive {
+  evalCompoundExpr(expr: ast.CompoundExpression): NingVal {
     if (expr.parts.every((p): p is ast.Identifier => p.kind === "identifier")) {
       const name = expr.parts.map((p) => p.name).join(" ");
 
@@ -149,7 +149,7 @@ class ProgramImpl implements Program {
     return this.evalQueryApplication(expr);
   }
 
-  getVarValOrNull(name: string): null | NingPrimitive {
+  getVarValOrNull(name: string): null | NingVal {
     for (let i = this.stack.length - 1; i >= 0; --i) {
       const val = this.stack[i].get(name);
       if (val !== undefined) {
@@ -159,8 +159,8 @@ class ProgramImpl implements Program {
     return null;
   }
 
-  evalQueryApplication(expr: ast.CompoundExpression): NingPrimitive {
-    const signature = getUntypedQueryApplicationSignature(expr);
+  evalQueryApplication(expr: ast.CompoundExpression): NingVal {
+    const signature = getUntypedQueryApplicationSignatureString(expr);
     const queryDef = this.queryDefs.get(signature);
     if (queryDef === undefined) {
       throw new Error(
@@ -172,15 +172,15 @@ class ProgramImpl implements Program {
       );
     }
     const args = getQueryApplicationArgs(expr);
-    return this.evalQueryApplicationUsingArgs(queryDef, args);
+    const argVals = args.map((arg) => this.evalExpr(arg));
+    return this.evalQueryApplicationUsingArgVals(queryDef, argVals);
   }
 
-  evalQueryApplicationUsingArgs(
+  evalQueryApplicationUsingArgVals(
     def: ast.QueryDef,
-    args: ast.Expression[]
-  ): NingPrimitive {
-    // TODO
-    const argMap = getStackEntryWithArgs(def.signature, args);
+    argVals: NingVal[]
+  ): NingVal {
+    const argMap = getStackEntryWithArgs(def.signature, argVals);
     this.stack.push(argMap);
 
     for (const command of def.body.commands) {
@@ -192,21 +192,21 @@ class ProgramImpl implements Program {
     }
     throw new Error(
       "Attempted to evaluate the query `" +
-        getUntypedQueryDefSignature(def) +
-        "` with args " +
-        args.map(stringifyExpression).join(", ") +
-        " but no `return` command was executed."
+        getUntypedFunctionSignatureString(def.signature) +
+        "` with args (" +
+        argVals.map((v) => JSON.stringify(v)).join(", ") +
+        ") but no `return` command was executed."
     );
   }
 
   // If a `return` command is reached, this function will stop execution and return the value.
   // Otherwise, it will return `null`.
-  executeCommandAndGetReturnValue(command: ast.Command): null | NingPrimitive {
+  executeCommandAndGetReturnValue(command: ast.Command): null | NingVal {
     // TODO
     return null;
   }
 
-  createVariable(name: string, value: NingPrimitive): void {
+  createVariable(name: string, value: NingVal): void {
     this.stack[this.stack.length - 1].set(name, value);
   }
 }
@@ -368,7 +368,7 @@ function parseNingStringEscapeCodeWithoutCurlyBraces(escape: string): string {
   return String.fromCodePoint(parsed);
 }
 
-function getUntypedQueryApplicationSignature(
+function getUntypedQueryApplicationSignatureString(
   expr: ast.CompoundExpression
 ): string {
   return (
@@ -410,9 +410,11 @@ function getQueryApplicationArgs(
   );
 }
 
-function getUntypedQueryDefSignature(def: ast.QueryDef): string {
+function getUntypedFunctionSignatureString(
+  signature: ast.FuncSignaturePart[]
+): string {
   return (
-    def.signature
+    signature
       // eslint-disable-next-line array-callback-return
       .map((p) => {
         switch (p.kind) {
@@ -424,4 +426,23 @@ function getUntypedQueryDefSignature(def: ast.QueryDef): string {
       })
       .join(" ")
   );
+}
+
+function getStackEntryWithArgs(
+  signature: ast.FuncSignaturePart[],
+  argVals: NingVal[]
+): Map<string, NingVal> {
+  const argMap = new Map<string, NingVal>();
+  let numberOfArgsAdded = 0;
+  for (let i = 0; i < signature.length; ++i) {
+    const part = signature[i];
+    if (part.kind === "func_param_def") {
+      argMap.set(
+        part.name.map((ident) => ident.name).join(" "),
+        argVals[numberOfArgsAdded]
+      );
+      ++numberOfArgsAdded;
+    }
+  }
+  return argMap;
 }
