@@ -13,6 +13,14 @@ export interface ExecutionEnvironment {
 
 type NingAtom = number | string | boolean;
 
+interface DrawRequest {
+  imageName: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export function buildUncheckedProgram(file: ast.Def[]): Program {
   return new ProgramImpl(file);
 }
@@ -24,15 +32,20 @@ class ProgramImpl implements Program {
   queryDefs: Map<string, ast.QueryDef>;
   desiredCanvasWidth: number;
   desiredCanvasHeight: number;
+  drawQueue: DrawRequest[];
 
   constructor(private readonly defs: ast.Def[]) {
     this.bindMethods();
     this.animationFrameId = null;
-    this.env = { ctx: document.createElement("canvas").getContext("2d")! };
+    this.env = {
+      ctx: document.createElement("canvas").getContext("2d")!,
+      imageLibrary: new Map(),
+    };
     this.stack = [getEmptyStackEntry()];
     this.queryDefs = new Map();
     this.desiredCanvasWidth = 0;
     this.desiredCanvasHeight = 0;
+    this.drawQueue = [];
   }
 
   bindMethods(): void {
@@ -126,7 +139,22 @@ class ProgramImpl implements Program {
       canvas.height = this.desiredCanvasHeight;
     }
 
-    // TODO
+    this.drawQueue = [];
+
+    // TODO Execute `render` command.
+
+    this.processDrawQueue();
+  }
+
+  processDrawQueue(): void {
+    for (const req of this.drawQueue) {
+      const { imageName, x, y, width, height } = req;
+      const image = this.env.imageLibrary.get(imageName);
+      if (image === undefined) {
+        throw new Error("Attempted to draw non-existent image: " + imageName);
+      }
+      this.env.ctx.drawImage(image, x, y, width, height);
+    }
   }
 
   evalExpr(expr: ast.Expression): NingAtom {
@@ -461,11 +489,6 @@ class ProgramImpl implements Program {
         throw new Error("Invalid image name: " + stringifyCommand(command));
       }
 
-      const image = this.env.imageLibrary.get(imageName);
-      if (image === undefined) {
-        throw new Error("Attempted to draw non-existent image: " + imageName);
-      }
-
       const x = Math.floor(this.evalExpr(args[1]) as any);
       const y = Math.floor(this.evalExpr(args[2]) as any);
       const width = Math.floor(this.evalExpr(args[3]) as any);
@@ -483,7 +506,7 @@ class ProgramImpl implements Program {
         return null;
       }
 
-      this.env.ctx.drawImage(image, x, y, width, height);
+      this.drawQueue.push({ imageName, x, y, width, height });
       return null;
     }
 
@@ -495,12 +518,16 @@ class ProgramImpl implements Program {
   executeBlockCommandAndGetReturnValue(
     command: ast.BlockCommand
   ): null | NingAtom {
+    this.stack.push(getEmptyStackEntry());
     for (const subCommand of command.commands) {
       const returnVal = this.executeCommandAndGetReturnValue(subCommand);
       if (returnVal !== null) {
+        this.stack.pop();
         return returnVal;
       }
     }
+
+    this.stack.pop();
     return null;
   }
 
