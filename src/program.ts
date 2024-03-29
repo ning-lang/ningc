@@ -215,8 +215,11 @@ class ProgramImpl implements Program {
 
   evalQueryApplication(expr: ast.CompoundExpression): NingAtom {
     const signature = getUntypedQueryApplicationSignatureString(expr);
-    const queryDef = this.queryDefs.get(signature);
-    if (queryDef === undefined) {
+
+    // TODO: Check if the signature matches a builtin.
+
+    const userQueryDef = this.queryDefs.get(signature);
+    if (userQueryDef === undefined) {
       throw new Error(
         "Attempted to evaluate " +
           stringifyExpression(expr) +
@@ -227,10 +230,10 @@ class ProgramImpl implements Program {
     }
     const args = getQueryApplicationArgs(expr);
     const argVals = args.map((arg) => this.evalExpr(arg));
-    return this.evalQueryApplicationUsingArgVals(queryDef, argVals);
+    return this.evalUserQueryApplicationUsingArgVals(userQueryDef, argVals);
   }
 
-  evalQueryApplicationUsingArgVals(
+  evalUserQueryApplicationUsingArgVals(
     def: ast.QueryDef,
     argVals: NingAtom[]
   ): NingAtom {
@@ -524,10 +527,10 @@ class ProgramImpl implements Program {
     }
 
     const signature = getUntypedCommandApplicationSignatureString(command);
-    const commandDef = this.commandDefs.get(signature);
-    if (commandDef !== undefined) {
+    const userCommandDef = this.commandDefs.get(signature);
+    if (userCommandDef !== undefined) {
       const argVals = args.map((arg) => this.evalExpr(arg));
-      this.evalUserCommandApplicationUsingArgVals(commandDef, argVals);
+      this.evalUserCommandApplicationUsingArgVals(userCommandDef, argVals);
       return null;
     }
 
