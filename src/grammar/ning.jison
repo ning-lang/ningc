@@ -10,7 +10,7 @@
 "{" return "LCURLY";
 "}" return "RCURLY";
 ";" return "SEMICOLON";
-\"(?:[^"]|\{0x[0-9a-fA-F]+\})*\" return "STRING_LITERAL";
+\"(?:[^"{}]|\{0x[0-9a-fA-F]+\})*\" return "STRING_LITERAL";
 "Command" return "COMMAND_KW";
 "Query" return "QUERY_KW";
 "Global" return "GLOBAL_KW";
