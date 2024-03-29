@@ -19,13 +19,13 @@ export function buildUncheckedProgram(file: ast.Def[]): Program {
 class ProgramImpl implements Program {
   animationFrameId: number | null;
   ctx: CanvasRenderingContext2D;
-  stack: { [variable: string]: NingPrimitive }[];
+  stack: Map<string, NingPrimitive>[];
 
   constructor(private readonly defs: ast.Def[]) {
     this.bindMethods();
     this.animationFrameId = null;
     this.ctx = document.createElement("canvas").getContext("2d")!;
-    this.stack = [{}];
+    this.stack = [new Map()];
   }
 
   bindMethods(): void {
@@ -64,7 +64,7 @@ class ProgramImpl implements Program {
   }
 
   reset(): void {
-    this.stack = [{}];
+    this.stack = [new Map()];
   }
 
   initGlobals(): void {
@@ -132,7 +132,7 @@ class ProgramImpl implements Program {
   }
 
   createVariable(name: string, value: NingPrimitive): void {
-    this.stack[this.stack.length - 1][name] = value;
+    this.stack[this.stack.length - 1].set(name, value);
   }
 }
 
