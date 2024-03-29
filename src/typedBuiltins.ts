@@ -44,6 +44,18 @@ export const TYPED_BUILTINS = {
     returnType: null,
     signature: ["repeat", NUMBER_SENTINEL, "times", COMMAND_SENTINEL],
   },
+  numberReturn: {
+    returnType: null,
+    signature: ["return", NUMBER_SENTINEL],
+  },
+  stringReturn: {
+    returnType: null,
+    signature: ["return", STRING_SENTINEL],
+  },
+  booleanReturn: {
+    returnType: null,
+    signature: ["return", BOOLEAN_SENTINEL],
+  },
 
   // Variables
   numberLet: {

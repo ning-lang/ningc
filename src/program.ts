@@ -10,7 +10,7 @@ export interface ExecutionEnvironment {
   ctx: CanvasRenderingContext2D;
 }
 
-type NingVal = number | string | boolean | number[] | string[] | boolean[];
+type NingVal = number | string | boolean;
 
 export function buildUncheckedProgram(file: ast.Def[]): Program {
   return new ProgramImpl(file);
@@ -101,7 +101,7 @@ class ProgramImpl implements Program {
 
     const varValue = this.evalExpr(varValueNode);
 
-    this.createVariable(varName, varValue);
+    this.createVariableInTopStackEntry(varName, varValue);
   }
 
   update(): void {
@@ -198,16 +198,187 @@ class ProgramImpl implements Program {
   // If a `return` command is reached, this function will stop execution and return the value.
   // Otherwise, it will return `null`.
   executeCommandAndGetReturnValue(command: ast.Command): null | NingVal {
-    // const commandSignatureString =
-    //   getUntypedCommandApplicationSignatureString(command);
-    // const args = getCommandApplicationArgs(command);
-    // const argVals = args.map((arg) => this.evalExpr(arg));
-    return null;
+    const commandSignatureString =
+      getUntypedCommandApplicationSignatureString(command);
+    const [args, blockCommands] =
+      getCommandApplicationArgsAndBlockCommands(command);
+
+    if (commandSignatureString === UNTYPED_BUILTINS.if_.signature.join(" ")) {
+      if (this.evalExpr(args[0])) {
+        return this.executeBlockCommandAndGetReturnValue(blockCommands[0]);
+      }
+      return null;
+    }
+
+    if (
+      commandSignatureString === UNTYPED_BUILTINS.ifElse.signature.join(" ")
+    ) {
+      if (this.evalExpr(args[0])) {
+        return this.executeBlockCommandAndGetReturnValue(blockCommands[0]);
+      }
+      return this.executeBlockCommandAndGetReturnValue(blockCommands[1]);
+    }
+
+    if (
+      commandSignatureString === UNTYPED_BUILTINS.while_.signature.join(" ")
+    ) {
+      while (this.evalExpr(args[0])) {
+        const returnVal = this.executeBlockCommandAndGetReturnValue(
+          blockCommands[0]
+        );
+        if (returnVal !== null) {
+          return returnVal;
+        }
+      }
+      return null;
+    }
+
+    if (
+      commandSignatureString ===
+      UNTYPED_BUILTINS.repeatUntil.signature.join(" ")
+    ) {
+      while (!this.evalExpr(args[0])) {
+        const returnVal = this.executeBlockCommandAndGetReturnValue(
+          blockCommands[0]
+        );
+        if (returnVal !== null) {
+          return returnVal;
+        }
+      }
+      return null;
+    }
+
+    if (
+      commandSignatureString === UNTYPED_BUILTINS.forever.signature.join(" ")
+    ) {
+      while (true) {
+        const returnVal = this.executeBlockCommandAndGetReturnValue(
+          blockCommands[0]
+        );
+        if (returnVal !== null) {
+          return returnVal;
+        }
+      }
+    }
+
+    if (
+      commandSignatureString === UNTYPED_BUILTINS.repeat.signature.join(" ")
+    ) {
+      const rawTimes = this.evalExpr(args[0]);
+      if (!Number.isFinite(rawTimes)) {
+        throw new Error("Repeat iteration count was not a finite number.");
+      }
+      const times = Math.floor(rawTimes as number);
+
+      for (let i = 0; i < times; ++i) {
+        const returnVal = this.executeBlockCommandAndGetReturnValue(
+          blockCommands[0]
+        );
+        if (returnVal !== null) {
+          return returnVal;
+        }
+      }
+      return null;
+    }
+
+    if (
+      commandSignatureString === UNTYPED_BUILTINS.return_.signature.join(" ")
+    ) {
+      return this.evalExpr(args[0]);
+    }
+
+    if (
+      commandSignatureString === UNTYPED_BUILTINS.let_.signature.join(" ") ||
+      commandSignatureString === UNTYPED_BUILTINS.var_.signature.join(" ")
+    ) {
+      const varName = getIdentifierSequenceName(args[0]);
+      if (varName === null) {
+        throw new Error("Invalid variable name: " + stringifyCommand(command));
+      }
+
+      const varValue = this.evalExpr(args[1]);
+
+      this.createVariableInTopStackEntry(varName, varValue);
+      return null;
+    }
+
+    if (
+      commandSignatureString === UNTYPED_BUILTINS.assign.signature.join(" ")
+    ) {
+      const varName = getIdentifierSequenceName(args[0]);
+      if (varName === null) {
+        throw new Error("Invalid variable name: " + stringifyCommand(command));
+      }
+
+      const varValue = this.evalExpr(args[1]);
+
+      this.setExistingVariable(varName, varValue);
+      return null;
+    }
+
+    if (
+      commandSignatureString === UNTYPED_BUILTINS.increase.signature.join(" ")
+    ) {
+      const varName = getIdentifierSequenceName(args[0]);
+      if (varName === null) {
+        throw new Error("Invalid variable name: " + stringifyCommand(command));
+      }
+
+      const varValue = this.evalExpr(args[1]);
+
+      this.increaseExistingVariable(varName, varValue);
+      return null;
+    }
+
+    if (
+      commandSignatureString ===
+      UNTYPED_BUILTINS.numberListCreate.signature.join(" ")
+    ) {
+      // todo
+    }
+
     // todo
   }
 
-  createVariable(name: string, value: NingVal): void {
+  // If a `return` command is reached, this function will stop execution and return the value.
+  // Otherwise, it will return `null`.
+  executeBlockCommandAndGetReturnValue(
+    command: ast.BlockCommand
+  ): null | NingVal {
+    for (const subCommand of command.commands) {
+      const returnVal = this.executeCommandAndGetReturnValue(subCommand);
+      if (returnVal !== null) {
+        return returnVal;
+      }
+    }
+    return null;
+  }
+
+  createVariableInTopStackEntry(name: string, value: NingVal): void {
     this.stack[this.stack.length - 1].set(name, value);
+  }
+
+  setExistingVariable(name: string, value: NingVal): void {
+    for (let i = this.stack.length - 1; i >= 0; --i) {
+      if (this.stack[i].has(name)) {
+        this.stack[i].set(name, value);
+        return;
+      }
+    }
+    throw new Error("Attempted to set value of non-existent variable: " + name);
+  }
+
+  increaseExistingVariable(name: string, amount: NingVal): void {
+    for (let i = this.stack.length - 1; i >= 0; --i) {
+      if (this.stack[i].has(name)) {
+        this.stack[i].set(
+          name,
+          (this.stack[i].get(name) as number) + (amount as number)
+        );
+        return;
+      }
+    }
+    throw new Error("Attempted to set value of non-existent variable: " + name);
   }
 }
 
@@ -257,6 +428,9 @@ function getCommandMatchStatus(
   return { succeeded: true, args };
 }
 
+// If `part` is a square-bracketed expression containing a sequence of `Identifier`s,
+// this function returns the names of each identifier joined by spaces.
+// Otherwise, it returns `null`.
 function getStaticSquareName(part: ast.CommandPart): null | string {
   if (
     !(
@@ -277,6 +451,22 @@ function getStaticSquareName(part: ast.CommandPart): null | string {
   }
 
   return nameParts.join(" ");
+}
+
+// If `expr` is a sequence of `Identifier`s, this function returns
+// the names of each identifier joined by spaces.
+// Otherwise, it returns `null`.
+function getIdentifierSequenceName(expr: ast.Expression): null | string {
+  if (expr.kind === "compound_expression") {
+    const { parts } = expr;
+    if (
+      parts.every((part): part is ast.Identifier => part.kind === "identifier")
+    ) {
+      return parts.map((part) => part.name).join(" ");
+    }
+  }
+
+  return null;
 }
 
 function stringifyCommand(command: ast.Command): string {
@@ -428,6 +618,35 @@ function getQueryApplicationArgs(
       })
       .filter((arg): arg is ast.Expression => arg !== null)
   );
+}
+
+function getCommandApplicationArgsAndBlockCommands(
+  command: ast.Command
+): [ast.Expression[], ast.BlockCommand[]] {
+  let args: ast.Expression[] = [];
+  let blockCommands: ast.BlockCommand[] = [];
+  for (const part of command.parts) {
+    if (part.kind === "identifier") {
+      continue;
+    }
+
+    if (part.kind === "block_command") {
+      blockCommands.push(part);
+      continue;
+    }
+
+    if (
+      part.kind === "parenthesized_expression" ||
+      part.kind === "square_bracketed_expression"
+    ) {
+      args.push(part.expression);
+      continue;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const exhaustivenessCheck: never = part;
+  }
+  return [args, blockCommands];
 }
 
 function getUntypedFunctionSignatureString(
