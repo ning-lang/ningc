@@ -1,5 +1,4 @@
 import { TYPED_BUILTINS } from "./typedBuiltins";
-import { Program } from "./program";
 import { TysonTypeDict } from "./types/tysonTypeDict";
 import type * as ast from "./types/tysonTypeDict";
 
@@ -7,7 +6,6 @@ export type TypecheckResult = TypecheckOk | TypecheckErr;
 
 export interface TypecheckOk {
   succeeded: true;
-  value: Program;
 }
 
 export interface TypecheckErr {
@@ -56,7 +54,7 @@ class Typechecker {
     this.checkGlobalDefs();
 
     // TODO: Properly implement this.
-    return { succeeded: false, errors: [] };
+    return { succeeded: true };
   }
 
   checkGlobalDefs() {
