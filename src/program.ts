@@ -33,7 +33,7 @@ class ProgramImpl implements Program {
   env: ExecutionEnvironment;
   stack: StackEntry[];
   /** A map of signature strings to their corresponding query definitions. */
-  queryDefs: Map<string, ast.QueryDef>;
+  userQueryDefs: Map<string, ast.QueryDef>;
   /** A map of signature strings to their corresponding command definitions. */
   userCommandDefs: Map<string, ast.CommandDef>;
   desiredCanvasWidth: number;
@@ -48,7 +48,7 @@ class ProgramImpl implements Program {
       imageLibrary: new Map(),
     };
     this.stack = [getEmptyStackEntry()];
-    this.queryDefs = new Map();
+    this.userQueryDefs = new Map();
     this.userCommandDefs = new Map();
     this.desiredCanvasWidth = 0;
     this.desiredCanvasHeight = 0;
@@ -93,7 +93,7 @@ class ProgramImpl implements Program {
       imageLibrary: new Map(),
     };
     this.stack = [getEmptyStackEntry()];
-    this.queryDefs = new Map();
+    this.userQueryDefs = new Map();
     this.userCommandDefs = new Map();
     this.desiredCanvasWidth = 0;
     this.desiredCanvasHeight = 0;
@@ -139,7 +139,11 @@ class ProgramImpl implements Program {
   }
 
   update(): void {
-    // TODO
+    const updateCommandDef = this.userCommandDefs.get(UPDATE_COMMAND_SIGNATURE);
+    if (updateCommandDef === undefined) {
+      throw new Error("Could not find `update` command definition.");
+    }
+    this.evalUserCommandApplicationUsingArgVals(updateCommandDef, []);
   }
 
   render(): void {
@@ -225,7 +229,7 @@ class ProgramImpl implements Program {
 
     // TODO: Check if the signature matches a builtin.
 
-    const userQueryDef = this.queryDefs.get(signature);
+    const userQueryDef = this.userQueryDefs.get(signature);
     if (userQueryDef === undefined) {
       throw new Error(
         "Attempted to evaluate " +
