@@ -198,8 +198,12 @@ class ProgramImpl implements Program {
   // If a `return` command is reached, this function will stop execution and return the value.
   // Otherwise, it will return `null`.
   executeCommandAndGetReturnValue(command: ast.Command): null | NingVal {
-    // TODO
+    // const commandSignatureString =
+    //   getUntypedCommandApplicationSignatureString(command);
+    // const args = getCommandApplicationArgs(command);
+    // const argVals = args.map((arg) => this.evalExpr(arg));
     return null;
+    // todo
   }
 
   createVariable(name: string, value: NingVal): void {
@@ -370,12 +374,32 @@ function getUntypedQueryApplicationSignatureString(
   return (
     expr.parts
       // eslint-disable-next-line array-callback-return
-      .map((p) => {
+      .map((p): string => {
         switch (p.kind) {
           case "identifier":
             return p.name;
           case "parenthesized_expression":
           case "square_bracketed_expression":
+            return UNTYPED_SENTINEL;
+        }
+      })
+      .join(" ")
+  );
+}
+
+function getUntypedCommandApplicationSignatureString(
+  expr: ast.Command
+): string {
+  return (
+    expr.parts
+      // eslint-disable-next-line array-callback-return
+      .map((p): string => {
+        switch (p.kind) {
+          case "identifier":
+            return p.name;
+          case "parenthesized_expression":
+          case "square_bracketed_expression":
+          case "block_command":
             return UNTYPED_SENTINEL;
         }
       })
@@ -412,7 +436,7 @@ function getUntypedFunctionSignatureString(
   return (
     signature
       // eslint-disable-next-line array-callback-return
-      .map((p) => {
+      .map((p): string => {
         switch (p.kind) {
           case "identifier":
             return p.name;
