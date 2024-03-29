@@ -227,8 +227,8 @@ class ProgramImpl implements Program {
   evalQueryApplication(expr: ast.CompoundExpression): NingAtom {
     const signature = getUntypedQueryApplicationSignatureString(expr);
 
-    if (/^\d+$/.test(signature)) {
-      return Number.parseInt(signature, 10);
+    if (/^\d+(?:\.\d+)?$/.test(signature)) {
+      return Number.parseFloat(signature);
     }
 
     // TODO: Check if the signature matches a builtin.
