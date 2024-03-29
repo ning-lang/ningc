@@ -7,7 +7,7 @@ export interface Program {
 }
 
 export interface ExecutionEnvironment {
-  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
 }
 
 type NingVal = number | string | boolean | number[] | string[] | boolean[];
@@ -18,14 +18,14 @@ export function buildUncheckedProgram(file: ast.Def[]): Program {
 
 class ProgramImpl implements Program {
   animationFrameId: number | null;
-  ctx: CanvasRenderingContext2D;
+  env: ExecutionEnvironment;
   stack: Map<string, NingVal>[];
   queryDefs: Map<string, ast.QueryDef>;
 
   constructor(private readonly defs: ast.Def[]) {
     this.bindMethods();
     this.animationFrameId = null;
-    this.ctx = document.createElement("canvas").getContext("2d")!;
+    this.env = { ctx: document.createElement("canvas").getContext("2d")! };
     this.stack = [new Map()];
     this.queryDefs = new Map();
   }
@@ -39,11 +39,7 @@ class ProgramImpl implements Program {
       throw new Error("Called `execute` when program was already running.");
     }
 
-    const ctx = env.canvas.getContext("2d");
-    if (ctx === null) {
-      throw new Error("Could not get 2d context from canvas.");
-    }
-    this.ctx = ctx;
+    this.env = env;
 
     this.reset();
     this.initGlobals();
