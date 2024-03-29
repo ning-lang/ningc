@@ -29,7 +29,10 @@ class ProgramImpl implements Program {
   animationFrameId: number | null;
   env: ExecutionEnvironment;
   stack: StackEntry[];
+  /** A map of signature strings to their corresponding query definitions. */
   queryDefs: Map<string, ast.QueryDef>;
+  /** A map of signature strings to their corresponding command definitions. */
+  commandDefs: Map<string, ast.CommandDef>;
   desiredCanvasWidth: number;
   desiredCanvasHeight: number;
   drawQueue: DrawRequest[];
@@ -43,6 +46,7 @@ class ProgramImpl implements Program {
     };
     this.stack = [getEmptyStackEntry()];
     this.queryDefs = new Map();
+    this.commandDefs = new Map();
     this.desiredCanvasWidth = 0;
     this.desiredCanvasHeight = 0;
     this.drawQueue = [];
@@ -80,8 +84,17 @@ class ProgramImpl implements Program {
   }
 
   reset(): void {
+    this.animationFrameId = null;
+    this.env = {
+      ctx: document.createElement("canvas").getContext("2d")!,
+      imageLibrary: new Map(),
+    };
     this.stack = [getEmptyStackEntry()];
     this.queryDefs = new Map();
+    this.commandDefs = new Map();
+    this.desiredCanvasWidth = 0;
+    this.desiredCanvasHeight = 0;
+    this.drawQueue = [];
   }
 
   initGlobals(): void {
@@ -510,7 +523,21 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    // todo
+    const signature = getUntypedCommandApplicationSignatureString(command);
+    const commandDef = this.commandDefs.get(signature);
+    if (commandDef !== undefined) {
+      const argVals = args.map((arg) => this.evalExpr(arg));
+      this.evalUserCommandApplicationUsingArgVals(commandDef, argVals);
+      return null;
+    }
+
+    throw new Error(
+      "Attempted to evaluate " +
+        stringifyCommand(command) +
+        " but could not find a command with signature `" +
+        signature +
+        "`"
+    );
   }
 
   // If a `return` command is reached, this function will stop execution and return the value.
@@ -529,6 +556,24 @@ class ProgramImpl implements Program {
 
     this.stack.pop();
     return null;
+  }
+
+  evalUserCommandApplicationUsingArgVals(
+    def: ast.CommandDef,
+    argVals: NingAtom[]
+  ): void {
+    const argMap = getVariableMapWithArgs(def.signature, argVals);
+    this.stack.push({ atoms: argMap, lists: new Map() });
+
+    for (const command of def.body.commands) {
+      const returnVal = this.executeCommandAndGetReturnValue(command);
+      if (returnVal !== null) {
+        this.stack.pop();
+        return;
+      }
+    }
+
+    this.stack.pop();
   }
 
   createVariableInTopStackEntry(name: string, value: NingAtom): void {
