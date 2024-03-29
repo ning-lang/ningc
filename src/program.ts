@@ -1,6 +1,9 @@
 import * as ast from "./types/tysonTypeDict";
 import { UNTYPED_BUILTINS, UNTYPED_SENTINEL } from "./untypedBuiltins";
 
+const RENDER_COMMAND_SIGNATURE = "render";
+const UPDATE_COMMAND_SIGNATURE = "update";
+
 export interface Program {
   execute(env: ExecutionEnvironment): void;
   stop(): void;
@@ -32,7 +35,7 @@ class ProgramImpl implements Program {
   /** A map of signature strings to their corresponding query definitions. */
   queryDefs: Map<string, ast.QueryDef>;
   /** A map of signature strings to their corresponding command definitions. */
-  commandDefs: Map<string, ast.CommandDef>;
+  userCommandDefs: Map<string, ast.CommandDef>;
   desiredCanvasWidth: number;
   desiredCanvasHeight: number;
   drawQueue: DrawRequest[];
@@ -46,7 +49,7 @@ class ProgramImpl implements Program {
     };
     this.stack = [getEmptyStackEntry()];
     this.queryDefs = new Map();
-    this.commandDefs = new Map();
+    this.userCommandDefs = new Map();
     this.desiredCanvasWidth = 0;
     this.desiredCanvasHeight = 0;
     this.drawQueue = [];
@@ -91,7 +94,7 @@ class ProgramImpl implements Program {
     };
     this.stack = [getEmptyStackEntry()];
     this.queryDefs = new Map();
-    this.commandDefs = new Map();
+    this.userCommandDefs = new Map();
     this.desiredCanvasWidth = 0;
     this.desiredCanvasHeight = 0;
     this.drawQueue = [];
@@ -154,7 +157,11 @@ class ProgramImpl implements Program {
 
     this.drawQueue = [];
 
-    // TODO Execute `render` command.
+    const renderCommandDef = this.userCommandDefs.get(RENDER_COMMAND_SIGNATURE);
+    if (renderCommandDef === undefined) {
+      throw new Error("Could not find `render` command definition.");
+    }
+    this.evalUserCommandApplicationUsingArgVals(renderCommandDef, []);
 
     this.processDrawQueue();
   }
@@ -527,7 +534,7 @@ class ProgramImpl implements Program {
     }
 
     const signature = getUntypedCommandApplicationSignatureString(command);
-    const userCommandDef = this.commandDefs.get(signature);
+    const userCommandDef = this.userCommandDefs.get(signature);
     if (userCommandDef !== undefined) {
       const argVals = args.map((arg) => this.evalExpr(arg));
       this.evalUserCommandApplicationUsingArgVals(userCommandDef, argVals);
