@@ -5,7 +5,7 @@ const RENDER_COMMAND_SIGNATURE = "render";
 const UPDATE_COMMAND_SIGNATURE = "update";
 
 export interface Program {
-  execute(env: ExecutionEnvironment): void;
+  start(env: ExecutionEnvironment): void;
   stop(): void;
 }
 
@@ -24,7 +24,7 @@ interface DrawRequest {
   height: number;
 }
 
-export function buildUncheckedProgram(file: ast.Def[]): Program {
+export function getUncheckedProgram(file: ast.Def[]): Program {
   return new ProgramImpl(file);
 }
 
@@ -59,7 +59,7 @@ class ProgramImpl implements Program {
     this.tick = this.tick.bind(this);
   }
 
-  execute(env: ExecutionEnvironment): void {
+  start(env: ExecutionEnvironment): void {
     if (this.animationFrameId !== null) {
       throw new Error("Called `execute` when program was already running.");
     }

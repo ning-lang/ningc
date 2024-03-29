@@ -2,6 +2,7 @@ import React from "react";
 import "./App.css";
 import { ParseResult, parse } from "./parser";
 import { TypecheckResult, typecheck } from "./typecheck";
+import { Program, getUncheckedProgram } from "./program";
 
 export interface State {
   readonly code: string;
@@ -10,8 +11,14 @@ export interface State {
 }
 
 export class App extends React.Component<{}, State> {
+  program: Program | null;
+  canvasRef: React.RefObject<HTMLCanvasElement>;
+
   constructor(props: {}) {
     super(props);
+
+    this.program = null;
+    this.canvasRef = React.createRef();
 
     const defaultCode = "";
     const parseResult = parse(defaultCode);
@@ -48,6 +55,8 @@ export class App extends React.Component<{}, State> {
         >
           Run
         </button>
+
+        <canvas ref={this.canvasRef}></canvas>
       </div>
     );
   }
@@ -67,11 +76,32 @@ export class App extends React.Component<{}, State> {
 
   onRunButtonClicked(): void {
     const typecheckResult = this.state.typecheckResultCache;
-    if (typecheckResult === null || !typecheckResult.succeeded) {
+    const parseResult = this.state.parseResultCache;
+    if (
+      !parseResult.succeeded ||
+      typecheckResult === null ||
+      !typecheckResult.succeeded
+    ) {
       return;
     }
 
-    // TODO: Run the program
+    const canvas = this.canvasRef.current;
+    if (canvas === null) {
+      return;
+    }
+    const ctx = canvas.getContext("2d");
+    if (ctx === null) {
+      throw new Error("Could not get 2d context");
+    }
+
+    if (this.program !== null) {
+      this.program.stop();
+    }
+
+    const program = getUncheckedProgram(parseResult.value);
+    program.start({ ctx, imageLibrary: new Map() });
+
+    this.program = program;
   }
 }
 
