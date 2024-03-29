@@ -1,5 +1,5 @@
 import * as ast from "./types/tysonTypeDict";
-import { UNTYPED_BUILTINS, UNTYPED_SENTINEL } from "./untpedBuiltins";
+import { UNTYPED_BUILTINS, UNTYPED_SENTINEL } from "./untypedBuiltins";
 
 export interface Program {
   execute(env: ExecutionEnvironment): void;
