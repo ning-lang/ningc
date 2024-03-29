@@ -8,6 +8,7 @@ export interface Program {
 
 export interface ExecutionEnvironment {
   ctx: CanvasRenderingContext2D;
+  imageLibrary: Map<string, HTMLImageElement>;
 }
 
 type NingAtom = number | string | boolean;
@@ -21,6 +22,8 @@ class ProgramImpl implements Program {
   env: ExecutionEnvironment;
   stack: StackEntry[];
   queryDefs: Map<string, ast.QueryDef>;
+  desiredCanvasWidth: number;
+  desiredCanvasHeight: number;
 
   constructor(private readonly defs: ast.Def[]) {
     this.bindMethods();
@@ -28,6 +31,8 @@ class ProgramImpl implements Program {
     this.env = { ctx: document.createElement("canvas").getContext("2d")! };
     this.stack = [getEmptyStackEntry()];
     this.queryDefs = new Map();
+    this.desiredCanvasWidth = 0;
+    this.desiredCanvasHeight = 0;
   }
 
   bindMethods(): void {
@@ -109,6 +114,18 @@ class ProgramImpl implements Program {
   }
 
   render(): void {
+    const { ctx } = this.env;
+    const { canvas } = ctx;
+    if (
+      !(
+        canvas.width === this.desiredCanvasWidth &&
+        canvas.height === this.desiredCanvasHeight
+      )
+    ) {
+      canvas.width = this.desiredCanvasWidth;
+      canvas.height = this.desiredCanvasHeight;
+    }
+
     // TODO
   }
 
@@ -332,9 +349,142 @@ class ProgramImpl implements Program {
 
     if (
       commandSignatureString ===
-      UNTYPED_BUILTINS.numberListCreate.signature.join(" ")
+        UNTYPED_BUILTINS.numberListCreate.signature.join(" ") ||
+      commandSignatureString ===
+        UNTYPED_BUILTINS.stringListCreate.signature.join(" ") ||
+      commandSignatureString ===
+        UNTYPED_BUILTINS.booleanListCreate.signature.join(" ")
     ) {
-      // todo
+      const listName = getIdentifierSequenceName(args[0]);
+      if (listName === null) {
+        throw new Error("Invalid variable name: " + stringifyCommand(command));
+      }
+
+      this.createListInTopStackEntry(listName);
+      return null;
+    }
+
+    if (
+      commandSignatureString ===
+      UNTYPED_BUILTINS.listReplaceItem.signature.join(" ")
+    ) {
+      const listName = getIdentifierSequenceName(args[1]);
+      if (listName === null) {
+        throw new Error("Invalid variable name: " + stringifyCommand(command));
+      }
+
+      const index = this.evalExpr(args[0]);
+      const newItem = this.evalExpr(args[2]);
+
+      this.replaceListItemIfPossible(listName, index, newItem);
+      return null;
+    }
+
+    if (
+      commandSignatureString === UNTYPED_BUILTINS.listInsert.signature.join(" ")
+    ) {
+      const listName = getIdentifierSequenceName(args[2]);
+      if (listName === null) {
+        throw new Error("Invalid variable name: " + stringifyCommand(command));
+      }
+
+      const index = this.evalExpr(args[1]);
+      const newItem = this.evalExpr(args[0]);
+
+      this.insertListItemIfPossible(listName, index, newItem);
+      return null;
+    }
+
+    if (
+      commandSignatureString ===
+      UNTYPED_BUILTINS.listDeleteItem.signature.join(" ")
+    ) {
+      const listName = getIdentifierSequenceName(args[1]);
+      if (listName === null) {
+        throw new Error("Invalid variable name: " + stringifyCommand(command));
+      }
+
+      const index = this.evalExpr(args[0]);
+
+      this.deleteListItemIfPossible(listName, index);
+      return null;
+    }
+
+    if (
+      commandSignatureString ===
+      UNTYPED_BUILTINS.listDeleteAll.signature.join(" ")
+    ) {
+      const listName = getIdentifierSequenceName(args[0]);
+      if (listName === null) {
+        throw new Error("Invalid variable name: " + stringifyCommand(command));
+      }
+
+      this.getMutableList(listName).splice(0, Infinity);
+      return null;
+    }
+
+    if (
+      commandSignatureString === UNTYPED_BUILTINS.listAdd.signature.join(" ")
+    ) {
+      const listName = getIdentifierSequenceName(args[1]);
+      if (listName === null) {
+        throw new Error("Invalid variable name: " + stringifyCommand(command));
+      }
+
+      const item = this.evalExpr(args[0]);
+
+      this.getMutableList(listName).push(item);
+      return null;
+    }
+
+    if (
+      commandSignatureString ===
+      UNTYPED_BUILTINS.resizeCanvas.signature.join(" ")
+    ) {
+      const width = Math.floor(this.evalExpr(args[0]) as any);
+      const height = Math.floor(this.evalExpr(args[1]) as any);
+
+      if (!(Number.isFinite(width) && Number.isFinite(height))) {
+        return null;
+      }
+
+      this.desiredCanvasWidth = width;
+      this.desiredCanvasHeight = height;
+      return null;
+    }
+
+    if (
+      commandSignatureString === UNTYPED_BUILTINS.drawImage.signature.join(" ")
+    ) {
+      const imageName = getStringValue(args[0]);
+      if (imageName === null) {
+        throw new Error("Invalid image name: " + stringifyCommand(command));
+      }
+
+      const image = this.env.imageLibrary.get(imageName);
+      if (image === undefined) {
+        throw new Error("Attempted to draw non-existent image: " + imageName);
+      }
+
+      const x = Math.floor(this.evalExpr(args[1]) as any);
+      const y = Math.floor(this.evalExpr(args[2]) as any);
+      const width = Math.floor(this.evalExpr(args[3]) as any);
+      const height = Math.floor(this.evalExpr(args[4]) as any);
+      if (
+        !(
+          Number.isFinite(x) &&
+          Number.isFinite(y) &&
+          Number.isFinite(width) &&
+          Number.isFinite(height) &&
+          width > 0 &&
+          height > 0
+        )
+      ) {
+        return null;
+      }
+
+      this.env.ctx.drawImage(image, x, y, width, height);
+      return null;
     }
 
     // todo
@@ -379,6 +529,70 @@ class ProgramImpl implements Program {
       }
     }
     throw new Error("Attempted to set value of non-existent variable: " + name);
+  }
+
+  createListInTopStackEntry(name: string): void {
+    this.stack[this.stack.length - 1].lists.set(name, []);
+  }
+
+  // If the index is invalid, this is a no-op.
+  replaceListItemIfPossible(
+    name: string,
+    index: NingAtom,
+    item: NingAtom
+  ): void {
+    const list = this.getMutableList(name);
+    if (
+      typeof index === "number" &&
+      index === Math.floor(index) &&
+      index >= 0 &&
+      index < list.length
+    ) {
+      list[index] = item;
+      return;
+    }
+  }
+
+  // If the index is invalid, this is a no-op.
+  insertListItemIfPossible(
+    name: string,
+    index: NingAtom,
+    item: NingAtom
+  ): void {
+    const list = this.getMutableList(name);
+    if (
+      typeof index === "number" &&
+      index === Math.floor(index) &&
+      index >= 0 &&
+      index < list.length
+    ) {
+      list.splice(index, 0, item);
+      return;
+    }
+  }
+
+  // If the index is invalid, this is a no-op.
+  deleteListItemIfPossible(name: string, index: NingAtom): void {
+    const list = this.getMutableList(name);
+    if (
+      typeof index === "number" &&
+      index === Math.floor(index) &&
+      index >= 0 &&
+      index < list.length
+    ) {
+      list.splice(index, 1);
+      return;
+    }
+  }
+
+  getMutableList(name: string): NingAtom[] {
+    for (let i = this.stack.length - 1; i >= 0; --i) {
+      const list = this.stack[i].lists.get(name);
+      if (list !== undefined) {
+        return list;
+      }
+    }
+    throw new Error("Attempted to access non-existent list: " + name);
   }
 }
 
@@ -693,4 +907,13 @@ interface StackEntry {
 
 function getEmptyStackEntry(): StackEntry {
   return { atoms: new Map(), lists: new Map() };
+}
+
+// If `expr` is a string literal, this function returns the string value.
+// Otherwise, it returns `null`.
+function getStringValue(expr: ast.Expression): null | string {
+  if (expr.kind === "string_literal") {
+    return parseNingString(expr.source);
+  }
+  return null;
 }
