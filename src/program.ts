@@ -127,6 +127,36 @@ class ProgramImpl implements Program {
   }
 
   evalCompoundExpr(expr: ast.CompoundExpression): NingPrimitive {
+    if (expr.parts.every((p): p is ast.Identifier => p.kind === "identifier")) {
+      const name = expr.parts.map((p) => p.name).join(" ");
+
+      if (name === "true") {
+        return true;
+      }
+      if (name === "false") {
+        return false;
+      }
+
+      const varVal = this.getVarValOrNull(name);
+      if (varVal !== null) {
+        return varVal;
+      }
+    }
+
+    return this.evalQuery(expr);
+  }
+
+  getVarValOrNull(name: string): null | NingPrimitive {
+    for (let i = this.stack.length - 1; i >= 0; --i) {
+      const val = this.stack[i].get(name);
+      if (val !== undefined) {
+        return val;
+      }
+    }
+    return null;
+  }
+
+  evalQuery(expr: ast.CompoundExpression): NingPrimitive {
     // TODO
     return 0;
   }
