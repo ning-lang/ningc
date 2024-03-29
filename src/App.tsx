@@ -107,5 +107,9 @@ export class App extends React.Component<{}, State> {
 
 function highlight(code: string): React.ReactElement[] {
   const result = parse(code);
-  return [<span style={{ color: result.succeeded ? "" : "red" }}>{code}</span>];
+  return [
+    <span key={0} style={{ color: result.succeeded ? "" : "red" }}>
+      {code}
+    </span>,
+  ];
 }
