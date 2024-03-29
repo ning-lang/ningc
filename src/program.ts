@@ -10,7 +10,7 @@ export interface ExecutionEnvironment {
   ctx: CanvasRenderingContext2D;
 }
 
-type NingVal = number | string | boolean;
+type NingAtom = number | string | boolean;
 
 export function buildUncheckedProgram(file: ast.Def[]): Program {
   return new ProgramImpl(file);
@@ -19,14 +19,14 @@ export function buildUncheckedProgram(file: ast.Def[]): Program {
 class ProgramImpl implements Program {
   animationFrameId: number | null;
   env: ExecutionEnvironment;
-  stack: Map<string, NingVal>[];
+  stack: StackEntry[];
   queryDefs: Map<string, ast.QueryDef>;
 
   constructor(private readonly defs: ast.Def[]) {
     this.bindMethods();
     this.animationFrameId = null;
     this.env = { ctx: document.createElement("canvas").getContext("2d")! };
-    this.stack = [new Map()];
+    this.stack = [getEmptyStackEntry()];
     this.queryDefs = new Map();
   }
 
@@ -62,7 +62,7 @@ class ProgramImpl implements Program {
   }
 
   reset(): void {
-    this.stack = [new Map()];
+    this.stack = [getEmptyStackEntry()];
     this.queryDefs = new Map();
   }
 
@@ -112,7 +112,7 @@ class ProgramImpl implements Program {
     // TODO
   }
 
-  evalExpr(expr: ast.Expression): NingVal {
+  evalExpr(expr: ast.Expression): NingAtom {
     if (expr.kind === "string_literal") {
       return parseNingString(expr.source);
     }
@@ -125,7 +125,7 @@ class ProgramImpl implements Program {
     return expr;
   }
 
-  evalCompoundExpr(expr: ast.CompoundExpression): NingVal {
+  evalCompoundExpr(expr: ast.CompoundExpression): NingAtom {
     if (expr.parts.every((p): p is ast.Identifier => p.kind === "identifier")) {
       const name = expr.parts.map((p) => p.name).join(" ");
 
@@ -145,9 +145,9 @@ class ProgramImpl implements Program {
     return this.evalQueryApplication(expr);
   }
 
-  getVarValOrNull(name: string): null | NingVal {
+  getVarValOrNull(name: string): null | NingAtom {
     for (let i = this.stack.length - 1; i >= 0; --i) {
-      const val = this.stack[i].get(name);
+      const val = this.stack[i].atoms.get(name);
       if (val !== undefined) {
         return val;
       }
@@ -155,7 +155,7 @@ class ProgramImpl implements Program {
     return null;
   }
 
-  evalQueryApplication(expr: ast.CompoundExpression): NingVal {
+  evalQueryApplication(expr: ast.CompoundExpression): NingAtom {
     const signature = getUntypedQueryApplicationSignatureString(expr);
     const queryDef = this.queryDefs.get(signature);
     if (queryDef === undefined) {
@@ -174,10 +174,10 @@ class ProgramImpl implements Program {
 
   evalQueryApplicationUsingArgVals(
     def: ast.QueryDef,
-    argVals: NingVal[]
-  ): NingVal {
-    const argMap = getStackEntryWithArgs(def.signature, argVals);
-    this.stack.push(argMap);
+    argVals: NingAtom[]
+  ): NingAtom {
+    const argMap = getVariableMapWithArgs(def.signature, argVals);
+    this.stack.push({ atoms: argMap, lists: new Map() });
 
     for (const command of def.body.commands) {
       const returnVal = this.executeCommandAndGetReturnValue(command);
@@ -197,7 +197,7 @@ class ProgramImpl implements Program {
 
   // If a `return` command is reached, this function will stop execution and return the value.
   // Otherwise, it will return `null`.
-  executeCommandAndGetReturnValue(command: ast.Command): null | NingVal {
+  executeCommandAndGetReturnValue(command: ast.Command): null | NingAtom {
     const commandSignatureString =
       getUntypedCommandApplicationSignatureString(command);
     const [args, blockCommands] =
@@ -344,7 +344,7 @@ class ProgramImpl implements Program {
   // Otherwise, it will return `null`.
   executeBlockCommandAndGetReturnValue(
     command: ast.BlockCommand
-  ): null | NingVal {
+  ): null | NingAtom {
     for (const subCommand of command.commands) {
       const returnVal = this.executeCommandAndGetReturnValue(subCommand);
       if (returnVal !== null) {
@@ -354,26 +354,26 @@ class ProgramImpl implements Program {
     return null;
   }
 
-  createVariableInTopStackEntry(name: string, value: NingVal): void {
-    this.stack[this.stack.length - 1].set(name, value);
+  createVariableInTopStackEntry(name: string, value: NingAtom): void {
+    this.stack[this.stack.length - 1].atoms.set(name, value);
   }
 
-  setExistingVariable(name: string, value: NingVal): void {
+  setExistingVariable(name: string, value: NingAtom): void {
     for (let i = this.stack.length - 1; i >= 0; --i) {
-      if (this.stack[i].has(name)) {
-        this.stack[i].set(name, value);
+      if (this.stack[i].atoms.has(name)) {
+        this.stack[i].atoms.set(name, value);
         return;
       }
     }
     throw new Error("Attempted to set value of non-existent variable: " + name);
   }
 
-  increaseExistingVariable(name: string, amount: NingVal): void {
+  increaseExistingVariable(name: string, amount: NingAtom): void {
     for (let i = this.stack.length - 1; i >= 0; --i) {
-      if (this.stack[i].has(name)) {
-        this.stack[i].set(
+      if (this.stack[i].atoms.has(name)) {
+        this.stack[i].atoms.set(
           name,
-          (this.stack[i].get(name) as number) + (amount as number)
+          (this.stack[i].atoms.get(name) as number) + (amount as number)
         );
         return;
       }
@@ -667,11 +667,11 @@ function getUntypedFunctionSignatureString(
   );
 }
 
-function getStackEntryWithArgs(
+function getVariableMapWithArgs(
   signature: ast.FuncSignaturePart[],
-  argVals: NingVal[]
-): Map<string, NingVal> {
-  const argMap = new Map<string, NingVal>();
+  argVals: NingAtom[]
+): Map<string, NingAtom> {
+  const argMap = new Map<string, NingAtom>();
   let numberOfArgsAdded = 0;
   for (let i = 0; i < signature.length; ++i) {
     const part = signature[i];
@@ -684,4 +684,13 @@ function getStackEntryWithArgs(
     }
   }
   return argMap;
+}
+
+interface StackEntry {
+  atoms: Map<string, NingAtom>;
+  lists: Map<string, NingAtom[]>;
+}
+
+function getEmptyStackEntry(): StackEntry {
+  return { atoms: new Map(), lists: new Map() };
 }
