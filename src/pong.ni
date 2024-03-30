@@ -180,5 +180,3 @@ Command (if ball is colliding with top or bottom wall, bounce) {
 // Difference between `()` and `[]`:
 // - `()` are used for immutable values
 // - `[]` are used for mutable references
-//   * List parameters must always be `[]`,
-//     since Ning does not copy lists when passing them to functions.
