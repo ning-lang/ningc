@@ -205,6 +205,10 @@ class ProgramImpl implements Program {
         return false;
       }
 
+      if (/^\d+(?:\.\d+)?$/.test(name)) {
+        return Number.parseFloat(name);
+      }
+
       const varVal = this.getVarValOrNull(name);
       if (varVal !== null) {
         return varVal;
@@ -226,10 +230,6 @@ class ProgramImpl implements Program {
 
   evalQueryApplication(expr: ast.CompoundExpression): NingAtom {
     const signature = getUntypedQueryApplicationSignatureString(expr);
-
-    if (/^\d+(?:\.\d+)?$/.test(signature)) {
-      return Number.parseFloat(signature);
-    }
 
     // TODO: Check if the signature matches a builtin.
 
