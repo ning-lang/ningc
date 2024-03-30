@@ -56,9 +56,9 @@ class ProgramImpl implements Program {
   env: ExecutionEnvironment;
   stack: StackEntry[];
   /** A map of signature strings to their corresponding query definitions. */
-  userQueryDefs: Map<string, ast.QueryDef>;
+  readonly userQueryDefs: ReadonlyMap<string, ast.QueryDef>;
   /** A map of signature strings to their corresponding command definitions. */
-  userCommandDefs: Map<string, ast.CommandDef>;
+  readonly userCommandDefs: ReadonlyMap<string, ast.CommandDef>;
   renderQueue: RenderRequest[];
 
   constructor(private readonly defs: ast.Def[]) {
@@ -66,8 +66,8 @@ class ProgramImpl implements Program {
     this.animationFrameId = null;
     this.env = getDummyEnv();
     this.stack = [getEmptyStackEntry()];
-    this.userQueryDefs = new Map();
-    this.userCommandDefs = new Map();
+    this.userQueryDefs = getUserQueryDefs(defs);
+    this.userCommandDefs = getUserCommandDefs(defs);
     this.renderQueue = [];
   }
 
@@ -104,8 +104,6 @@ class ProgramImpl implements Program {
     this.animationFrameId = null;
     this.env = env;
     this.stack = [getEmptyStackEntry()];
-    this.userQueryDefs = new Map();
-    this.userCommandDefs = new Map();
     this.renderQueue = [];
   }
 
@@ -1346,4 +1344,30 @@ function getDummyEnv(): ExecutionEnvironment {
     getWindowHeight: () => window.innerHeight,
     isKeyPressed: () => false,
   };
+}
+
+function getUserQueryDefs(defs: ast.Def[]): Map<string, ast.QueryDef> {
+  const out: Map<string, ast.QueryDef> = new Map();
+
+  for (const def of defs) {
+    if (def.kind === "query_def") {
+      const signature = getUntypedFunctionSignatureString(def.signature);
+      out.set(signature, def);
+    }
+  }
+
+  return out;
+}
+
+function getUserCommandDefs(defs: ast.Def[]): Map<string, ast.CommandDef> {
+  const out: Map<string, ast.CommandDef> = new Map();
+
+  for (const def of defs) {
+    if (def.kind === "command_def") {
+      const signature = getUntypedFunctionSignatureString(def.signature);
+      out.set(signature, def);
+    }
+  }
+
+  return out;
 }
