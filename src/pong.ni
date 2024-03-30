@@ -6,7 +6,7 @@ Global {
     let [paddle margin] = (paddle width);
     let [ball width] = (paddle width);
     let [ball height] = (ball width);
-    let [ball speed magnitude] = ((ball width) * (3));
+    let [ball speed magnitude] = ((ball width) * (10));
 
     var [left paddle top] = (((height) / (2)) - ((paddle height) / (2)));
     var [right paddle top] = (((height) / (2)) - ((paddle height) / (2)));
