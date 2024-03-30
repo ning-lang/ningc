@@ -230,8 +230,38 @@ class ProgramImpl implements Program {
 
   evalQueryApplication(expr: ast.CompoundExpression): NingAtom {
     const signature = getUntypedQueryApplicationSignatureString(expr);
+    const args = getQueryApplicationArgs(expr);
 
     // TODO: Check if the signature matches a builtin.
+
+    if (signature === UNTYPED_BUILTINS.listOrStringLength.signature.join(" ")) {
+      const identSequence = getIdentifierSequenceName(args[0]);
+      if (identSequence !== null) {
+        try {
+          const list = this.getMutableList(identSequence);
+          return list.items.length;
+        } catch {}
+      }
+
+      const argVal0 = this.evalExpr(args[0]);
+      if (typeof argVal0 === "string") {
+        return argVal0.length;
+      }
+
+      throw new Error(
+        "Could not evaluate `" +
+          stringifyExpression(expr) +
+          "`. Expected argument 0 to be a string or list, but it was `" +
+          argVal0 +
+          "`."
+      );
+    }
+
+    if (signature === UNTYPED_BUILTINS.listItemOf.signature.join(" ")) {
+      // todo
+    }
+
+    // todo: check rest of builtins
 
     const userQueryDef = this.userQueryDefs.get(signature);
     if (userQueryDef === undefined) {
@@ -243,7 +273,6 @@ class ProgramImpl implements Program {
           "`"
       );
     }
-    const args = getQueryApplicationArgs(expr);
     const argVals = args.map((arg) => this.evalExpr(arg));
     return this.evalUserQueryApplicationUsingArgVals(userQueryDef, argVals);
   }
@@ -408,18 +437,40 @@ class ProgramImpl implements Program {
 
     if (
       commandSignatureString ===
-        UNTYPED_BUILTINS.numberListCreate.signature.join(" ") ||
-      commandSignatureString ===
-        UNTYPED_BUILTINS.stringListCreate.signature.join(" ") ||
-      commandSignatureString ===
-        UNTYPED_BUILTINS.booleanListCreate.signature.join(" ")
+      UNTYPED_BUILTINS.numberListCreate.signature.join(" ")
     ) {
       const listName = getIdentifierSequenceName(args[0]);
       if (listName === null) {
         throw new Error("Invalid variable name: " + stringifyCommand(command));
       }
 
-      this.createListInTopStackEntry(listName);
+      this.createListInTopStackEntry(listName, "number");
+      return null;
+    }
+
+    if (
+      commandSignatureString ===
+      UNTYPED_BUILTINS.stringListCreate.signature.join(" ")
+    ) {
+      const listName = getIdentifierSequenceName(args[0]);
+      if (listName === null) {
+        throw new Error("Invalid variable name: " + stringifyCommand(command));
+      }
+
+      this.createListInTopStackEntry(listName, "string");
+      return null;
+    }
+
+    if (
+      commandSignatureString ===
+      UNTYPED_BUILTINS.booleanListCreate.signature.join(" ")
+    ) {
+      const listName = getIdentifierSequenceName(args[0]);
+      if (listName === null) {
+        throw new Error("Invalid variable name: " + stringifyCommand(command));
+      }
+
+      this.createListInTopStackEntry(listName, "boolean");
       return null;
     }
 
@@ -478,7 +529,7 @@ class ProgramImpl implements Program {
         throw new Error("Invalid variable name: " + stringifyCommand(command));
       }
 
-      this.getMutableList(listName).splice(0, Infinity);
+      this.getMutableList(listName).items.splice(0, Infinity);
       return null;
     }
 
@@ -492,7 +543,7 @@ class ProgramImpl implements Program {
 
       const item = this.evalExpr(args[0]);
 
-      this.getMutableList(listName).push(item);
+      this.getMutableList(listName).items.push(item);
       return null;
     }
 
@@ -621,8 +672,8 @@ class ProgramImpl implements Program {
     throw new Error("Attempted to set value of non-existent variable: " + name);
   }
 
-  createListInTopStackEntry(name: string): void {
-    this.stack[this.stack.length - 1].lists.set(name, []);
+  createListInTopStackEntry(name: string, kind: NingAtomKind): void {
+    this.stack[this.stack.length - 1].lists.set(name, { kind, items: [] });
   }
 
   // If the index is invalid, this is a no-op.
@@ -636,9 +687,9 @@ class ProgramImpl implements Program {
       typeof index === "number" &&
       index === Math.floor(index) &&
       index >= 0 &&
-      index < list.length
+      index < list.items.length
     ) {
-      list[index] = item;
+      list.items[index] = item;
       return;
     }
   }
@@ -654,9 +705,9 @@ class ProgramImpl implements Program {
       typeof index === "number" &&
       index === Math.floor(index) &&
       index >= 0 &&
-      index < list.length
+      index < list.items.length
     ) {
-      list.splice(index, 0, item);
+      list.items.splice(index, 0, item);
       return;
     }
   }
@@ -668,14 +719,14 @@ class ProgramImpl implements Program {
       typeof index === "number" &&
       index === Math.floor(index) &&
       index >= 0 &&
-      index < list.length
+      index < list.items.length
     ) {
-      list.splice(index, 1);
+      list.items.splice(index, 1);
       return;
     }
   }
 
-  getMutableList(name: string): NingAtom[] {
+  getMutableList(name: string): NingList {
     for (let i = this.stack.length - 1; i >= 0; --i) {
       const list = this.stack[i].lists.get(name);
       if (list !== undefined) {
@@ -992,8 +1043,15 @@ function getVariableMapWithArgs(
 
 interface StackEntry {
   atoms: Map<string, NingAtom>;
-  lists: Map<string, NingAtom[]>;
+  lists: Map<string, NingList>;
 }
+
+interface NingList {
+  kind: NingAtomKind;
+  items: NingAtom[];
+}
+
+type NingAtomKind = "number" | "string" | "boolean";
 
 function getEmptyStackEntry(): StackEntry {
   return { atoms: new Map(), lists: new Map() };
