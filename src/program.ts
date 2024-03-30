@@ -90,6 +90,8 @@ class ProgramImpl implements Program {
   tick(): void {
     this.update();
     this.render();
+
+    this.animationFrameId = requestAnimationFrame(this.tick);
   }
 
   stop(): void {

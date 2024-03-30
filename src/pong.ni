@@ -48,10 +48,10 @@ Command (update) {
     let [up was down] = (up down);
     let [down was down] = (down down);
 
-    set [w down] to (is key down ("w"));
-    set [s down] to (is key down ("s"));
-    set [up down] to (is key down ("up"));
-    set [down down] to (is key down ("down"));
+    set [w down] to (key ("w") pressed?);
+    set [s down] to (key ("s") pressed?);
+    set [up down] to (key ("up") pressed?);
+    set [down down] to (key ("down") pressed?);
 
     var [left dy] = (0);
 
@@ -93,7 +93,7 @@ Command (reset ball and paddles) {
 Command (reset ball) {
     set [ball left] to (((width) / (2)) - ((ball width) / (2)));
     set [ball top] to (((height) / (2)) - ((ball height) / (2)));
-    let [angle] = (pick random from (0) up to but not including (360))
+    let [angle] = (pick random from (0) up to but not including (360));
     set [x speed] to ((cosine of (angle) degrees) * (ball speed magnitude));
     set [y speed] to ((sine of (angle) degrees) * (ball speed magnitude));
 }
@@ -127,8 +127,8 @@ Boolean Query (ball is touching left paddle?) {
     let [paddle top] = (left paddle top);
     let [paddle bottom] = ((left paddle top) + (paddle height));
 
-    let [in horizontal bounds?] = (((ball left) <= (paddle right)) and ((ball right) >= (paddle left)))
-    let [in vertical bounds?] = (((ball top) <= (paddle bottom)) and ((ball bottom) >= (paddle top)))
+    let [in horizontal bounds?] = (((ball left) <= (paddle right)) and ((ball right) >= (paddle left)));
+    let [in vertical bounds?] = (((ball top) <= (paddle bottom)) and ((ball bottom) >= (paddle top)));
     return ((in horizontal bounds?) and (in vertical bounds?));
 }
 
@@ -141,8 +141,8 @@ Boolean Query (ball is touching right paddle?) {
     let [paddle top] = (right paddle top);
     let [paddle bottom] = ((right paddle top) + (paddle height));
 
-    let [in horizontal bounds?] = (((ball left) <= (paddle right)) and ((ball right) >= (paddle left)))
-    let [in vertical bounds?] = (((ball top) <= (paddle bottom)) and ((ball bottom) >= (paddle top)))
+    let [in horizontal bounds?] = (((ball left) <= (paddle right)) and ((ball right) >= (paddle left)));
+    let [in vertical bounds?] = (((ball top) <= (paddle bottom)) and ((ball bottom) >= (paddle top)));
     return ((in horizontal bounds?) and (in vertical bounds?));
 }
 
