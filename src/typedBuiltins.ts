@@ -56,6 +56,10 @@ export const TYPED_BUILTINS = {
     returnType: null,
     signature: ["return", BOOLEAN_SENTINEL],
   },
+  voidReturn: {
+    returnType: null,
+    signature: ["return"],
+  },
 
   // Variables
   numberLet: {
@@ -538,7 +542,7 @@ export const TYPED_BUILTINS = {
   randomInt: {
     returnType: NUMBER_SENTINEL,
     signature: [
-      "random number from ",
+      "random integer from ",
       NUMBER_SENTINEL,
       " up to but not including ",
       NUMBER_SENTINEL,

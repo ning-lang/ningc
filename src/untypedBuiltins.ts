@@ -331,7 +331,7 @@ export const UNTYPED_BUILTINS = {
 
   randomInt: {
     isQuery: true,
-    signature: ["random number from ", VAL, " up to but not including ", VAL],
+    signature: ["random integer from", VAL, "up to but not including", VAL],
   },
 
   // Sensing

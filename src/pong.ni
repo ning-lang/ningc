@@ -86,6 +86,7 @@ Command (update) {
 }
 
 Command (reset ball and paddles) {
+    reset ball;
     set [left paddle top] to (((height) / (2)) - ((paddle height) / (2)));
     set [right paddle top] to (((height) / (2)) - ((paddle height) / (2)));
 }
@@ -93,9 +94,9 @@ Command (reset ball and paddles) {
 Command (reset ball) {
     set [ball left] to (((width) / (2)) - ((ball width) / (2)));
     set [ball top] to (((height) / (2)) - ((ball height) / (2)));
-    let [angle] = (pick random from (0) up to but not including (360));
-    set [x speed] to ((cosine of (angle) degrees) * (ball speed magnitude));
-    set [y speed] to ((sine of (angle) degrees) * (ball speed magnitude));
+    let [angle] = (random integer from (0) up to but not including (360));
+    set [x speed] to ((cos of (angle) degrees) * (ball speed magnitude));
+    set [y speed] to ((sin of (angle) degrees) * (ball speed magnitude));
 }
 
 Command (if ball is out of bounds, update score and reset ball) {

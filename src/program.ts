@@ -77,6 +77,8 @@ class ProgramImpl implements Program {
   }
 
   start(env: ExecutionEnvironment): void {
+    (window as any).program = this;
+
     if (this.animationFrameId !== null) {
       throw new Error("Called `execute` when program was already running.");
     }
