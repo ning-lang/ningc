@@ -515,7 +515,7 @@ class ProgramImpl implements Program {
     if (
       commandSignatureString === UNTYPED_BUILTINS.drawImage.signature.join(" ")
     ) {
-      const imageName = getStringValue(args[0]);
+      const imageName = getStringValueIfExprIsString(args[0]);
       if (imageName === null) {
         throw new Error("Invalid image name: " + stringifyCommand(command));
       }
@@ -1001,7 +1001,7 @@ function getEmptyStackEntry(): StackEntry {
 
 // If `expr` is a string literal, this function returns the string value.
 // Otherwise, it returns `null`.
-function getStringValue(expr: ast.Expression): null | string {
+function getStringValueIfExprIsString(expr: ast.Expression): null | string {
   if (expr.kind === "string_literal") {
     return parseNingString(expr.source);
   }
