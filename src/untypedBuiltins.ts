@@ -1,235 +1,221 @@
-export const UNTYPED_SENTINEL = "()";
+export const UNTYPED_VAL_SENTINEL = "()";
+export const UNTYPED_REF_SENTINEL = "[]";
+export const UNTYPED_BLOCK_SENTINEL = "{}";
+
+const VAL = UNTYPED_VAL_SENTINEL;
+const REF = UNTYPED_REF_SENTINEL;
+const BLOCK = UNTYPED_BLOCK_SENTINEL;
 
 export const UNTYPED_BUILTINS = {
   // Control
   if_: {
     isQuery: false,
-    signature: ["if", UNTYPED_SENTINEL, UNTYPED_SENTINEL],
+    signature: ["if", VAL, BLOCK],
   },
   ifElse: {
     isQuery: false,
-    signature: [
-      "if",
-      UNTYPED_SENTINEL,
-      UNTYPED_SENTINEL,
-      "else",
-      UNTYPED_SENTINEL,
-    ],
+    signature: ["if", VAL, BLOCK, "else", BLOCK],
   },
   while_: {
     isQuery: false,
-    signature: ["while", UNTYPED_SENTINEL, UNTYPED_SENTINEL],
+    signature: ["while", VAL, BLOCK],
   },
   repeatUntil: {
     isQuery: false,
-    signature: ["repeat until", UNTYPED_SENTINEL, UNTYPED_SENTINEL],
+    signature: ["repeat until", VAL, BLOCK],
   },
   forever: {
     isQuery: false,
-    signature: ["forever", UNTYPED_SENTINEL],
+    signature: ["forever", BLOCK],
   },
   repeat: {
     isQuery: false,
-    signature: ["repeat", UNTYPED_SENTINEL, "times", UNTYPED_SENTINEL],
+    signature: ["repeat", VAL, "times", BLOCK],
   },
   return_: {
     isQuery: false,
-    signature: ["return", UNTYPED_SENTINEL],
+    signature: ["return", VAL],
   },
 
   // Variables
   let_: {
     isQuery: false,
-    signature: ["let", UNTYPED_SENTINEL, "=", UNTYPED_SENTINEL],
+    signature: ["let", REF, "=", VAL],
   },
   var_: {
     isQuery: false,
-    signature: ["var", UNTYPED_SENTINEL, "=", UNTYPED_SENTINEL],
+    signature: ["var", REF, "=", VAL],
   },
   assign: {
     isQuery: false,
-    signature: ["set", UNTYPED_SENTINEL, "to", UNTYPED_SENTINEL],
+    signature: ["set", REF, "to", VAL],
   },
   increase: {
     isQuery: false,
-    signature: ["change", UNTYPED_SENTINEL, "by", UNTYPED_SENTINEL],
+    signature: ["change", REF, "by", VAL],
   },
 
   // Lists
   numberListCreate: {
     isQuery: false,
-    signature: ["create number list", UNTYPED_SENTINEL],
+    signature: ["create number list", REF],
   },
   stringListCreate: {
     isQuery: false,
-    signature: ["create string list", UNTYPED_SENTINEL],
+    signature: ["create string list", REF],
   },
   booleanListCreate: {
     isQuery: false,
-    signature: ["create boolean list", UNTYPED_SENTINEL],
+    signature: ["create boolean list", REF],
   },
 
-  listOrStringLength: {
-    returnType: UNTYPED_SENTINEL,
-    signature: ["length of", UNTYPED_SENTINEL],
+  listLength: {
+    isQuery: true,
+    signature: ["length of", REF],
   },
 
   listItemOf: {
     isQuery: true,
-    signature: ["item", UNTYPED_SENTINEL, "of", UNTYPED_SENTINEL],
+    signature: ["item", VAL, "of", REF],
   },
 
-  listOrStringIndexOf: {
+  listOrIndexOf: {
     isQuery: true,
-    signature: ["index of", UNTYPED_SENTINEL, "in", UNTYPED_SENTINEL],
+    signature: ["index of", VAL, "in", REF],
   },
 
-  listOrStringContains: {
+  listContains: {
     isQuery: true,
-    signature: [UNTYPED_SENTINEL, "contains", UNTYPED_SENTINEL, "?"],
+    signature: [REF, "contains", VAL, "?"],
   },
 
   listReplaceItem: {
     isQuery: false,
-    signature: [
-      "replace item",
-      UNTYPED_SENTINEL,
-      "of",
-      UNTYPED_SENTINEL,
-      "with",
-      UNTYPED_SENTINEL,
-    ],
+    signature: ["replace item", VAL, "of", REF, "with", VAL],
   },
   listInsert: {
     isQuery: false,
-    signature: [
-      "insert",
-      UNTYPED_SENTINEL,
-      "at",
-      UNTYPED_SENTINEL,
-      "of",
-      UNTYPED_SENTINEL,
-    ],
+    signature: ["insert", VAL, "at", VAL, "of", REF],
   },
   listDeleteItem: {
     isQuery: false,
-    signature: ["delete item", UNTYPED_SENTINEL, "of", UNTYPED_SENTINEL],
+    signature: ["delete item", VAL, "of", REF],
   },
   listDeleteAll: {
     isQuery: false,
-    signature: ["delete all of", UNTYPED_SENTINEL],
+    signature: ["delete all of", REF],
   },
   listAdd: {
     isQuery: false,
-    signature: ["add", UNTYPED_SENTINEL, "to", UNTYPED_SENTINEL],
+    signature: ["add", VAL, "to", REF],
   },
 
   // Operators
   opAdd: {
     isQuery: true,
-    signature: [UNTYPED_SENTINEL, "+", UNTYPED_SENTINEL],
+    signature: [VAL, "+", VAL],
   },
   opSub: {
     isQuery: true,
-    signature: [UNTYPED_SENTINEL, "-", UNTYPED_SENTINEL],
+    signature: [VAL, "-", VAL],
   },
   opMul: {
     isQuery: true,
-    signature: [UNTYPED_SENTINEL, "*", UNTYPED_SENTINEL],
+    signature: [VAL, "*", VAL],
   },
   opDiv: {
     isQuery: true,
-    signature: [UNTYPED_SENTINEL, "/", UNTYPED_SENTINEL],
+    signature: [VAL, "/", VAL],
   },
   opMod: {
     isQuery: true,
-    signature: [UNTYPED_SENTINEL, "mod", UNTYPED_SENTINEL],
+    signature: [VAL, "mod", VAL],
   },
   opPow: {
     isQuery: true,
-    signature: [UNTYPED_SENTINEL, "to the power of", UNTYPED_SENTINEL],
+    signature: [VAL, "to the power of", VAL],
   },
 
   opEq: {
     isQuery: true,
-    signature: [UNTYPED_SENTINEL, "==", UNTYPED_SENTINEL],
+    signature: [VAL, "==", VAL],
   },
   opNe: {
     isQuery: true,
-    signature: [UNTYPED_SENTINEL, "!=", UNTYPED_SENTINEL],
+    signature: [VAL, "!=", VAL],
   },
   opLt: {
     isQuery: true,
-    signature: [UNTYPED_SENTINEL, "<", UNTYPED_SENTINEL],
+    signature: [VAL, "<", VAL],
   },
   opLe: {
     isQuery: true,
-    signature: [UNTYPED_SENTINEL, "<=", UNTYPED_SENTINEL],
+    signature: [VAL, "<=", VAL],
   },
   opGt: {
     isQuery: true,
-    signature: [UNTYPED_SENTINEL, ">", UNTYPED_SENTINEL],
+    signature: [VAL, ">", VAL],
   },
   opGe: {
     isQuery: true,
-    signature: [UNTYPED_SENTINEL, ">=", UNTYPED_SENTINEL],
+    signature: [VAL, ">=", VAL],
   },
 
   opExp: {
     isQuery: true,
-    signature: ["exp", UNTYPED_SENTINEL],
+    signature: ["exp", VAL],
   },
   opLn: {
     isQuery: true,
-    signature: ["ln", UNTYPED_SENTINEL],
+    signature: ["ln", VAL],
   },
   opSinDeg: {
     isQuery: true,
-    signature: ["sin of", UNTYPED_SENTINEL, "degrees"],
+    signature: ["sin of", VAL, "degrees"],
   },
   opCosDeg: {
     isQuery: true,
-    signature: ["cos of", UNTYPED_SENTINEL, "degrees"],
+    signature: ["cos of", VAL, "degrees"],
   },
   opTanDeg: {
     isQuery: true,
-    signature: ["tan of", UNTYPED_SENTINEL, "degrees"],
+    signature: ["tan of", VAL, "degrees"],
   },
   opAsinDeg: {
     isQuery: true,
-    signature: ["asin degrees of", UNTYPED_SENTINEL],
+    signature: ["asin degrees of", VAL],
   },
   opAcosDeg: {
     isQuery: true,
-    signature: ["acos degrees of", UNTYPED_SENTINEL],
+    signature: ["acos degrees of", VAL],
   },
   opAtanDeg: {
     isQuery: true,
-    signature: ["atan degrees of", UNTYPED_SENTINEL],
+    signature: ["atan degrees of", VAL],
   },
   opSinRad: {
     isQuery: true,
-    signature: ["sin of", UNTYPED_SENTINEL, "radians"],
+    signature: ["sin of", VAL, "radians"],
   },
   opCosRad: {
     isQuery: true,
-    signature: ["cos of", UNTYPED_SENTINEL, "radians"],
+    signature: ["cos of", VAL, "radians"],
   },
   opTanRad: {
     isQuery: true,
-    signature: ["tan of", UNTYPED_SENTINEL, "radians"],
+    signature: ["tan of", VAL, "radians"],
   },
   opAsinRad: {
     isQuery: true,
-    signature: ["asin radians of", UNTYPED_SENTINEL],
+    signature: ["asin radians of", VAL],
   },
   opAcosRad: {
     isQuery: true,
-    signature: ["acos radians of", UNTYPED_SENTINEL],
+    signature: ["acos radians of", VAL],
   },
   opAtanRad: {
     isQuery: true,
-    signature: ["atan radians of", UNTYPED_SENTINEL],
+    signature: ["atan radians of", VAL],
   },
   opPi: {
     isQuery: true,
@@ -250,106 +236,97 @@ export const UNTYPED_BUILTINS = {
 
   opFloor: {
     isQuery: true,
-    signature: ["floor", UNTYPED_SENTINEL],
+    signature: ["floor", VAL],
   },
   opCeil: {
     isQuery: true,
-    signature: ["ceiling", UNTYPED_SENTINEL],
+    signature: ["ceiling", VAL],
   },
   opRound: {
     isQuery: true,
-    signature: ["round", UNTYPED_SENTINEL],
+    signature: ["round", VAL],
   },
   opAbs: {
     isQuery: true,
-    signature: ["abs", UNTYPED_SENTINEL],
+    signature: ["abs", VAL],
   },
   opMin: {
     isQuery: true,
-    signature: ["min of", UNTYPED_SENTINEL, "and", UNTYPED_SENTINEL],
+    signature: ["min of", VAL, "and", VAL],
   },
   opMax: {
     isQuery: true,
-    signature: ["max of", UNTYPED_SENTINEL, "and", UNTYPED_SENTINEL],
+    signature: ["max of", VAL, "and", VAL],
   },
   opClamp: {
     isQuery: true,
-    signature: [
-      "clamp",
-      UNTYPED_SENTINEL,
-      "between",
-      UNTYPED_SENTINEL,
-      "and",
-      UNTYPED_SENTINEL,
-    ],
+    signature: ["clamp", VAL, "between", VAL, "and", VAL],
   },
 
   opAnd: {
     isQuery: true,
-    signature: [UNTYPED_SENTINEL, "and", UNTYPED_SENTINEL],
+    signature: [VAL, "and", VAL],
   },
   opOr: {
     isQuery: true,
-    signature: [UNTYPED_SENTINEL, "or", UNTYPED_SENTINEL],
+    signature: [VAL, "or", VAL],
   },
   opNot: {
     isQuery: true,
-    signature: ["not", UNTYPED_SENTINEL],
+    signature: ["not", VAL],
   },
 
   opConcat: {
     isQuery: true,
-    signature: [UNTYPED_SENTINEL, "++", UNTYPED_SENTINEL],
+    signature: [VAL, "++", VAL],
+  },
+  stringLength: {
+    isQuery: true,
+    signature: ["length of", VAL],
   },
   stringLetter: {
     isQuery: true,
-    signature: ["letter", UNTYPED_SENTINEL, "of", UNTYPED_SENTINEL],
+    signature: ["letter", VAL, "of", VAL],
   },
   stringSubstring: {
     isQuery: true,
-    signature: [
-      "substring of",
-      UNTYPED_SENTINEL,
-      "from",
-      UNTYPED_SENTINEL,
-      "to",
-      UNTYPED_SENTINEL,
-    ],
+    signature: ["substring of", VAL, "from", VAL, "to", VAL],
+  },
+  stringContains: {
+    isQuery: true,
+    signature: [VAL, "contains", VAL, "?"],
+  },
+  stringIndexOf: {
+    isQuery: true,
+    signature: ["index of", VAL, "in", VAL],
   },
 
   ternary: {
     isQuery: true,
-    signature: [
-      "if",
-      UNTYPED_SENTINEL,
-      "then",
-      UNTYPED_SENTINEL,
-      "else",
-      UNTYPED_SENTINEL,
-    ],
+    signature: ["if", VAL, "then", VAL, "else", VAL],
   },
 
   parseNumber: {
     isQuery: true,
-    signature: ["parse", UNTYPED_SENTINEL, "as number"],
+    signature: ["parse", VAL, "as number"],
   },
 
   numberOrBooleanToString: {
     isQuery: true,
-    signature: ["convert", UNTYPED_SENTINEL, "to string"],
+    signature: ["convert", VAL, "to string"],
   },
 
   stringCanBeParsedAsNumber: {
     isQuery: true,
-    signature: ["can", UNTYPED_SENTINEL, "be parsed as a number?"],
+    signature: ["can", VAL, "be parsed as a number?"],
   },
   stringCanBeParsedAsRealNumber: {
     isQuery: true,
-    signature: ["can", UNTYPED_SENTINEL, "be parsed as a real number?"],
+    signature: ["can", VAL, "be parsed as a real number?"],
   },
   stringCanBeParsedAsInteger: {
     isQuery: true,
-    signature: ["can", UNTYPED_SENTINEL, "be parsed as an integer?"],
+    signature: ["can", VAL, "be parsed as an integer?"],
   },
 
   // Sensing
@@ -426,32 +403,27 @@ export const UNTYPED_BUILTINS = {
 
   keyPressed: {
     isQuery: true,
-    signature: ["key", UNTYPED_SENTINEL, "pressed?"],
+    signature: ["key", VAL, "pressed?"],
   },
 
   // Looks
   resizeCanvas: {
     isQuery: false,
-    signature: [
-      "resize canvas to width",
-      UNTYPED_SENTINEL,
-      "height",
-      UNTYPED_SENTINEL,
-    ],
+    signature: ["resize canvas to width", VAL, "height", VAL],
   },
   drawImage: {
     isQuery: false,
     signature: [
       "draw image",
-      UNTYPED_SENTINEL,
+      VAL,
       "at x",
-      UNTYPED_SENTINEL,
+      VAL,
       "y",
-      UNTYPED_SENTINEL,
+      VAL,
       "with width",
-      UNTYPED_SENTINEL,
+      VAL,
       "height",
-      UNTYPED_SENTINEL,
+      VAL,
     ],
   },
 } as const;

@@ -256,8 +256,8 @@ const semanticActions = {
     return $$;
   },
 
-  "commandPart -> squareBracketedExpression"(
-    $1: TysonTypeDict["squareBracketedExpression"]
+  "commandPart -> squareBracketedIdentifierSequence"(
+    $1: TysonTypeDict["squareBracketedIdentifierSequence"]
   ): TysonTypeDict["commandPart"] {
     let $$: TysonTypeDict["commandPart"];
     $$ = $1;
@@ -290,19 +290,19 @@ const semanticActions = {
     return $$;
   },
 
-  "squareBracketedExpression -> lsquare expression rsquare"(
+  "squareBracketedIdentifierSequence -> lsquare oneOrMoreIdentifiers rsquare"(
     yylstack: { "@$": TokenLocation },
 
     $1: TysonTypeDict["lsquare"],
-    $2: TysonTypeDict["expression"],
+    $2: TysonTypeDict["oneOrMoreIdentifiers"],
     $3: TysonTypeDict["rsquare"]
-  ): TysonTypeDict["squareBracketedExpression"] {
-    let $$: TysonTypeDict["squareBracketedExpression"];
+  ): TysonTypeDict["squareBracketedIdentifierSequence"] {
+    let $$: TysonTypeDict["squareBracketedIdentifierSequence"];
     $$ = {
       location: yylstack["@$"],
-      kind: "square_bracketed_expression",
+      kind: "square_bracketed_identifier_sequence",
       lsquare: $1,
-      expression: $2,
+      identifiers: $2,
       rsquare: $3,
     };
     return $$;
@@ -366,8 +366,8 @@ const semanticActions = {
     return $$;
   },
 
-  "compoundExpressionPart -> squareBracketedExpression"(
-    $1: TysonTypeDict["squareBracketedExpression"]
+  "compoundExpressionPart -> squareBracketedIdentifierSequence"(
+    $1: TysonTypeDict["squareBracketedIdentifierSequence"]
   ): TysonTypeDict["compoundExpressionPart"] {
     let $$: TysonTypeDict["compoundExpressionPart"];
     $$ = $1;

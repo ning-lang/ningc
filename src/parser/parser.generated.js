@@ -97,14 +97,11 @@ var parser = (function () {
     $Vc = [1, 35],
     $Vd = [1, 38],
     $Ve = [41, 43, 45, 47, 56],
-    $Vf = [41, 42, 43, 44, 45, 47, 56],
+    $Vf = [41, 42, 43, 45, 47, 56],
     $Vg = [5, 41, 43, 45, 47, 49, 51, 52, 53, 54, 56],
     $Vh = [1, 56],
-    $Vi = [2, 32],
-    $Vj = [1, 63],
-    $Vk = [42, 56],
-    $Vl = [42, 44],
-    $Vm = [41, 42, 43, 44, 56];
+    $Vi = [41, 42, 43, 56],
+    $Vj = [42, 44, 56];
   var parser = {
     trace: function trace() {},
     yy: {},
@@ -136,7 +133,7 @@ var parser = (function () {
       semicolon: 26,
       commandPart: 27,
       parenthesizedExpression: 28,
-      squareBracketedExpression: 29,
+      squareBracketedIdentifierSequence: 29,
       expression: 30,
       lsquare: 31,
       rsquare: 32,
@@ -352,9 +349,9 @@ var parser = (function () {
         case 27:
           this.$ = {
             location: this._$,
-            kind: "square_bracketed_expression",
+            kind: "square_bracketed_identifier_sequence",
             lsquare: $$[$0 - 2],
-            expression: $$[$0 - 1],
+            identifiers: $$[$0 - 1],
             rsquare: $$[$0],
           };
           break;
@@ -523,7 +520,7 @@ var parser = (function () {
       o($Vf, [2, 43]),
       o($V9, [2, 12]),
       { 15: 45, 37: 12, 38: 13, 39: 14, 52: $V1, 53: $V2, 54: $V3 },
-      o($Vf, [2, 57]),
+      o([41, 42, 43, 44, 45, 47, 56], [2, 57]),
       { 11: 37, 13: 46, 18: 34, 19: 36, 41: $V4, 42: $Vc, 56: $Vd },
       o($Vg, [2, 16]),
       o($Vb, [2, 17]),
@@ -554,39 +551,49 @@ var parser = (function () {
       o($Ve, [2, 23]),
       o($Ve, [2, 24]),
       o($Ve, [2, 25]),
-      o([41, 42, 43, 56], $Vi, { 30: 60, 33: 61, 34: 62, 35: 64, 48: $Vj }),
-      o([41, 43, 44, 56], $Vi, { 33: 61, 34: 62, 35: 64, 30: 65, 48: $Vj }),
-      o([41, 43, 44, 48, 56], [2, 44]),
+      o($Vi, [2, 32], { 30: 60, 33: 61, 34: 62, 35: 64, 48: [1, 63] }),
+      { 19: 58, 20: 65, 56: $Vd },
+      { 56: [2, 44] },
       { 13: 66, 19: 67, 42: $Vc, 56: $Vd },
-      o($Vk, [2, 14]),
+      o($Vj, [2, 14]),
       o($V0, [2, 8]),
       { 13: 68, 42: $Vc },
-      o($Vl, [2, 28]),
-      o($Vl, [2, 29]),
-      o($Vl, [2, 49]),
-      o($Vl, [2, 30], {
+      { 42: [2, 28] },
+      { 42: [2, 29] },
+      { 42: [2, 49] },
+      {
         11: 54,
-        31: 55,
-        36: 69,
         19: 70,
         28: 71,
         29: 72,
+        31: 55,
+        36: 69,
         41: $V4,
+        42: [2, 30],
         43: $Vh,
         56: $Vd,
-      }),
-      { 32: 73, 44: [1, 74] },
+      },
+      { 19: 67, 32: 73, 44: [1, 74], 56: $Vd },
       o($V9, [2, 13]),
-      o($Vk, [2, 15]),
+      o($Vj, [2, 15]),
       o($Vf, [2, 26]),
-      o($Vm, [2, 31]),
-      o($Vm, [2, 33]),
-      o($Vm, [2, 34]),
-      o($Vm, [2, 35]),
+      o($Vi, [2, 31]),
+      o($Vi, [2, 33]),
+      o($Vi, [2, 34]),
+      o($Vi, [2, 35]),
       o($Vf, [2, 27]),
       o($Vf, [2, 45]),
     ],
-    defaultActions: { 3: [2, 1], 11: [2, 50], 15: [2, 52], 22: [2, 51] },
+    defaultActions: {
+      3: [2, 1],
+      11: [2, 50],
+      15: [2, 52],
+      22: [2, 51],
+      56: [2, 44],
+      61: [2, 28],
+      62: [2, 29],
+      63: [2, 49],
+    },
     parseError: function parseError(str, hash) {
       if (hash.recoverable) {
         this.trace(str);
@@ -1242,6 +1249,7 @@ if (typeof require !== "undefined" && typeof exports !== "undefined") {
   exports.parse = function () {
     return parser.parse.apply(parser, arguments);
   };
+
   if (typeof module !== "undefined" && require.main === module) {
     exports.main(process.argv.slice(1));
   }

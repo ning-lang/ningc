@@ -42,7 +42,7 @@ interface NodeTypeDict {
   zeroOrMoreCommandParts: CommandPart[];
   commandPart: CommandPart;
   parenthesizedExpression: ParenthesizedExpression;
-  squareBracketedExpression: SquareBracketedExpression;
+  squareBracketedIdentifierSequence: SquareBracketedIdentifierSequence;
   expression: Expression;
   compoundExpression: CompoundExpression;
   zeroOrMoreCompoundExpressionParts: CompoundExpressionPart[];
@@ -133,7 +133,7 @@ export interface Command {
 export type CommandPart =
   | Identifier
   | ParenthesizedExpression
-  | SquareBracketedExpression
+  | SquareBracketedIdentifierSequence
   | BlockCommand;
 
 export type NonIdentifierCommandPart = Exclude<CommandPart, Identifier>;
@@ -147,12 +147,12 @@ export interface ParenthesizedExpression {
   rparen: Token<"rparen">;
 }
 
-export interface SquareBracketedExpression {
+export interface SquareBracketedIdentifierSequence {
   location: JisonTokenLocation;
-  kind: "square_bracketed_expression";
+  kind: "square_bracketed_identifier_sequence";
 
   lsquare: Token<"lsquare">;
-  expression: Expression;
+  identifiers: Identifier[];
   rsquare: Token<"rsquare">;
 }
 
@@ -168,7 +168,7 @@ export interface CompoundExpression {
 export type CompoundExpressionPart =
   | Identifier
   | ParenthesizedExpression
-  | SquareBracketedExpression;
+  | SquareBracketedIdentifierSequence;
 
 export interface TypeNode {
   location: JisonTokenLocation;

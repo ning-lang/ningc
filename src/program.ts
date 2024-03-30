@@ -1,5 +1,10 @@
 import * as ast from "./types/tysonTypeDict";
-import { UNTYPED_BUILTINS, UNTYPED_SENTINEL } from "./untypedBuiltins";
+import {
+  UNTYPED_BUILTINS,
+  UNTYPED_VAL_SENTINEL,
+  UNTYPED_REF_SENTINEL,
+  UNTYPED_BLOCK_SENTINEL,
+} from "./untypedBuiltins";
 
 const RENDER_COMMAND_SIGNATURE = "render";
 const UPDATE_COMMAND_SIGNATURE = "update";
@@ -14,7 +19,7 @@ export interface ExecutionEnvironment {
   imageLibrary: Map<string, HTMLImageElement>;
 }
 
-type NingAtom = number | string | boolean;
+type NingVal = number | string | boolean;
 
 interface DrawRequest {
   imageName: string;
@@ -115,26 +120,22 @@ class ProgramImpl implements Program {
   }
 
   updateGlobalsBasedOnGlobalDefCommand(command: ast.Command): void {
-    let match = getCommandMatchStatus(command, UNTYPED_BUILTINS.let_.signature);
-    if (!match.succeeded) {
-      match = getCommandMatchStatus(command, UNTYPED_BUILTINS.var_.signature);
-    }
-    if (!match.succeeded) {
+    const signature = getUntypedCommandApplicationSignatureString(command);
+
+    if (
+      !(
+        signature === UNTYPED_BUILTINS.let_.signature.join(" ") ||
+        signature === UNTYPED_BUILTINS.var_.signature.join(" ")
+      )
+    ) {
       return;
     }
 
-    const varName = getStaticSquareName(match.args[0]);
-    if (varName === null) {
-      throw new Error("Invalid variable name: " + stringifyCommand(command));
-    }
+    const [args, squares] =
+      getCommandApplicationArgsAndSquaresAndBlockCommands(command);
 
-    const varValueNode = getExprFromCommandPart(match.args[1]);
-    if (varValueNode === null) {
-      throw new Error("Invalid variable value: " + stringifyCommand(command));
-    }
-
-    const varValue = this.evalExpr(varValueNode);
-
+    const varName = squares[0].identifiers.map((i) => i.name).join(" ");
+    const varValue = this.evalExpr(args[0]);
     this.createVariableInTopStackEntry(varName, varValue);
   }
 
@@ -181,7 +182,7 @@ class ProgramImpl implements Program {
     }
   }
 
-  evalExpr(expr: ast.Expression): NingAtom {
+  evalExpr(expr: ast.Expression): NingVal {
     if (expr.kind === "string_literal") {
       return parseNingString(expr.source);
     }
@@ -194,7 +195,7 @@ class ProgramImpl implements Program {
     return expr;
   }
 
-  evalCompoundExpr(expr: ast.CompoundExpression): NingAtom {
+  evalCompoundExpr(expr: ast.CompoundExpression): NingVal {
     if (expr.parts.every((p): p is ast.Identifier => p.kind === "identifier")) {
       const name = expr.parts.map((p) => p.name).join(" ");
 
@@ -218,9 +219,9 @@ class ProgramImpl implements Program {
     return this.evalQueryApplication(expr);
   }
 
-  getVarValOrNull(name: string): null | NingAtom {
+  getVarValOrNull(name: string): null | NingVal {
     for (let i = this.stack.length - 1; i >= 0; --i) {
-      const val = this.stack[i].atoms.get(name);
+      const val = this.stack[i].variables.get(name);
       if (val !== undefined) {
         return val;
       }
@@ -228,33 +229,16 @@ class ProgramImpl implements Program {
     return null;
   }
 
-  evalQueryApplication(expr: ast.CompoundExpression): NingAtom {
+  evalQueryApplication(expr: ast.CompoundExpression): NingVal {
     const signature = getUntypedQueryApplicationSignatureString(expr);
-    const args = getQueryApplicationArgs(expr);
+    const [args, squares] = getQueryApplicationArgsAndSquares(expr);
 
     // TODO: Check if the signature matches a builtin.
 
-    if (signature === UNTYPED_BUILTINS.listOrStringLength.signature.join(" ")) {
-      const identSequence = getIdentifierSequenceName(args[0]);
-      if (identSequence !== null) {
-        try {
-          const list = this.getMutableList(identSequence);
-          return list.items.length;
-        } catch {}
-      }
-
-      const argVal0 = this.evalExpr(args[0]);
-      if (typeof argVal0 === "string") {
-        return argVal0.length;
-      }
-
-      throw new Error(
-        "Could not evaluate `" +
-          stringifyExpression(expr) +
-          "`. Expected argument 0 to be a string or list, but it was `" +
-          argVal0 +
-          "`."
-      );
+    if (signature === UNTYPED_BUILTINS.listLength.signature.join(" ")) {
+      const listName = squares[0].identifiers.map((i) => i.name).join(" ");
+      const list = this.getMutableList(listName);
+      return list.items.length;
     }
 
     if (signature === UNTYPED_BUILTINS.listItemOf.signature.join(" ")) {
@@ -279,10 +263,10 @@ class ProgramImpl implements Program {
 
   evalUserQueryApplicationUsingArgVals(
     def: ast.QueryDef,
-    argVals: NingAtom[]
-  ): NingAtom {
+    argVals: NingVal[]
+  ): NingVal {
     const argMap = getVariableMapWithArgs(def.signature, argVals);
-    this.stack.push({ atoms: argMap, lists: new Map() });
+    this.stack.push({ variables: argMap, lists: new Map() });
 
     for (const command of def.body.commands) {
       const returnVal = this.executeCommandAndGetReturnValue(command);
@@ -302,11 +286,11 @@ class ProgramImpl implements Program {
 
   // If a `return` command is reached, this function will stop execution and return the value.
   // Otherwise, it will return `null`.
-  executeCommandAndGetReturnValue(command: ast.Command): null | NingAtom {
+  executeCommandAndGetReturnValue(command: ast.Command): null | NingVal {
     const commandSignatureString =
       getUntypedCommandApplicationSignatureString(command);
-    const [args, blockCommands] =
-      getCommandApplicationArgsAndBlockCommands(command);
+    const [args, squares, blockCommands] =
+      getCommandApplicationArgsAndSquaresAndBlockCommands(command);
 
     if (commandSignatureString === UNTYPED_BUILTINS.if_.signature.join(" ")) {
       if (this.evalExpr(args[0])) {
@@ -396,13 +380,10 @@ class ProgramImpl implements Program {
       commandSignatureString === UNTYPED_BUILTINS.let_.signature.join(" ") ||
       commandSignatureString === UNTYPED_BUILTINS.var_.signature.join(" ")
     ) {
-      const varName = getIdentifierSequenceName(args[0]);
-      if (varName === null) {
-        throw new Error("Invalid variable name: " + stringifyCommand(command));
-      }
-
-      const varValue = this.evalExpr(args[1]);
-
+      const varName = squares[0].identifiers
+        .map((ident) => ident.name)
+        .join(" ");
+      const varValue = this.evalExpr(args[0]);
       this.createVariableInTopStackEntry(varName, varValue);
       return null;
     }
@@ -410,13 +391,10 @@ class ProgramImpl implements Program {
     if (
       commandSignatureString === UNTYPED_BUILTINS.assign.signature.join(" ")
     ) {
-      const varName = getIdentifierSequenceName(args[0]);
-      if (varName === null) {
-        throw new Error("Invalid variable name: " + stringifyCommand(command));
-      }
-
-      const varValue = this.evalExpr(args[1]);
-
+      const varName = squares[0].identifiers
+        .map((ident) => ident.name)
+        .join(" ");
+      const varValue = this.evalExpr(args[0]);
       this.setExistingVariable(varName, varValue);
       return null;
     }
@@ -424,13 +402,10 @@ class ProgramImpl implements Program {
     if (
       commandSignatureString === UNTYPED_BUILTINS.increase.signature.join(" ")
     ) {
-      const varName = getIdentifierSequenceName(args[0]);
-      if (varName === null) {
-        throw new Error("Invalid variable name: " + stringifyCommand(command));
-      }
-
-      const varValue = this.evalExpr(args[1]);
-
+      const varName = squares[0].identifiers
+        .map((ident) => ident.name)
+        .join(" ");
+      const varValue = this.evalExpr(args[0]);
       this.increaseExistingVariable(varName, varValue);
       return null;
     }
@@ -439,11 +414,9 @@ class ProgramImpl implements Program {
       commandSignatureString ===
       UNTYPED_BUILTINS.numberListCreate.signature.join(" ")
     ) {
-      const listName = getIdentifierSequenceName(args[0]);
-      if (listName === null) {
-        throw new Error("Invalid variable name: " + stringifyCommand(command));
-      }
-
+      const listName = squares[0].identifiers
+        .map((ident) => ident.name)
+        .join(" ");
       this.createListInTopStackEntry(listName, "number");
       return null;
     }
@@ -452,11 +425,9 @@ class ProgramImpl implements Program {
       commandSignatureString ===
       UNTYPED_BUILTINS.stringListCreate.signature.join(" ")
     ) {
-      const listName = getIdentifierSequenceName(args[0]);
-      if (listName === null) {
-        throw new Error("Invalid variable name: " + stringifyCommand(command));
-      }
-
+      const listName = squares[0].identifiers
+        .map((ident) => ident.name)
+        .join(" ");
       this.createListInTopStackEntry(listName, "string");
       return null;
     }
@@ -465,11 +436,9 @@ class ProgramImpl implements Program {
       commandSignatureString ===
       UNTYPED_BUILTINS.booleanListCreate.signature.join(" ")
     ) {
-      const listName = getIdentifierSequenceName(args[0]);
-      if (listName === null) {
-        throw new Error("Invalid variable name: " + stringifyCommand(command));
-      }
-
+      const listName = squares[0].identifiers
+        .map((ident) => ident.name)
+        .join(" ");
       this.createListInTopStackEntry(listName, "boolean");
       return null;
     }
@@ -478,14 +447,11 @@ class ProgramImpl implements Program {
       commandSignatureString ===
       UNTYPED_BUILTINS.listReplaceItem.signature.join(" ")
     ) {
-      const listName = getIdentifierSequenceName(args[1]);
-      if (listName === null) {
-        throw new Error("Invalid variable name: " + stringifyCommand(command));
-      }
-
+      const listName = squares[0].identifiers
+        .map((ident) => ident.name)
+        .join(" ");
       const index = this.evalExpr(args[0]);
-      const newItem = this.evalExpr(args[2]);
-
+      const newItem = this.evalExpr(args[1]);
       this.replaceListItemIfPossible(listName, index, newItem);
       return null;
     }
@@ -493,14 +459,11 @@ class ProgramImpl implements Program {
     if (
       commandSignatureString === UNTYPED_BUILTINS.listInsert.signature.join(" ")
     ) {
-      const listName = getIdentifierSequenceName(args[2]);
-      if (listName === null) {
-        throw new Error("Invalid variable name: " + stringifyCommand(command));
-      }
-
+      const listName = squares[0].identifiers
+        .map((ident) => ident.name)
+        .join(" ");
       const index = this.evalExpr(args[1]);
       const newItem = this.evalExpr(args[0]);
-
       this.insertListItemIfPossible(listName, index, newItem);
       return null;
     }
@@ -509,13 +472,10 @@ class ProgramImpl implements Program {
       commandSignatureString ===
       UNTYPED_BUILTINS.listDeleteItem.signature.join(" ")
     ) {
-      const listName = getIdentifierSequenceName(args[1]);
-      if (listName === null) {
-        throw new Error("Invalid variable name: " + stringifyCommand(command));
-      }
-
+      const listName = squares[0].identifiers
+        .map((ident) => ident.name)
+        .join(" ");
       const index = this.evalExpr(args[0]);
-
       this.deleteListItemIfPossible(listName, index);
       return null;
     }
@@ -524,11 +484,9 @@ class ProgramImpl implements Program {
       commandSignatureString ===
       UNTYPED_BUILTINS.listDeleteAll.signature.join(" ")
     ) {
-      const listName = getIdentifierSequenceName(args[0]);
-      if (listName === null) {
-        throw new Error("Invalid variable name: " + stringifyCommand(command));
-      }
-
+      const listName = squares[0].identifiers
+        .map((ident) => ident.name)
+        .join(" ");
       this.getMutableList(listName).items.splice(0, Infinity);
       return null;
     }
@@ -536,13 +494,10 @@ class ProgramImpl implements Program {
     if (
       commandSignatureString === UNTYPED_BUILTINS.listAdd.signature.join(" ")
     ) {
-      const listName = getIdentifierSequenceName(args[1]);
-      if (listName === null) {
-        throw new Error("Invalid variable name: " + stringifyCommand(command));
-      }
-
+      const listName = squares[0].identifiers
+        .map((ident) => ident.name)
+        .join(" ");
       const item = this.evalExpr(args[0]);
-
       this.getMutableList(listName).items.push(item);
       return null;
     }
@@ -613,7 +568,7 @@ class ProgramImpl implements Program {
   // Otherwise, it will return `null`.
   executeBlockCommandAndGetReturnValue(
     command: ast.BlockCommand
-  ): null | NingAtom {
+  ): null | NingVal {
     this.stack.push(getEmptyStackEntry());
     for (const subCommand of command.commands) {
       const returnVal = this.executeCommandAndGetReturnValue(subCommand);
@@ -629,10 +584,10 @@ class ProgramImpl implements Program {
 
   evalUserCommandApplicationUsingArgVals(
     def: ast.CommandDef,
-    argVals: NingAtom[]
+    argVals: NingVal[]
   ): void {
     const argMap = getVariableMapWithArgs(def.signature, argVals);
-    this.stack.push({ atoms: argMap, lists: new Map() });
+    this.stack.push({ variables: argMap, lists: new Map() });
 
     for (const command of def.body.commands) {
       const returnVal = this.executeCommandAndGetReturnValue(command);
@@ -645,26 +600,26 @@ class ProgramImpl implements Program {
     this.stack.pop();
   }
 
-  createVariableInTopStackEntry(name: string, value: NingAtom): void {
-    this.stack[this.stack.length - 1].atoms.set(name, value);
+  createVariableInTopStackEntry(name: string, value: NingVal): void {
+    this.stack[this.stack.length - 1].variables.set(name, value);
   }
 
-  setExistingVariable(name: string, value: NingAtom): void {
+  setExistingVariable(name: string, value: NingVal): void {
     for (let i = this.stack.length - 1; i >= 0; --i) {
-      if (this.stack[i].atoms.has(name)) {
-        this.stack[i].atoms.set(name, value);
+      if (this.stack[i].variables.has(name)) {
+        this.stack[i].variables.set(name, value);
         return;
       }
     }
     throw new Error("Attempted to set value of non-existent variable: " + name);
   }
 
-  increaseExistingVariable(name: string, amount: NingAtom): void {
+  increaseExistingVariable(name: string, amount: NingVal): void {
     for (let i = this.stack.length - 1; i >= 0; --i) {
-      if (this.stack[i].atoms.has(name)) {
-        this.stack[i].atoms.set(
+      if (this.stack[i].variables.has(name)) {
+        this.stack[i].variables.set(
           name,
-          (this.stack[i].atoms.get(name) as number) + (amount as number)
+          (this.stack[i].variables.get(name) as number) + (amount as number)
         );
         return;
       }
@@ -672,16 +627,12 @@ class ProgramImpl implements Program {
     throw new Error("Attempted to set value of non-existent variable: " + name);
   }
 
-  createListInTopStackEntry(name: string, kind: NingAtomKind): void {
+  createListInTopStackEntry(name: string, kind: NingValKind): void {
     this.stack[this.stack.length - 1].lists.set(name, { kind, items: [] });
   }
 
   // If the index is invalid, this is a no-op.
-  replaceListItemIfPossible(
-    name: string,
-    index: NingAtom,
-    item: NingAtom
-  ): void {
+  replaceListItemIfPossible(name: string, index: NingVal, item: NingVal): void {
     const list = this.getMutableList(name);
     if (
       typeof index === "number" &&
@@ -695,11 +646,7 @@ class ProgramImpl implements Program {
   }
 
   // If the index is invalid, this is a no-op.
-  insertListItemIfPossible(
-    name: string,
-    index: NingAtom,
-    item: NingAtom
-  ): void {
+  insertListItemIfPossible(name: string, index: NingVal, item: NingVal): void {
     const list = this.getMutableList(name);
     if (
       typeof index === "number" &&
@@ -713,7 +660,7 @@ class ProgramImpl implements Program {
   }
 
   // If the index is invalid, this is a no-op.
-  deleteListItemIfPossible(name: string, index: NingAtom): void {
+  deleteListItemIfPossible(name: string, index: NingVal): void {
     const list = this.getMutableList(name);
     if (
       typeof index === "number" &&
@@ -737,118 +684,8 @@ class ProgramImpl implements Program {
   }
 }
 
-type CommandMatchResult = CommandMatchOk | CommandMatchErr;
-
-interface CommandMatchOk {
-  succeeded: true;
-  args: ast.NonIdentifierCommandPart[];
-}
-
-interface CommandMatchErr {
-  succeeded: false;
-}
-
-function getCommandMatchStatus(
-  command: ast.Command,
-  signature: readonly string[]
-): CommandMatchResult {
-  if (command.parts.length !== signature.length) {
-    return { succeeded: false };
-  }
-
-  const args: ast.NonIdentifierCommandPart[] = [];
-
-  for (let i = 0; i < command.parts.length; ++i) {
-    const commandPart = command.parts[i];
-    const expectedPart = signature[i];
-
-    if (
-      commandPart.kind === "identifier" &&
-      commandPart.name === expectedPart
-    ) {
-      continue;
-    }
-
-    if (
-      commandPart.kind !== "identifier" &&
-      expectedPart === UNTYPED_SENTINEL
-    ) {
-      args.push(commandPart);
-      continue;
-    }
-
-    return { succeeded: false };
-  }
-
-  return { succeeded: true, args };
-}
-
-// If `part` is a square-bracketed expression containing a sequence of `Identifier`s,
-// this function returns the names of each identifier joined by spaces.
-// Otherwise, it returns `null`.
-function getStaticSquareName(part: ast.CommandPart): null | string {
-  if (
-    !(
-      part.kind === "square_bracketed_expression" &&
-      part.expression.kind === "compound_expression"
-    )
-  ) {
-    return null;
-  }
-
-  const nameParts = part.expression.parts;
-  if (
-    !nameParts.every(
-      (part): part is ast.Identifier => part.kind === "identifier"
-    )
-  ) {
-    return null;
-  }
-
-  return nameParts.join(" ");
-}
-
-// If `expr` is a sequence of `Identifier`s, this function returns
-// the names of each identifier joined by spaces.
-// Otherwise, it returns `null`.
-function getIdentifierSequenceName(expr: ast.Expression): null | string {
-  if (expr.kind === "compound_expression") {
-    const { parts } = expr;
-    if (
-      parts.every((part): part is ast.Identifier => part.kind === "identifier")
-    ) {
-      return parts.map((part) => part.name).join(" ");
-    }
-  }
-
-  return null;
-}
-
 function stringifyCommand(command: ast.Command): string {
   return "TODO IMPLEMENT stringifyCommand;";
-}
-
-function getExprFromCommandPart(
-  commandPart: ast.CommandPart
-): null | ast.Expression {
-  if (commandPart.kind === "parenthesized_expression") {
-    return commandPart.expression;
-  }
-
-  if (commandPart.kind === "square_bracketed_expression") {
-    return commandPart.expression;
-  }
-
-  if (
-    commandPart.kind === "block_command" ||
-    commandPart.kind === "identifier"
-  ) {
-    return null;
-  }
-
-  // Unreachable.
-  // `commandPart` should have type `never`.
-  return commandPart;
 }
 
 function parseNingString(source: string): string {
@@ -924,8 +761,9 @@ function getUntypedQueryApplicationSignatureString(
           case "identifier":
             return p.name;
           case "parenthesized_expression":
-          case "square_bracketed_expression":
-            return UNTYPED_SENTINEL;
+            return UNTYPED_VAL_SENTINEL;
+          case "square_bracketed_identifier_sequence":
+            return UNTYPED_REF_SENTINEL;
         }
       })
       .join(" ")
@@ -943,9 +781,11 @@ function getUntypedCommandApplicationSignatureString(
           case "identifier":
             return p.name;
           case "parenthesized_expression":
-          case "square_bracketed_expression":
+            return UNTYPED_VAL_SENTINEL;
+          case "square_bracketed_identifier_sequence":
+            return UNTYPED_REF_SENTINEL;
           case "block_command":
-            return UNTYPED_SENTINEL;
+            return UNTYPED_BLOCK_SENTINEL;
         }
       })
       .join(" ")
@@ -956,32 +796,54 @@ function stringifyExpression(expr: ast.Expression): string {
   return "TODO IMPLEMENT stringifyExpression";
 }
 
-function getQueryApplicationArgs(
+function getQueryApplicationArgsAndSquares(
   expr: ast.CompoundExpression
-): ast.Expression[] {
-  return (
-    expr.parts
-      // eslint-disable-next-line array-callback-return
-      .map((p): ast.Expression | null => {
-        switch (p.kind) {
-          case "identifier":
-            return null;
-          case "parenthesized_expression":
-          case "square_bracketed_expression":
-            return p.expression;
-        }
-      })
-      .filter((arg): arg is ast.Expression => arg !== null)
-  );
+): [ast.Expression[], ast.SquareBracketedIdentifierSequence[]] {
+  const args: ast.Expression[] = [];
+  const squares: ast.SquareBracketedIdentifierSequence[] = [];
+  for (const part of expr.parts) {
+    if (part.kind === "identifier") {
+      continue;
+    }
+
+    if (part.kind === "parenthesized_expression") {
+      args.push(part.expression);
+      continue;
+    }
+
+    if (part.kind === "square_bracketed_identifier_sequence") {
+      squares.push(part);
+      continue;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const exhaustivenessCheck: never = part;
+  }
+  return [args, squares];
 }
 
-function getCommandApplicationArgsAndBlockCommands(
+function getCommandApplicationArgsAndSquaresAndBlockCommands(
   command: ast.Command
-): [ast.Expression[], ast.BlockCommand[]] {
-  let args: ast.Expression[] = [];
-  let blockCommands: ast.BlockCommand[] = [];
+): [
+  ast.Expression[],
+  ast.SquareBracketedIdentifierSequence[],
+  ast.BlockCommand[]
+] {
+  const args: ast.Expression[] = [];
+  const squares: ast.SquareBracketedIdentifierSequence[] = [];
+  const blockCommands: ast.BlockCommand[] = [];
   for (const part of command.parts) {
     if (part.kind === "identifier") {
+      continue;
+    }
+
+    if (part.kind === "parenthesized_expression") {
+      args.push(part.expression);
+      continue;
+    }
+
+    if (part.kind === "square_bracketed_identifier_sequence") {
+      squares.push(part);
       continue;
     }
 
@@ -990,18 +852,10 @@ function getCommandApplicationArgsAndBlockCommands(
       continue;
     }
 
-    if (
-      part.kind === "parenthesized_expression" ||
-      part.kind === "square_bracketed_expression"
-    ) {
-      args.push(part.expression);
-      continue;
-    }
-
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const exhaustivenessCheck: never = part;
   }
-  return [args, blockCommands];
+  return [args, squares, blockCommands];
 }
 
 function getUntypedFunctionSignatureString(
@@ -1015,7 +869,7 @@ function getUntypedFunctionSignatureString(
           case "identifier":
             return p.name;
           case "func_param_def":
-            return UNTYPED_SENTINEL;
+            return UNTYPED_VAL_SENTINEL;
         }
       })
       .join(" ")
@@ -1024,9 +878,9 @@ function getUntypedFunctionSignatureString(
 
 function getVariableMapWithArgs(
   signature: ast.FuncSignaturePart[],
-  argVals: NingAtom[]
-): Map<string, NingAtom> {
-  const argMap = new Map<string, NingAtom>();
+  argVals: NingVal[]
+): Map<string, NingVal> {
+  const argMap = new Map<string, NingVal>();
   let numberOfArgsAdded = 0;
   for (let i = 0; i < signature.length; ++i) {
     const part = signature[i];
@@ -1042,19 +896,19 @@ function getVariableMapWithArgs(
 }
 
 interface StackEntry {
-  atoms: Map<string, NingAtom>;
+  variables: Map<string, NingVal>;
   lists: Map<string, NingList>;
 }
 
 interface NingList {
-  kind: NingAtomKind;
-  items: NingAtom[];
+  kind: NingValKind;
+  items: NingVal[];
 }
 
-type NingAtomKind = "number" | "string" | "boolean";
+type NingValKind = "number" | "string" | "boolean";
 
 function getEmptyStackEntry(): StackEntry {
-  return { atoms: new Map(), lists: new Map() };
+  return { variables: new Map(), lists: new Map() };
 }
 
 // If `expr` is a string literal, this function returns the string value.

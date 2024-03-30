@@ -106,7 +106,7 @@ zeroOrMoreCommandParts
 commandPart
     : identifier
     | parenthesizedExpression
-    | squareBracketedExpression
+    | squareBracketedIdentifierSequence
     | blockCommand
 ;
 
@@ -115,9 +115,9 @@ parenthesizedExpression
         { $$ = { location: @$, kind: "parenthesized_expression", lparen: $1, expression: $2, rparen: $3 }; }
 ;
 
-squareBracketedExpression
-    : lsquare expression rsquare
-        { $$ = { location: @$, kind: "square_bracketed_expression", lsquare: $1, expression: $2, rsquare: $3 }; }
+squareBracketedIdentifierSequence
+    : lsquare oneOrMoreIdentifiers rsquare
+        { $$ = { location: @$, kind: "square_bracketed_identifier_sequence", lsquare: $1, identifiers: $2, rsquare: $3 }; }
 ;
 
 expression
@@ -140,7 +140,7 @@ zeroOrMoreCompoundExpressionParts
 compoundExpressionPart
     : identifier
     | parenthesizedExpression
-    | squareBracketedExpression
+    | squareBracketedIdentifierSequence
 ;
 
 type_
