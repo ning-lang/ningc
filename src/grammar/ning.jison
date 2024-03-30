@@ -17,7 +17,6 @@
 "Number" return "NUMBER_KW";
 "String" return "STRING_KW";
 "Boolean" return "BOOLEAN_KW";
-"List" return "LIST_KW";
 [^\s()[\]{};A-Z"]+ return "IDENTIFIER"
 <<EOF>> return 'EOF';
 
@@ -150,12 +149,6 @@ type_
         { $$ = { location: @$, kind: "type", tokens: [$1], value: "string" }; }
     | booleanKw
         { $$ = { location: @$, kind: "type", tokens: [$1], value: "boolean" }; }
-    | numberKw listKw
-        { $$ = { location: @$, kind: "type", tokens: [$1, $2], value: "number_list" }; }
-    | stringKw listKw
-        { $$ = { location: @$, kind: "type", tokens: [$1, $2], value: "string_list" }; }
-    | booleanKw listKw
-        { $$ = { location: @$, kind: "type", tokens: [$1, $2], value: "boolean_list" }; }
 ;
 
 lparen
@@ -226,11 +219,6 @@ stringKw
 booleanKw
     : BOOLEAN_KW
         { $$ = { location: @$, kind: "boolean_kw" }; }
-;
-
-listKw
-    : LIST_KW
-        { $$ = { location: @$, kind: "list_kw" }; }
 ;
 
 identifier

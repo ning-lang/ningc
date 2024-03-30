@@ -153,23 +153,9 @@ export interface StaticSquareErr {
 }
 
 function checkStaticSquare(part: ast.CommandPart): StaticSquareResult {
-  if (
-    !(
-      part.kind === "square_bracketed_expression" &&
-      part.expression.kind === "compound_expression"
-    )
-  ) {
+  if (!(part.kind === "square_bracketed_identifier_sequence")) {
     return { succeeded: false };
   }
 
-  const nameParts = part.expression.parts;
-  if (
-    !nameParts.every(
-      (part): part is ast.Identifier => part.kind === "identifier"
-    )
-  ) {
-    return { succeeded: false };
-  }
-
-  return { succeeded: true, nameParts };
+  return { succeeded: true, nameParts: part.identifiers };
 }

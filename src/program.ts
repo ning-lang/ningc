@@ -627,7 +627,7 @@ class ProgramImpl implements Program {
     throw new Error("Attempted to set value of non-existent variable: " + name);
   }
 
-  createListInTopStackEntry(name: string, kind: NingValKind): void {
+  createListInTopStackEntry(name: string, kind: ast.NingValKind): void {
     this.stack[this.stack.length - 1].lists.set(name, { kind, items: [] });
   }
 
@@ -901,11 +901,9 @@ interface StackEntry {
 }
 
 interface NingList {
-  kind: NingValKind;
+  kind: ast.NingValKind;
   items: NingVal[];
 }
-
-type NingValKind = "number" | "string" | "boolean";
 
 function getEmptyStackEntry(): StackEntry {
   return { variables: new Map(), lists: new Map() };

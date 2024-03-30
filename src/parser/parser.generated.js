@@ -82,26 +82,24 @@ var parser = (function () {
       for (o = o || {}, l = k.length; l--; o[k[l]] = v);
       return o;
     },
-    $V0 = [5, 49, 51, 52, 53, 54],
+    $V0 = [5, 48, 50, 51, 52, 53],
     $V1 = [1, 16],
     $V2 = [1, 17],
     $V3 = [1, 18],
     $V4 = [1, 20],
     $V5 = [1, 25],
-    $V6 = [50, 56],
-    $V7 = [1, 27],
-    $V8 = [50, 55, 56],
-    $V9 = [41, 42, 56],
-    $Va = [2, 11],
-    $Vb = [41, 43, 45, 46, 47, 56],
-    $Vc = [1, 35],
-    $Vd = [1, 38],
-    $Ve = [41, 43, 45, 47, 56],
-    $Vf = [41, 42, 43, 45, 47, 56],
-    $Vg = [5, 41, 43, 45, 47, 49, 51, 52, 53, 54, 56],
-    $Vh = [1, 56],
-    $Vi = [41, 42, 43, 56],
-    $Vj = [42, 44, 56];
+    $V6 = [49, 54],
+    $V7 = [40, 41, 54],
+    $V8 = [2, 11],
+    $V9 = [40, 42, 44, 45, 46, 54],
+    $Va = [1, 31],
+    $Vb = [1, 34],
+    $Vc = [40, 42, 44, 46, 54],
+    $Vd = [40, 41, 42, 44, 46, 54],
+    $Ve = [5, 40, 42, 44, 46, 48, 50, 51, 52, 53, 54],
+    $Vf = [1, 52],
+    $Vg = [40, 41, 42, 54],
+    $Vh = [41, 43, 54];
   var parser = {
     trace: function trace() {},
     yy: {},
@@ -144,45 +142,42 @@ var parser = (function () {
       numberKw: 37,
       stringKw: 38,
       booleanKw: 39,
-      listKw: 40,
-      LPAREN: 41,
-      RPAREN: 42,
-      LSQUARE: 43,
-      RSQUARE: 44,
-      LCURLY: 45,
-      RCURLY: 46,
-      SEMICOLON: 47,
-      STRING_LITERAL: 48,
-      COMMAND_KW: 49,
-      QUERY_KW: 50,
-      GLOBAL_KW: 51,
-      NUMBER_KW: 52,
-      STRING_KW: 53,
-      BOOLEAN_KW: 54,
-      LIST_KW: 55,
-      IDENTIFIER: 56,
+      LPAREN: 40,
+      RPAREN: 41,
+      LSQUARE: 42,
+      RSQUARE: 43,
+      LCURLY: 44,
+      RCURLY: 45,
+      SEMICOLON: 46,
+      STRING_LITERAL: 47,
+      COMMAND_KW: 48,
+      QUERY_KW: 49,
+      GLOBAL_KW: 50,
+      NUMBER_KW: 51,
+      STRING_KW: 52,
+      BOOLEAN_KW: 53,
+      IDENTIFIER: 54,
       $accept: 0,
       $end: 1,
     },
     terminals_: {
       2: "error",
       5: "EOF",
-      41: "LPAREN",
-      42: "RPAREN",
-      43: "LSQUARE",
-      44: "RSQUARE",
-      45: "LCURLY",
-      46: "RCURLY",
-      47: "SEMICOLON",
-      48: "STRING_LITERAL",
-      49: "COMMAND_KW",
-      50: "QUERY_KW",
-      51: "GLOBAL_KW",
-      52: "NUMBER_KW",
-      53: "STRING_KW",
-      54: "BOOLEAN_KW",
-      55: "LIST_KW",
-      56: "IDENTIFIER",
+      40: "LPAREN",
+      41: "RPAREN",
+      42: "LSQUARE",
+      43: "RSQUARE",
+      44: "LCURLY",
+      45: "RCURLY",
+      46: "SEMICOLON",
+      47: "STRING_LITERAL",
+      48: "COMMAND_KW",
+      49: "QUERY_KW",
+      50: "GLOBAL_KW",
+      51: "NUMBER_KW",
+      52: "STRING_KW",
+      53: "BOOLEAN_KW",
+      54: "IDENTIFIER",
     },
     productions_: [
       0,
@@ -224,9 +219,6 @@ var parser = (function () {
       [15, 1],
       [15, 1],
       [15, 1],
-      [15, 2],
-      [15, 2],
-      [15, 2],
       [11, 1],
       [13, 1],
       [31, 1],
@@ -241,7 +233,6 @@ var parser = (function () {
       [37, 1],
       [38, 1],
       [39, 1],
-      [40, 1],
       [19, 1],
     ],
     performAction: function anonymous(
@@ -387,79 +378,52 @@ var parser = (function () {
           };
           break;
         case 39:
-          this.$ = {
-            location: this._$,
-            kind: "type",
-            tokens: [$$[$0 - 1], $$[$0]],
-            value: "number_list",
-          };
-          break;
-        case 40:
-          this.$ = {
-            location: this._$,
-            kind: "type",
-            tokens: [$$[$0 - 1], $$[$0]],
-            value: "string_list",
-          };
-          break;
-        case 41:
-          this.$ = {
-            location: this._$,
-            kind: "type",
-            tokens: [$$[$0 - 1], $$[$0]],
-            value: "boolean_list",
-          };
-          break;
-        case 42:
           this.$ = { location: this._$, kind: "lparen" };
           break;
-        case 43:
+        case 40:
           this.$ = { location: this._$, kind: "rparen" };
           break;
-        case 44:
+        case 41:
           this.$ = { location: this._$, kind: "lsquare" };
           break;
-        case 45:
+        case 42:
           this.$ = { location: this._$, kind: "rsquare" };
           break;
-        case 46:
+        case 43:
           this.$ = { location: this._$, kind: "lcurly" };
           break;
-        case 47:
+        case 44:
           this.$ = { location: this._$, kind: "rcurly" };
           break;
-        case 48:
+        case 45:
           this.$ = { location: this._$, kind: "semicolon" };
           break;
-        case 49:
+        case 46:
           this.$ = {
             location: this._$,
             kind: "string_literal",
             source: $$[$0],
           };
           break;
-        case 50:
+        case 47:
           this.$ = { location: this._$, kind: "command_kw" };
           break;
-        case 51:
+        case 48:
           this.$ = { location: this._$, kind: "query_kw" };
           break;
-        case 52:
+        case 49:
           this.$ = { location: this._$, kind: "global_kw" };
           break;
-        case 53:
+        case 50:
           this.$ = { location: this._$, kind: "number_kw" };
           break;
-        case 54:
+        case 51:
           this.$ = { location: this._$, kind: "string_kw" };
           break;
-        case 55:
+        case 52:
           this.$ = { location: this._$, kind: "boolean_kw" };
           break;
-        case 56:
-          this.$ = { location: this._$, kind: "list_kw" };
-          break;
-        case 57:
+        case 53:
           this.$ = { location: this._$, kind: "identifier", name: $$[$0] };
           break;
       }
@@ -479,120 +443,116 @@ var parser = (function () {
         37: 12,
         38: 13,
         39: 14,
-        49: [1, 11],
-        51: [1, 15],
-        52: $V1,
-        53: $V2,
-        54: $V3,
+        48: [1, 11],
+        50: [1, 15],
+        51: $V1,
+        52: $V2,
+        53: $V3,
       },
       { 1: [2, 1] },
       o($V0, [2, 2]),
       o($V0, [2, 4]),
       o($V0, [2, 5]),
       o($V0, [2, 6]),
-      { 11: 19, 41: $V4 },
-      { 16: 21, 50: [1, 22] },
-      { 14: 23, 21: 24, 45: $V5 },
-      { 41: [2, 50] },
-      o($V6, [2, 36], { 40: 26, 55: $V7 }),
-      o($V6, [2, 37], { 40: 28, 55: $V7 }),
-      o($V6, [2, 38], { 40: 29, 55: $V7 }),
-      { 45: [2, 52] },
-      o($V8, [2, 53]),
-      o($V8, [2, 54]),
-      o($V8, [2, 55]),
-      o($V9, $Va, { 12: 30 }),
-      o([41, 42, 43, 48, 52, 53, 54, 56], [2, 42]),
-      { 11: 31, 41: $V4 },
-      { 41: [2, 51] },
+      { 11: 19, 40: $V4 },
+      { 16: 21, 49: [1, 22] },
+      { 14: 23, 21: 24, 44: $V5 },
+      { 40: [2, 47] },
+      o($V6, [2, 36]),
+      o($V6, [2, 37]),
+      o($V6, [2, 38]),
+      { 44: [2, 49] },
+      o($V6, [2, 50]),
+      o($V6, [2, 51]),
+      o($V6, [2, 52]),
+      o($V7, $V8, { 12: 26 }),
+      o([40, 41, 42, 47, 51, 52, 53, 54], [2, 39]),
+      { 11: 27, 40: $V4 },
+      { 40: [2, 48] },
       o($V0, [2, 9]),
-      o($Vb, [2, 18], { 22: 32 }),
-      o($Vb, [2, 46]),
-      o($V6, [2, 39]),
-      o($V6, [2, 56]),
-      o($V6, [2, 40]),
-      o($V6, [2, 41]),
-      { 11: 37, 13: 33, 18: 34, 19: 36, 41: $V4, 42: $Vc, 56: $Vd },
-      o($V9, $Va, { 12: 39 }),
-      o($Ve, [2, 21], { 23: 40, 24: 41, 25: 43, 46: [1, 42] }),
-      { 14: 44, 21: 24, 45: $V5 },
-      o($V9, [2, 10]),
-      o($Vf, [2, 43]),
-      o($V9, [2, 12]),
-      { 15: 45, 37: 12, 38: 13, 39: 14, 52: $V1, 53: $V2, 54: $V3 },
-      o([41, 42, 43, 44, 45, 47, 56], [2, 57]),
-      { 11: 37, 13: 46, 18: 34, 19: 36, 41: $V4, 42: $Vc, 56: $Vd },
-      o($Vg, [2, 16]),
-      o($Vb, [2, 17]),
-      o($Vg, [2, 47]),
+      o($V9, [2, 18], { 22: 28 }),
+      o($V9, [2, 43]),
+      { 11: 33, 13: 29, 18: 30, 19: 32, 40: $V4, 41: $Va, 54: $Vb },
+      o($V7, $V8, { 12: 35 }),
+      o($Vc, [2, 21], { 23: 36, 24: 37, 25: 39, 45: [1, 38] }),
+      { 14: 40, 21: 24, 44: $V5 },
+      o($V7, [2, 10]),
+      o($Vd, [2, 40]),
+      o($V7, [2, 12]),
+      { 15: 41, 37: 12, 38: 13, 39: 14, 51: $V1, 52: $V2, 53: $V3 },
+      o([40, 41, 42, 43, 44, 46, 54], [2, 53]),
+      { 11: 33, 13: 42, 18: 30, 19: 32, 40: $V4, 41: $Va, 54: $Vb },
+      o($Ve, [2, 16]),
+      o($V9, [2, 17]),
+      o($Ve, [2, 44]),
       {
-        11: 54,
-        14: 53,
-        19: 50,
+        11: 50,
+        14: 49,
+        19: 46,
         21: 24,
-        26: 47,
-        27: 48,
-        28: 51,
-        29: 52,
-        31: 55,
-        41: $V4,
-        43: $Vh,
-        45: $V5,
-        47: [1, 49],
-        56: $Vd,
+        26: 43,
+        27: 44,
+        28: 47,
+        29: 48,
+        31: 51,
+        40: $V4,
+        42: $Vf,
+        44: $V5,
+        46: [1, 45],
+        54: $Vb,
       },
       o($V0, [2, 7]),
-      { 19: 58, 20: 57, 56: $Vd },
-      { 14: 59, 21: 24, 45: $V5 },
-      o($Vb, [2, 19]),
-      o($Ve, [2, 20]),
-      o($Vb, [2, 48]),
-      o($Ve, [2, 22]),
-      o($Ve, [2, 23]),
-      o($Ve, [2, 24]),
-      o($Ve, [2, 25]),
-      o($Vi, [2, 32], { 30: 60, 33: 61, 34: 62, 35: 64, 48: [1, 63] }),
-      { 19: 58, 20: 65, 56: $Vd },
-      { 56: [2, 44] },
-      { 13: 66, 19: 67, 42: $Vc, 56: $Vd },
-      o($Vj, [2, 14]),
+      { 19: 54, 20: 53, 54: $Vb },
+      { 14: 55, 21: 24, 44: $V5 },
+      o($V9, [2, 19]),
+      o($Vc, [2, 20]),
+      o($V9, [2, 45]),
+      o($Vc, [2, 22]),
+      o($Vc, [2, 23]),
+      o($Vc, [2, 24]),
+      o($Vc, [2, 25]),
+      o($Vg, [2, 32], { 30: 56, 33: 57, 34: 58, 35: 60, 47: [1, 59] }),
+      { 19: 54, 20: 61, 54: $Vb },
+      { 54: [2, 41] },
+      { 13: 62, 19: 63, 41: $Va, 54: $Vb },
+      o($Vh, [2, 14]),
       o($V0, [2, 8]),
-      { 13: 68, 42: $Vc },
-      { 42: [2, 28] },
-      { 42: [2, 29] },
-      { 42: [2, 49] },
+      { 13: 64, 41: $Va },
+      { 41: [2, 28] },
+      { 41: [2, 29] },
+      { 41: [2, 46] },
       {
-        11: 54,
-        19: 70,
-        28: 71,
-        29: 72,
-        31: 55,
-        36: 69,
-        41: $V4,
-        42: [2, 30],
-        43: $Vh,
-        56: $Vd,
+        11: 50,
+        19: 66,
+        28: 67,
+        29: 68,
+        31: 51,
+        36: 65,
+        40: $V4,
+        41: [2, 30],
+        42: $Vf,
+        54: $Vb,
       },
-      { 19: 67, 32: 73, 44: [1, 74], 56: $Vd },
-      o($V9, [2, 13]),
-      o($Vj, [2, 15]),
-      o($Vf, [2, 26]),
-      o($Vi, [2, 31]),
-      o($Vi, [2, 33]),
-      o($Vi, [2, 34]),
-      o($Vi, [2, 35]),
-      o($Vf, [2, 27]),
-      o($Vf, [2, 45]),
+      { 19: 63, 32: 69, 43: [1, 70], 54: $Vb },
+      o($V7, [2, 13]),
+      o($Vh, [2, 15]),
+      o($Vd, [2, 26]),
+      o($Vg, [2, 31]),
+      o($Vg, [2, 33]),
+      o($Vg, [2, 34]),
+      o($Vg, [2, 35]),
+      o($Vd, [2, 27]),
+      o($Vd, [2, 42]),
     ],
     defaultActions: {
       3: [2, 1],
-      11: [2, 50],
-      15: [2, 52],
-      22: [2, 51],
-      56: [2, 44],
-      61: [2, 28],
-      62: [2, 29],
-      63: [2, 49],
+      11: [2, 47],
+      15: [2, 49],
+      22: [2, 48],
+      52: [2, 41],
+      57: [2, 28],
+      58: [2, 29],
+      59: [2, 46],
     },
     parseError: function parseError(str, hash) {
       if (hash.recoverable) {
@@ -1192,12 +1152,9 @@ var parser = (function () {
             return "BOOLEAN_KW";
             break;
           case 16:
-            return "LIST_KW";
-            break;
-          case 17:
             return "IDENTIFIER";
             break;
-          case 18:
+          case 17:
             return 5;
             break;
         }
@@ -1219,15 +1176,12 @@ var parser = (function () {
         /^(?:Number\b)/,
         /^(?:String\b)/,
         /^(?:Boolean\b)/,
-        /^(?:List\b)/,
         /^(?:[^\s()[\]{};A-Z"]+)/,
         /^(?:$)/,
       ],
       conditions: {
         INITIAL: {
-          rules: [
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
-          ],
+          rules: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
           inclusive: true,
         },
       },

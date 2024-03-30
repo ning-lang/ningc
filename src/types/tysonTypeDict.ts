@@ -21,7 +21,6 @@ interface TokenTypeDict {
   NUMBER_KW: "Number";
   STRING_KW: "String";
   BOOLEAN_KW: "Boolean";
-  LIST_KW: "List";
   IDENTIFIER: string;
   EOF: unknown;
 }
@@ -62,7 +61,6 @@ interface NodeTypeDict {
   numberKw: Token<"number_kw">;
   stringKw: Token<"string_kw">;
   booleanKw: Token<"boolean_kw">;
-  listKw: Token<"list_kw">;
 
   stringLiteral: StringLiteral;
   identifier: Identifier;
@@ -175,16 +173,10 @@ export interface TypeNode {
   kind: "type";
 
   tokens: Token<TokenKind>[];
-  value: Type;
+  value: NingValKind;
 }
 
-export type Type =
-  | "number"
-  | "string"
-  | "boolean"
-  | "number_list"
-  | "string_list"
-  | "boolean_list";
+export type NingValKind = "number" | "string" | "boolean";
 
 export interface Token<K extends TokenKind> {
   location: JisonTokenLocation;
@@ -205,7 +197,6 @@ export type TokenKind =
   | "number_kw"
   | "string_kw"
   | "boolean_kw"
-  | "list_kw"
   | "string_literal"
   | "identifier";
 

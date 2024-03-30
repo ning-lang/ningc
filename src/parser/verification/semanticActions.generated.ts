@@ -419,54 +419,6 @@ const semanticActions = {
     return $$;
   },
 
-  "type_ -> numberKw listKw"(
-    yylstack: { "@$": TokenLocation },
-
-    $1: TysonTypeDict["numberKw"],
-    $2: TysonTypeDict["listKw"]
-  ): TysonTypeDict["type_"] {
-    let $$: TysonTypeDict["type_"];
-    $$ = {
-      location: yylstack["@$"],
-      kind: "type",
-      tokens: [$1, $2],
-      value: "number_list",
-    };
-    return $$;
-  },
-
-  "type_ -> stringKw listKw"(
-    yylstack: { "@$": TokenLocation },
-
-    $1: TysonTypeDict["stringKw"],
-    $2: TysonTypeDict["listKw"]
-  ): TysonTypeDict["type_"] {
-    let $$: TysonTypeDict["type_"];
-    $$ = {
-      location: yylstack["@$"],
-      kind: "type",
-      tokens: [$1, $2],
-      value: "string_list",
-    };
-    return $$;
-  },
-
-  "type_ -> booleanKw listKw"(
-    yylstack: { "@$": TokenLocation },
-
-    $1: TysonTypeDict["booleanKw"],
-    $2: TysonTypeDict["listKw"]
-  ): TysonTypeDict["type_"] {
-    let $$: TysonTypeDict["type_"];
-    $$ = {
-      location: yylstack["@$"],
-      kind: "type",
-      tokens: [$1, $2],
-      value: "boolean_list",
-    };
-    return $$;
-  },
-
   "lparen -> LPAREN"(yylstack: {
     "@$": TokenLocation;
   }): TysonTypeDict["lparen"] {
@@ -578,14 +530,6 @@ const semanticActions = {
   }): TysonTypeDict["booleanKw"] {
     let $$: TysonTypeDict["booleanKw"];
     $$ = { location: yylstack["@$"], kind: "boolean_kw" };
-    return $$;
-  },
-
-  "listKw -> LIST_KW"(yylstack: {
-    "@$": TokenLocation;
-  }): TysonTypeDict["listKw"] {
-    let $$: TysonTypeDict["listKw"];
-    $$ = { location: yylstack["@$"], kind: "list_kw" };
     return $$;
   },
 
