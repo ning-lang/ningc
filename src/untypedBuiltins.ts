@@ -320,23 +320,24 @@ export const UNTYPED_BUILTINS = {
     isQuery: true,
     signature: ["can", VAL, "be parsed as a number?"],
   },
-  stringCanBeParsedAsRealNumber: {
-    isQuery: true,
-    signature: ["can", VAL, "be parsed as a real number?"],
-  },
   stringCanBeParsedAsInteger: {
     isQuery: true,
     signature: ["can", VAL, "be parsed as an integer?"],
   },
 
-  // Sensing
-  screenMouseX: {
+  randomInt: {
     isQuery: true,
-    signature: ["screen mouse x"],
+    signature: ["random number from ", VAL, " up to but not including ", VAL],
   },
-  screenMouseY: {
+
+  // Sensing
+  windowMouseX: {
     isQuery: true,
-    signature: ["screen mouse y"],
+    signature: ["window mouse x"],
+  },
+  windowMouseY: {
+    isQuery: true,
+    signature: ["window mouse y"],
   },
   canvasMouseX: {
     isQuery: true,
@@ -351,13 +352,13 @@ export const UNTYPED_BUILTINS = {
     signature: ["mouse down?"],
   },
 
-  screenWidth: {
+  windowWidth: {
     isQuery: true,
-    signature: ["screen width"],
+    signature: ["window width"],
   },
-  screenHeight: {
+  windowHeight: {
     isQuery: true,
-    signature: ["screen height"],
+    signature: ["window height"],
   },
   canvasWidth: {
     isQuery: true,

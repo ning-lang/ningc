@@ -530,10 +530,6 @@ export const TYPED_BUILTINS = {
     returnType: BOOLEAN_SENTINEL,
     signature: ["can", STRING_SENTINEL, "be parsed as a number?"],
   },
-  stringCanBeParsedAsRealNumber: {
-    returnType: BOOLEAN_SENTINEL,
-    signature: ["can", STRING_SENTINEL, "be parsed as a real number?"],
-  },
   stringCanBeParsedAsInteger: {
     returnType: BOOLEAN_SENTINEL,
     signature: ["can", STRING_SENTINEL, "be parsed as an integer?"],

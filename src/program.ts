@@ -17,6 +17,15 @@ export interface Program {
 export interface ExecutionEnvironment {
   ctx: CanvasRenderingContext2D;
   imageLibrary: Map<string, HTMLImageElement>;
+
+  getWindowMouseX(): number;
+  getWindowMouseY(): number;
+  getCanvasMouseX(): number;
+  getCanvasMouseY(): number;
+  isMouseDown(): boolean;
+  getWindowWidth(): number;
+  getWindowHeight(): number;
+  isKeyPressed(key: string): boolean;
 }
 
 type NingVal = number | string | boolean;
@@ -55,10 +64,7 @@ class ProgramImpl implements Program {
   constructor(private readonly defs: ast.Def[]) {
     this.bindMethods();
     this.animationFrameId = null;
-    this.env = {
-      ctx: document.createElement("canvas").getContext("2d")!,
-      imageLibrary: new Map(),
-    };
+    this.env = getDummyEnv();
     this.stack = [getEmptyStackEntry()];
     this.userQueryDefs = new Map();
     this.userCommandDefs = new Map();
@@ -74,9 +80,7 @@ class ProgramImpl implements Program {
       throw new Error("Called `execute` when program was already running.");
     }
 
-    this.env = env;
-
-    this.reset();
+    this.reset(env);
     this.initGlobals();
 
     this.animationFrameId = requestAnimationFrame(this.tick);
@@ -96,12 +100,9 @@ class ProgramImpl implements Program {
     this.animationFrameId = null;
   }
 
-  reset(): void {
+  reset(env: ExecutionEnvironment): void {
     this.animationFrameId = null;
-    this.env = {
-      ctx: document.createElement("canvas").getContext("2d")!,
-      imageLibrary: new Map(),
-    };
+    this.env = env;
     this.stack = [getEmptyStackEntry()];
     this.userQueryDefs = new Map();
     this.userCommandDefs = new Map();
@@ -213,7 +214,7 @@ class ProgramImpl implements Program {
         return false;
       }
 
-      if (/^\d+(?:\.\d+)?$/.test(name)) {
+      if (getNingNumberLiteralRegex().test(name)) {
         return Number.parseFloat(name);
       }
 
@@ -240,8 +241,6 @@ class ProgramImpl implements Program {
     const signature = getUntypedQueryApplicationSignatureString(expr);
     const [args, squares] = getQueryApplicationArgsAndSquares(expr);
 
-    // TODO: Check if the signature matches a builtin.
-
     if (signature === UNTYPED_BUILTINS.listLength.signature.join(" ")) {
       const listName = squares[0].identifiers.map((i) => i.name).join(" ");
       const list = this.getMutableList(listName);
@@ -249,10 +248,399 @@ class ProgramImpl implements Program {
     }
 
     if (signature === UNTYPED_BUILTINS.listItemOf.signature.join(" ")) {
-      // todo
+      const index = this.evalExpr(args[0]);
+      const listName = squares[0].identifiers.map((i) => i.name).join(" ");
+      const list = this.getMutableList(listName);
+      if (
+        typeof index === "number" &&
+        index === Math.floor(index) &&
+        index >= 0 &&
+        index < list.items.length
+      ) {
+        return list.items[index];
+      }
+      return getDefaultValueOfKind(list.kind);
     }
 
-    // todo: check rest of builtins
+    if (signature === UNTYPED_BUILTINS.listOrIndexOf.signature.join(" ")) {
+      const item = this.evalExpr(args[0]);
+      const listName = squares[0].identifiers.map((i) => i.name).join(" ");
+      const list = this.getMutableList(listName);
+      return list.items.indexOf(item);
+    }
+
+    if (signature === UNTYPED_BUILTINS.listContains.signature.join(" ")) {
+      const item = this.evalExpr(args[0]);
+      const listName = squares[0].identifiers.map((i) => i.name).join(" ");
+      const list = this.getMutableList(listName);
+      return list.items.includes(item);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opAdd.signature.join(" ")) {
+      return (this.evalExpr(args[0]) as any) + (this.evalExpr(args[1]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opSub.signature.join(" ")) {
+      return (this.evalExpr(args[0]) as any) - (this.evalExpr(args[1]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opMul.signature.join(" ")) {
+      return (this.evalExpr(args[0]) as any) * (this.evalExpr(args[1]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opDiv.signature.join(" ")) {
+      return (this.evalExpr(args[0]) as any) / (this.evalExpr(args[1]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opMod.signature.join(" ")) {
+      return (this.evalExpr(args[0]) as any) % (this.evalExpr(args[1]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opPow.signature.join(" ")) {
+      return (this.evalExpr(args[0]) as any) ** (this.evalExpr(args[1]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opEq.signature.join(" ")) {
+      return this.evalExpr(args[0]) === this.evalExpr(args[1]);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opNe.signature.join(" ")) {
+      return this.evalExpr(args[0]) !== this.evalExpr(args[1]);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opLt.signature.join(" ")) {
+      return this.evalExpr(args[0]) < this.evalExpr(args[1]);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opLe.signature.join(" ")) {
+      return this.evalExpr(args[0]) <= this.evalExpr(args[1]);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opGt.signature.join(" ")) {
+      return this.evalExpr(args[0]) > this.evalExpr(args[1]);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opGe.signature.join(" ")) {
+      return this.evalExpr(args[0]) >= this.evalExpr(args[1]);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opExp.signature.join(" ")) {
+      return Math.exp(this.evalExpr(args[0]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opLn.signature.join(" ")) {
+      return Math.log(this.evalExpr(args[0]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opSinDeg.signature.join(" ")) {
+      const deg = this.evalExpr(args[0]) as any;
+      const rad = (deg * Math.PI) / 180;
+      return Math.sin(rad);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opCosDeg.signature.join(" ")) {
+      const deg = this.evalExpr(args[0]) as any;
+      const rad = (deg * Math.PI) / 180;
+      return Math.cos(rad);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opTanDeg.signature.join(" ")) {
+      const deg = this.evalExpr(args[0]) as any;
+      const rad = (deg * Math.PI) / 180;
+      return Math.tan(rad);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opAsinDeg.signature.join(" ")) {
+      const rad = Math.asin(this.evalExpr(args[0]) as any);
+      return (rad * 180) / Math.PI;
+    }
+
+    if (signature === UNTYPED_BUILTINS.opAcosDeg.signature.join(" ")) {
+      const rad = Math.acos(this.evalExpr(args[0]) as any);
+      return (rad * 180) / Math.PI;
+    }
+
+    if (signature === UNTYPED_BUILTINS.opAtanDeg.signature.join(" ")) {
+      const rad = Math.atan(this.evalExpr(args[0]) as any);
+      return (rad * 180) / Math.PI;
+    }
+
+    if (signature === UNTYPED_BUILTINS.opSinRad.signature.join(" ")) {
+      const rad = this.evalExpr(args[0]) as any;
+      return Math.sin(rad);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opCosRad.signature.join(" ")) {
+      const rad = this.evalExpr(args[0]) as any;
+      return Math.cos(rad);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opTanRad.signature.join(" ")) {
+      const rad = this.evalExpr(args[0]) as any;
+      return Math.tan(rad);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opAsinRad.signature.join(" ")) {
+      return Math.asin(this.evalExpr(args[0]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opAcosRad.signature.join(" ")) {
+      return Math.acos(this.evalExpr(args[0]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opAtanRad.signature.join(" ")) {
+      return Math.atan(this.evalExpr(args[0]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opPi.signature.join(" ")) {
+      return Math.PI;
+    }
+
+    if (signature === UNTYPED_BUILTINS.opNaN.signature.join(" ")) {
+      return NaN;
+    }
+
+    if (signature === UNTYPED_BUILTINS.opInfinity.signature.join(" ")) {
+      return Infinity;
+    }
+
+    if (signature === UNTYPED_BUILTINS.opNegInfinity.signature.join(" ")) {
+      return -Infinity;
+    }
+
+    if (signature === UNTYPED_BUILTINS.opFloor.signature.join(" ")) {
+      return Math.floor(this.evalExpr(args[0]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opCeil.signature.join(" ")) {
+      return Math.ceil(this.evalExpr(args[0]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opRound.signature.join(" ")) {
+      return Math.round(this.evalExpr(args[0]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opAbs.signature.join(" ")) {
+      return Math.abs(this.evalExpr(args[0]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opMin.signature.join(" ")) {
+      return Math.min(
+        this.evalExpr(args[0]) as any,
+        this.evalExpr(args[1]) as any
+      );
+    }
+
+    if (signature === UNTYPED_BUILTINS.opMax.signature.join(" ")) {
+      return Math.max(
+        this.evalExpr(args[0]) as any,
+        this.evalExpr(args[1]) as any
+      );
+    }
+
+    if (signature === UNTYPED_BUILTINS.opClamp.signature.join(" ")) {
+      const clampee = this.evalExpr(args[0]) as any;
+      const bound1 = this.evalExpr(args[1]) as any;
+      const bound2 = this.evalExpr(args[2]) as any;
+      const min = Math.min(bound1, bound2);
+      const max = Math.max(bound1, bound2);
+      return Math.min(Math.max(clampee, min), max);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opAnd.signature.join(" ")) {
+      const a = this.evalExpr(args[0]);
+      const b = this.evalExpr(args[1]);
+      return Boolean(a && b);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opOr.signature.join(" ")) {
+      const a = this.evalExpr(args[0]);
+      const b = this.evalExpr(args[1]);
+      return Boolean(a || b);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opNot.signature.join(" ")) {
+      return !this.evalExpr(args[0]);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opConcat.signature.join(" ")) {
+      return (this.evalExpr(args[0]) as any) + (this.evalExpr(args[1]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.stringLength.signature.join(" ")) {
+      return (this.evalExpr(args[0]) as string).length;
+    }
+
+    if (signature === UNTYPED_BUILTINS.stringLetter.signature.join(" ")) {
+      const s = this.evalExpr(args[0]) as string;
+      const index = this.evalExpr(args[1]);
+      if (
+        Number.isFinite(index) &&
+        index === Math.floor(index as number) &&
+        index >= 0 &&
+        index < s.length
+      ) {
+        return s.charAt(index);
+      }
+
+      return getDefaultValueOfKind("string");
+    }
+
+    if (signature === UNTYPED_BUILTINS.stringSubstring.signature.join(" ")) {
+      const s = this.evalExpr(args[0]) as string;
+      const start = this.evalExpr(args[1]);
+      const end = this.evalExpr(args[2]);
+      if (
+        Number.isFinite(start) &&
+        start === Math.floor(start as number) &&
+        Number.isFinite(end) &&
+        end === Math.floor(end as number)
+      ) {
+        return s.slice(start as number, end as number);
+      }
+
+      return getDefaultValueOfKind("string");
+    }
+
+    if (signature === UNTYPED_BUILTINS.stringContains.signature.join(" ")) {
+      const haystack = this.evalExpr(args[0]) as string;
+      const needle = this.evalExpr(args[1]);
+      return haystack.includes(needle as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.stringIndexOf.signature.join(" ")) {
+      const haystack = this.evalExpr(args[0]) as string;
+      const needle = this.evalExpr(args[1]);
+      return haystack.indexOf(needle as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.ternary.signature.join(" ")) {
+      const question = this.evalExpr(args[0]);
+      const answer = this.evalExpr(args[1]);
+      const else_ = this.evalExpr(args[2]);
+      return question ? answer : else_;
+    }
+
+    if (signature === UNTYPED_BUILTINS.parseNumber.signature.join(" ")) {
+      const s = this.evalExpr(args[0]) as string;
+      if (getNingNumberLiteralRegex().test(s)) {
+        return parseFloat(s);
+      }
+
+      return NaN;
+    }
+
+    if (
+      signature === UNTYPED_BUILTINS.numberOrBooleanToString.signature.join(" ")
+    ) {
+      return String(this.evalExpr(args[0]));
+    }
+
+    if (
+      signature ===
+      UNTYPED_BUILTINS.stringCanBeParsedAsNumber.signature.join(" ")
+    ) {
+      const s = this.evalExpr(args[0]) as string;
+      return getNingNumberLiteralRegex().test(s);
+    }
+
+    if (
+      signature ===
+      UNTYPED_BUILTINS.stringCanBeParsedAsInteger.signature.join(" ")
+    ) {
+      const s = this.evalExpr(args[0]) as string;
+      const n = parseFloat(s);
+      return getNingNumberLiteralRegex().test(s) && n === Math.floor(n);
+    }
+
+    if (signature === UNTYPED_BUILTINS.randomInt.signature.join(" ")) {
+      const min = Math.floor(this.evalExpr(args[0]) as number);
+      const max = Math.floor(this.evalExpr(args[1]) as number);
+      return min + Math.floor(Math.random() * (max - min));
+    }
+
+    if (signature === UNTYPED_BUILTINS.windowMouseX.signature.join(" ")) {
+      return this.env.getWindowMouseX();
+    }
+
+    if (signature === UNTYPED_BUILTINS.windowMouseY.signature.join(" ")) {
+      return this.env.getWindowMouseY();
+    }
+
+    if (signature === UNTYPED_BUILTINS.canvasMouseX.signature.join(" ")) {
+      return this.env.getCanvasMouseX();
+    }
+
+    if (signature === UNTYPED_BUILTINS.canvasMouseY.signature.join(" ")) {
+      return this.env.getCanvasMouseY();
+    }
+
+    if (signature === UNTYPED_BUILTINS.mouseDown.signature.join(" ")) {
+      return this.env.isMouseDown();
+    }
+
+    if (signature === UNTYPED_BUILTINS.windowHeight.signature.join(" ")) {
+      return this.env.getWindowWidth();
+    }
+
+    if (signature === UNTYPED_BUILTINS.windowHeight.signature.join(" ")) {
+      return this.env.getWindowHeight();
+    }
+
+    if (signature === UNTYPED_BUILTINS.canvasWidth.signature.join(" ")) {
+      return this.env.ctx.canvas.width;
+    }
+
+    if (signature === UNTYPED_BUILTINS.canvasHeight.signature.join(" ")) {
+      return this.env.ctx.canvas.height;
+    }
+
+    if (
+      signature ===
+      UNTYPED_BUILTINS.millisecondsSinceUnixEpoch.signature.join(" ")
+    ) {
+      return Date.now();
+    }
+
+    if (signature === UNTYPED_BUILTINS.currentYear.signature.join(" ")) {
+      return new Date().getFullYear();
+    }
+
+    if (signature === UNTYPED_BUILTINS.currentMonth.signature.join(" ")) {
+      return new Date().getMonth();
+    }
+
+    if (signature === UNTYPED_BUILTINS.currentDate.signature.join(" ")) {
+      return new Date().getDate();
+    }
+
+    if (signature === UNTYPED_BUILTINS.currentDayOfWeek.signature.join(" ")) {
+      return new Date().getDay();
+    }
+
+    if (signature === UNTYPED_BUILTINS.currentHour.signature.join(" ")) {
+      return new Date().getHours();
+    }
+
+    if (signature === UNTYPED_BUILTINS.currentMinute.signature.join(" ")) {
+      return new Date().getMinutes();
+    }
+
+    if (signature === UNTYPED_BUILTINS.currentSecond.signature.join(" ")) {
+      return new Date().getSeconds();
+    }
+
+    if (signature === UNTYPED_BUILTINS.keyPressed.signature.join(" ")) {
+      const key = this.evalExpr(args[0]);
+      if (typeof key !== "string") {
+        throw new Error(
+          "Attempted to evaluate `" +
+            stringifyExpression(expr) +
+            "`, but the key was not a string."
+        );
+      }
+      return this.env.isKeyPressed(key);
+    }
 
     const userQueryDef = this.userQueryDefs.get(signature);
     if (userQueryDef === undefined) {
@@ -922,4 +1310,40 @@ function getStringValueIfExprIsString(expr: ast.Expression): null | string {
     return parseNingString(expr.source);
   }
   return null;
+}
+
+function getDefaultValueOfKind(kind: ast.NingValKind): NingVal {
+  if (kind === "number") {
+    return 0;
+  }
+  if (kind === "string") {
+    return "";
+  }
+  if (kind === "boolean") {
+    return false;
+  }
+
+  const exhaustivenessCheck: never = kind;
+  return exhaustivenessCheck;
+}
+
+function getNingNumberLiteralRegex(): RegExp {
+  return /^-?[0-9]+(?:\.[0-9]+)?(?:e-?[0-9]+)?$/;
+}
+
+function getDummyEnv(): ExecutionEnvironment {
+  return {
+    ctx: document.createElement("canvas").getContext("2d")!,
+    imageLibrary: new Map(),
+
+    getWindowMouseX: () => 0,
+    getWindowMouseY: () => 0,
+    getCanvasMouseX: () => 0,
+    getCanvasMouseY: () => 0,
+    isMouseDown: () => false,
+
+    getWindowWidth: () => window.innerWidth,
+    getWindowHeight: () => window.innerHeight,
+    isKeyPressed: () => false,
+  };
 }
