@@ -21,7 +21,16 @@ export interface ExecutionEnvironment {
 
 type NingVal = number | string | boolean;
 
+type RenderRequest = ResizeRequest | DrawRequest;
+
+interface ResizeRequest {
+  kind: "resize";
+  width: number;
+  height: number;
+}
+
 interface DrawRequest {
+  kind: "draw";
   imageName: string;
   x: number;
   y: number;
@@ -41,9 +50,7 @@ class ProgramImpl implements Program {
   userQueryDefs: Map<string, ast.QueryDef>;
   /** A map of signature strings to their corresponding command definitions. */
   userCommandDefs: Map<string, ast.CommandDef>;
-  desiredCanvasWidth: number;
-  desiredCanvasHeight: number;
-  drawQueue: DrawRequest[];
+  renderQueue: RenderRequest[];
 
   constructor(private readonly defs: ast.Def[]) {
     this.bindMethods();
@@ -55,9 +62,7 @@ class ProgramImpl implements Program {
     this.stack = [getEmptyStackEntry()];
     this.userQueryDefs = new Map();
     this.userCommandDefs = new Map();
-    this.desiredCanvasWidth = 0;
-    this.desiredCanvasHeight = 0;
-    this.drawQueue = [];
+    this.renderQueue = [];
   }
 
   bindMethods(): void {
@@ -100,9 +105,7 @@ class ProgramImpl implements Program {
     this.stack = [getEmptyStackEntry()];
     this.userQueryDefs = new Map();
     this.userCommandDefs = new Map();
-    this.desiredCanvasWidth = 0;
-    this.desiredCanvasHeight = 0;
-    this.drawQueue = [];
+    this.renderQueue = [];
   }
 
   initGlobals(): void {
@@ -148,19 +151,7 @@ class ProgramImpl implements Program {
   }
 
   render(): void {
-    const { ctx } = this.env;
-    const { canvas } = ctx;
-    if (
-      !(
-        canvas.width === this.desiredCanvasWidth &&
-        canvas.height === this.desiredCanvasHeight
-      )
-    ) {
-      canvas.width = this.desiredCanvasWidth;
-      canvas.height = this.desiredCanvasHeight;
-    }
-
-    this.drawQueue = [];
+    this.renderQueue = [];
 
     const renderCommandDef = this.userCommandDefs.get(RENDER_COMMAND_SIGNATURE);
     if (renderCommandDef === undefined) {
@@ -168,18 +159,34 @@ class ProgramImpl implements Program {
     }
     this.evalUserCommandApplicationUsingArgVals(renderCommandDef, []);
 
-    this.processDrawQueue();
+    this.processRenderQueue();
   }
 
-  processDrawQueue(): void {
-    for (const req of this.drawQueue) {
+  processRenderQueue(): void {
+    for (const req of this.renderQueue) {
+      this.processRenderRequest(req);
+    }
+  }
+
+  processRenderRequest(req: RenderRequest): void {
+    if (req.kind === "resize") {
+      this.env.ctx.canvas.width = req.width;
+      this.env.ctx.canvas.height = req.height;
+      return;
+    }
+
+    if (req.kind === "draw") {
       const { imageName, x, y, width, height } = req;
       const image = this.env.imageLibrary.get(imageName);
       if (image === undefined) {
         throw new Error("Attempted to draw non-existent image: " + imageName);
       }
       this.env.ctx.drawImage(image, x, y, width, height);
+      return;
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const exhaustivenessCheck: never = req;
   }
 
   evalExpr(expr: ast.Expression): NingVal {
@@ -513,8 +520,7 @@ class ProgramImpl implements Program {
         return null;
       }
 
-      this.desiredCanvasWidth = width;
-      this.desiredCanvasHeight = height;
+      this.renderQueue.push({ kind: "resize", width, height });
       return null;
     }
 
@@ -543,7 +549,7 @@ class ProgramImpl implements Program {
         return null;
       }
 
-      this.drawQueue.push({ imageName, x, y, width, height });
+      this.renderQueue.push({ kind: "draw", imageName, x, y, width, height });
       return null;
     }
 
