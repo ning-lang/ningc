@@ -214,17 +214,28 @@ export class App extends React.Component<{}, State> {
   }
 
   onKeyDown(event: KeyboardEvent): void {
-    const keyName = getNingKeyName(event.code);
+    const keyName = this.getNingKeyName(event.code);
     if (keyName !== null) {
       this.keysPressed.add(keyName);
     }
   }
 
   onKeyUp(event: KeyboardEvent): void {
-    const keyName = getNingKeyName(event.code);
+    const keyName = this.getNingKeyName(event.code);
     if (keyName !== null) {
       this.keysPressed.delete(keyName);
     }
+  }
+
+  // This shouldn't need to be a method.
+  // However, for some strange reason, when
+  // I made it a function, it resulted in a runtime
+  // error saying the name `getNingKeyName` was not found.
+  // I think this is a bug in the TypeScript compiler
+  // handling `bind`.
+  getNingKeyName(code: string): null | string {
+    // TODO: Properly implement this.
+    return code;
   }
 }
 
@@ -235,9 +246,4 @@ function highlight(code: string): React.ReactElement[] {
       {code}
     </span>,
   ];
-}
-
-function getNingKeyName(code: string): null | string {
-  // TODO: Properly implement this.
-  return code;
 }
