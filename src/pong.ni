@@ -19,8 +19,8 @@ Global {
 
     var [w down] = (false);
     var [s down] = (false);
-    var [up down] = (false);
-    var [down down] = (false);
+    var [i down] = (false);
+    var [k down] = (false);
 
     var [last time] = (0);
 }
@@ -45,13 +45,13 @@ Command (update) {
 
     let [w was down] = (w down);
     let [s was down] = (s down);
-    let [up was down] = (up down);
-    let [down was down] = (down down);
+    let [i was down] = (i down);
+    let [k was down] = (k down);
 
     set [w down] to (key ("w") pressed?);
     set [s down] to (key ("s") pressed?);
-    set [up down] to (key ("up") pressed?);
-    set [down down] to (key ("down") pressed?);
+    set [i down] to (key ("i") pressed?);
+    set [k down] to (key ("k") pressed?);
 
     var [left dy] = (0);
 
@@ -64,10 +64,10 @@ Command (update) {
 
     var [right dy] = (0);
 
-    if ((up down) and (not (up was down))) {
+    if ((i down) and (not (i was down))) {
         set [right dy] to ((-1) * (paddle height));
     };
-    if ((down down) and (not (down was down))) {
+    if ((k down) and (not (k was down))) {
         set [right dy] to (paddle height);
     };
 

@@ -3,6 +3,7 @@ import "./App.css";
 import { ParseResult, parse } from "./parser";
 import { TypecheckResult, typecheck } from "./typecheck";
 import { ExecutionEnvironment, Program, getUncheckedProgram } from "./program";
+import { NingKey, codeToKey } from "./key";
 
 export interface State {
   readonly code: string;
@@ -17,7 +18,7 @@ export class App extends React.Component<{}, State> {
   mouseClientX: number;
   mouseClientY: number;
   mouseDown: boolean;
-  keysPressed: Set<string>;
+  keysPressed: Set<NingKey>;
 
   placeholder_background: HTMLImageElement;
   placeholder_paddle: HTMLImageElement;
@@ -217,7 +218,7 @@ export class App extends React.Component<{}, State> {
   }
 
   isKeyPressed(key: string): boolean {
-    return this.keysPressed.has(key);
+    return this.keysPressed.has(key as NingKey);
   }
 
   onMouseMove(event: MouseEvent): void {
@@ -253,9 +254,8 @@ export class App extends React.Component<{}, State> {
   // error saying the name `getNingKeyName` was not found.
   // I think this is a bug in the TypeScript compiler
   // handling `bind`.
-  getNingKeyName(code: string): null | string {
-    // TODO: Properly implement this.
-    return code;
+  getNingKeyName(code: string): null | NingKey {
+    return codeToKey(code);
   }
 }
 
