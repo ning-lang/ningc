@@ -32,9 +32,13 @@ export const UNTYPED_BUILTINS = {
     isQuery: false,
     signature: ["repeat", VAL, "times", BLOCK],
   },
-  return_: {
+  valReturn: {
     isQuery: false,
     signature: ["return", VAL],
+  },
+  voidReturn: {
+    isQuery: false,
+    signature: ["return"],
   },
 
   // Variables

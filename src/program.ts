@@ -8,6 +8,7 @@ import {
 
 const RENDER_COMMAND_SIGNATURE = "render";
 const UPDATE_COMMAND_SIGNATURE = "update";
+const VOID_RETURN_SENTINEL = Symbol("VOID_RETURN_SENTINEL");
 
 export interface Program {
   start(env: ExecutionEnvironment): void;
@@ -665,6 +666,15 @@ class ProgramImpl implements Program {
       const returnVal = this.executeCommandAndGetReturnValue(command);
       if (returnVal !== null) {
         this.stack.pop();
+        if (returnVal === VOID_RETURN_SENTINEL) {
+          throw new Error(
+            "Attempted to evaluate the query `" +
+              getUntypedFunctionSignatureString(def.signature) +
+              "` with args (" +
+              argVals.map((v) => JSON.stringify(v)).join(", ") +
+              ") but a void `return` statement (i.e., one with no return value) was reached."
+          );
+        }
         return returnVal;
       }
     }
@@ -679,7 +689,9 @@ class ProgramImpl implements Program {
 
   // If a `return` command is reached, this function will stop execution and return the value.
   // Otherwise, it will return `null`.
-  executeCommandAndGetReturnValue(command: ast.Command): null | NingVal {
+  executeCommandAndGetReturnValue(
+    command: ast.Command
+  ): null | typeof VOID_RETURN_SENTINEL | NingVal {
     const commandSignatureString =
       getUntypedCommandApplicationSignatureString(command);
     const [args, squares, blockCommands] =
@@ -764,9 +776,15 @@ class ProgramImpl implements Program {
     }
 
     if (
-      commandSignatureString === UNTYPED_BUILTINS.return_.signature.join(" ")
+      commandSignatureString === UNTYPED_BUILTINS.valReturn.signature.join(" ")
     ) {
       return this.evalExpr(args[0]);
+    }
+
+    if (
+      commandSignatureString === UNTYPED_BUILTINS.voidReturn.signature.join(" ")
+    ) {
+      return VOID_RETURN_SENTINEL;
     }
 
     if (
@@ -960,7 +978,7 @@ class ProgramImpl implements Program {
   // Otherwise, it will return `null`.
   executeBlockCommandAndGetReturnValue(
     command: ast.BlockCommand
-  ): null | NingVal {
+  ): null | typeof VOID_RETURN_SENTINEL | NingVal {
     this.stack.push(getEmptyStackEntry());
     for (const subCommand of command.commands) {
       const returnVal = this.executeCommandAndGetReturnValue(subCommand);
