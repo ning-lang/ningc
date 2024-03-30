@@ -933,7 +933,7 @@ class ProgramImpl implements Program {
     ) {
       const imageName = getStringValueIfExprIsString(args[0]);
       if (imageName === null) {
-        throw new Error("Invalid image name: " + stringifyCommand(command));
+        throw new Error("Invalid image name: " + stringifyExpression(args[0]));
       }
 
       const x = Math.floor(this.evalExpr(args[1]) as any);

@@ -19,6 +19,10 @@ export class App extends React.Component<{}, State> {
   mouseDown: boolean;
   keysPressed: Set<string>;
 
+  placeholder_background: HTMLImageElement;
+  placeholder_paddle: HTMLImageElement;
+  placeholder_ball: HTMLImageElement;
+
   constructor(props: {}) {
     super(props);
 
@@ -42,6 +46,15 @@ export class App extends React.Component<{}, State> {
     };
 
     this.bindMethods();
+
+    this.placeholder_background = new Image();
+    this.placeholder_background.src = "background.png";
+    this.placeholder_paddle = new Image();
+    this.placeholder_paddle.src = "paddle.png";
+    this.placeholder_ball = new Image();
+    this.placeholder_ball.src = "ball.png";
+
+    (window as any).app = this;
   }
 
   bindMethods() {
@@ -142,9 +155,16 @@ export class App extends React.Component<{}, State> {
     if (ctx === null) {
       throw new Error("Could not get 2d context");
     }
+
+    const imageLibrary = new Map<string, HTMLImageElement>();
+    imageLibrary.set("background.png", this.placeholder_background);
+    imageLibrary.set("left_paddle.png", this.placeholder_paddle);
+    imageLibrary.set("right_paddle.png", this.placeholder_paddle);
+    imageLibrary.set("ball.png", this.placeholder_ball);
+
     return {
       ctx,
-      imageLibrary: new Map(),
+      imageLibrary,
       getWindowMouseX: this.getWindowMouseX,
       getWindowMouseY: this.getWindowMouseY,
       getCanvasMouseX: this.getCanvasMouseX,

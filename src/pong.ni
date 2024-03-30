@@ -27,10 +27,10 @@ Global {
 
 Command (render) {
     resize canvas to width (width) height (height);
-    draw image ('background.png') at x (0) y (0) with width (width) height (height);
-    draw image ('left_paddle.png') at x (paddle margin) y (left paddle top) with width (paddle width) height (paddle height);
-    draw image ('right_paddle.png') at x (width - paddle margin - paddle width) y (right paddle top) with width (paddle width) height (paddle height);
-    draw image ('ball.png') at x (ball left) y (ball top) with width (ball width) height (ball height);
+    draw image ("background.png") at x (0) y (0) with width (width) height (height);
+    draw image ("left_paddle.png") at x (paddle margin) y (left paddle top) with width (paddle width) height (paddle height);
+    draw image ("right_paddle.png") at x (((width) - (paddle margin)) - (paddle width)) y (right paddle top) with width (paddle width) height (paddle height);
+    draw image ("ball.png") at x (ball left) y (ball top) with width (ball width) height (ball height);
 }
 
 Command (update) {
@@ -48,10 +48,10 @@ Command (update) {
     let [up was down] = (up down);
     let [down was down] = (down down);
 
-    set [w down] to (is key down ('w'));
-    set [s down] to (is key down ('s'));
-    set [up down] to (is key down ('up'));
-    set [down down] to (is key down ('down'));
+    set [w down] to (is key down ("w"));
+    set [s down] to (is key down ("s"));
+    set [up down] to (is key down ("up"));
+    set [down down] to (is key down ("down"));
 
     var [left dy] = (0);
 
