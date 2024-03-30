@@ -35,7 +35,7 @@ Command (render) {
 
 Command (update) {
     let [current time] = (milliseconds since unix epoch);
-    if ((last time) = (0)) {
+    if ((last time) == (0)) {
         set [last time] to (current time);
         reset ball and paddles;
         return;

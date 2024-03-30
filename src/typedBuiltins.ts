@@ -535,14 +535,24 @@ export const TYPED_BUILTINS = {
     signature: ["can", STRING_SENTINEL, "be parsed as an integer?"],
   },
 
-  // Sensing
-  screenMouseX: {
+  randomInt: {
     returnType: NUMBER_SENTINEL,
-    signature: ["screen mouse x"],
+    signature: [
+      "random number from ",
+      NUMBER_SENTINEL,
+      " up to but not including ",
+      NUMBER_SENTINEL,
+    ],
   },
-  screenMouseY: {
+
+  // Sensing
+  windowMouseX: {
     returnType: NUMBER_SENTINEL,
-    signature: ["screen mouse y"],
+    signature: ["window mouse x"],
+  },
+  windowMouseY: {
+    returnType: NUMBER_SENTINEL,
+    signature: ["window mouse y"],
   },
   canvasMouseX: {
     returnType: NUMBER_SENTINEL,
@@ -557,13 +567,13 @@ export const TYPED_BUILTINS = {
     signature: ["mouse down?"],
   },
 
-  screenWidth: {
+  windowWidth: {
     returnType: NUMBER_SENTINEL,
-    signature: ["screen width"],
+    signature: ["window width"],
   },
-  screenHeight: {
+  windowHeight: {
     returnType: NUMBER_SENTINEL,
-    signature: ["screen height"],
+    signature: ["window height"],
   },
   canvasWidth: {
     returnType: NUMBER_SENTINEL,
