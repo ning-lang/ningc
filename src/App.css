@@ -1,3 +1,18 @@
+html {
+  --code-color-background: #f9f9f9;
+  --code-color-main: #5a6177;
+  --code-color-yellow: #ffbf00;
+  --code-color-purple: #9a66ff;
+  --code-color-blue: #4c97ff;
+  --code-color-magenta: #cf63cf;
+  --code-color-orange: #ffab1a;
+  --code-color-cyan: #5bb1d6;
+  --code-color-green: #58c059;
+  --code-color-fire: #ff8c19;
+  --code-color-red: #ff6619;
+  --code-color-pink: #ff6680;
+}
+
 .CodeInput__Container,
 .CodeInput__Backdrop,
 .CodeInput__Textarea {
@@ -15,8 +30,8 @@
 .CodeInput__Backdrop {
   position: absolute;
   z-index: 1;
-  border: 2px solid #685972;
-  background-color: #fff;
+  border: 2px solid var(--code-color-main);
+  background-color: var(--code-color-background);
   overflow: auto;
   pointer-events: none;
   transition: transform 1s;
@@ -33,22 +48,17 @@
   position: absolute;
   z-index: 2;
   margin: 0;
-  border: 2px solid #74637f;
+  border: 2px solid var(--code-color-main);
   border-radius: 0;
-  color: #0000ffaa;
-  caret-color: red;
+  color: transparent;
+  caret-color: var(--code-color-main);
   background-color: transparent;
   resize: none;
   transition: transform 1s;
   white-space: pre;
   overflow-wrap: normal;
   overflow-x: scroll;
-}
-
-/* TODO: Delete */
-.CodeInput__HighlightSpan {
-  background-color: #d4e9ab; /* or whatever */
-  border: 0;
+  outline: none;
 }
 
 .CodeInput__Highlight,

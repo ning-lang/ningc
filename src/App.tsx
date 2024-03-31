@@ -299,7 +299,7 @@ function highlight(code: string): React.ReactElement[] {
     <span
       className="CodeInput__HighlightSpan"
       key={0}
-      style={{ color: result.succeeded ? "purple" : "red" }}
+      style={{ color: result.succeeded ? "#4c97ff" : "#ff6619" }}
     >
       {
         /**
