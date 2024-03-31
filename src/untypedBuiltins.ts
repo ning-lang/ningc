@@ -165,30 +165,6 @@ export const UNTYPED_BUILTINS = {
     isQuery: true,
     signature: ["ln", VAL],
   },
-  opSinDeg: {
-    isQuery: true,
-    signature: ["sin of", VAL, "degrees"],
-  },
-  opCosDeg: {
-    isQuery: true,
-    signature: ["cos of", VAL, "degrees"],
-  },
-  opTanDeg: {
-    isQuery: true,
-    signature: ["tan of", VAL, "degrees"],
-  },
-  opAsinDeg: {
-    isQuery: true,
-    signature: ["asin degrees of", VAL],
-  },
-  opAcosDeg: {
-    isQuery: true,
-    signature: ["acos degrees of", VAL],
-  },
-  opAtanDeg: {
-    isQuery: true,
-    signature: ["atan degrees of", VAL],
-  },
   opSinRad: {
     isQuery: true,
     signature: ["sin of", VAL, "radians"],
@@ -203,15 +179,19 @@ export const UNTYPED_BUILTINS = {
   },
   opAsinRad: {
     isQuery: true,
-    signature: ["asin radians of", VAL],
+    signature: ["asin of", VAL, "in radians"],
   },
   opAcosRad: {
     isQuery: true,
-    signature: ["acos radians of", VAL],
+    signature: ["acos of", VAL, "in radians"],
   },
   opAtanRad: {
     isQuery: true,
-    signature: ["atan radians of", VAL],
+    signature: ["atan of", VAL, "in radians"],
+  },
+  opAtan2Rad: {
+    isQuery: true,
+    signature: ["atan2 of y", VAL, "x", VAL, "in radians"],
   },
   opPi: {
     isQuery: true,

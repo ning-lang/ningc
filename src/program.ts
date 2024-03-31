@@ -335,39 +335,6 @@ class ProgramImpl implements Program {
       return Math.log(this.evalExpr(args[0]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.opSinDeg.signature.join(" ")) {
-      const deg = this.evalExpr(args[0]) as any;
-      const rad = (deg * Math.PI) / 180;
-      return Math.sin(rad);
-    }
-
-    if (signature === UNTYPED_BUILTINS.opCosDeg.signature.join(" ")) {
-      const deg = this.evalExpr(args[0]) as any;
-      const rad = (deg * Math.PI) / 180;
-      return Math.cos(rad);
-    }
-
-    if (signature === UNTYPED_BUILTINS.opTanDeg.signature.join(" ")) {
-      const deg = this.evalExpr(args[0]) as any;
-      const rad = (deg * Math.PI) / 180;
-      return Math.tan(rad);
-    }
-
-    if (signature === UNTYPED_BUILTINS.opAsinDeg.signature.join(" ")) {
-      const rad = Math.asin(this.evalExpr(args[0]) as any);
-      return (rad * 180) / Math.PI;
-    }
-
-    if (signature === UNTYPED_BUILTINS.opAcosDeg.signature.join(" ")) {
-      const rad = Math.acos(this.evalExpr(args[0]) as any);
-      return (rad * 180) / Math.PI;
-    }
-
-    if (signature === UNTYPED_BUILTINS.opAtanDeg.signature.join(" ")) {
-      const rad = Math.atan(this.evalExpr(args[0]) as any);
-      return (rad * 180) / Math.PI;
-    }
-
     if (signature === UNTYPED_BUILTINS.opSinRad.signature.join(" ")) {
       const rad = this.evalExpr(args[0]) as any;
       return Math.sin(rad);
@@ -393,6 +360,12 @@ class ProgramImpl implements Program {
 
     if (signature === UNTYPED_BUILTINS.opAtanRad.signature.join(" ")) {
       return Math.atan(this.evalExpr(args[0]) as any);
+    }
+
+    if (signature === UNTYPED_BUILTINS.opAtan2Rad.signature.join(" ")) {
+      const y = this.evalExpr(args[0]) as any;
+      const x = this.evalExpr(args[1]) as any;
+      return Math.atan2(y, x);
     }
 
     if (signature === UNTYPED_BUILTINS.opPi.signature.join(" ")) {

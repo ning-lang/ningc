@@ -328,30 +328,6 @@ export const TYPED_BUILTINS = {
     returnType: NUMBER_SENTINEL,
     signature: ["ln", NUMBER_SENTINEL],
   },
-  opSinDeg: {
-    returnType: NUMBER_SENTINEL,
-    signature: ["sin of", NUMBER_SENTINEL, "degrees"],
-  },
-  opCosDeg: {
-    returnType: NUMBER_SENTINEL,
-    signature: ["cos of", NUMBER_SENTINEL, "degrees"],
-  },
-  opTanDeg: {
-    returnType: NUMBER_SENTINEL,
-    signature: ["tan of", NUMBER_SENTINEL, "degrees"],
-  },
-  opAsinDeg: {
-    returnType: NUMBER_SENTINEL,
-    signature: ["asin degrees of", NUMBER_SENTINEL],
-  },
-  opAcosDeg: {
-    returnType: NUMBER_SENTINEL,
-    signature: ["acos degrees of", NUMBER_SENTINEL],
-  },
-  opAtanDeg: {
-    returnType: NUMBER_SENTINEL,
-    signature: ["atan degrees of", NUMBER_SENTINEL],
-  },
   opSinRad: {
     returnType: NUMBER_SENTINEL,
     signature: ["sin of", NUMBER_SENTINEL, "radians"],
@@ -366,15 +342,25 @@ export const TYPED_BUILTINS = {
   },
   opAsinRad: {
     returnType: NUMBER_SENTINEL,
-    signature: ["asin radians of", NUMBER_SENTINEL],
+    signature: ["asin of", NUMBER_SENTINEL, "in radians"],
   },
   opAcosRad: {
     returnType: NUMBER_SENTINEL,
-    signature: ["acos radians of", NUMBER_SENTINEL],
+    signature: ["acos of", NUMBER_SENTINEL, "in radians"],
   },
   opAtanRad: {
     returnType: NUMBER_SENTINEL,
-    signature: ["atan radians of", NUMBER_SENTINEL],
+    signature: ["atan of", NUMBER_SENTINEL, "in radians"],
+  },
+  opAtan2Rad: {
+    returnType: NUMBER_SENTINEL,
+    signature: [
+      "atan2 of y",
+      NUMBER_SENTINEL,
+      "x",
+      NUMBER_SENTINEL,
+      "in radians",
+    ],
   },
   opPi: {
     returnType: NUMBER_SENTINEL,
