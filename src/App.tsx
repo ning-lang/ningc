@@ -4,6 +4,9 @@ import { ParseResult, parse } from "./parser";
 import { TypecheckResult, typecheck } from "./typecheck";
 import { ExecutionEnvironment, Program, getUncheckedProgram } from "./program";
 import { NingKey, codeToKey } from "./key";
+import { HELLO_WORLD_CODE } from "./helloWorldCode";
+
+const LOCAL_STORAGE_CODE_KEY = "NingPlayground.UserCode";
 
 export interface State {
   readonly code: string;
@@ -39,13 +42,13 @@ export class App extends React.Component<{}, State> {
     this.mouseDown = false;
     this.keysPressed = new Set();
 
-    const defaultCode = "";
-    const parseResult = parse(defaultCode);
+    const initialCode = getInitialCodeFromLocalStorage();
+    const parseResult = parse(initialCode);
     const typecheckResult = parseResult.succeeded
       ? typecheck(parseResult.value)
       : null;
     this.state = {
-      code: defaultCode,
+      code: initialCode,
       parseResultCache: parseResult,
       typecheckResultCache: typecheckResult,
     };
@@ -135,6 +138,7 @@ export class App extends React.Component<{}, State> {
       parseResultCache: parseResult,
       typecheckResultCache: typecheckResult,
     });
+    saveCodeToLocalStorage(code);
   }
 
   onCodeInputTextareaScrolled() {
@@ -310,4 +314,16 @@ function highlight(code: string): React.ReactElement[] {
       }
     </span>,
   ];
+}
+
+function getInitialCodeFromLocalStorage(): string {
+  const s = localStorage.getItem(LOCAL_STORAGE_CODE_KEY);
+  if (s === null) {
+    return HELLO_WORLD_CODE;
+  }
+  return s;
+}
+
+function saveCodeToLocalStorage(code: string): void {
+  localStorage.setItem(LOCAL_STORAGE_CODE_KEY, code);
 }
