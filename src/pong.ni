@@ -114,8 +114,11 @@ Command (if ball is out of bounds, update score and reset ball) {
 }
 
 Command (if ball is colliding with paddle, bounce) {
-    if ((ball is touching left paddle?) or (ball is touching right paddle?)) {
-        set [x speed] to ((-1) * (x speed));
+    if (ball is touching left paddle?) {
+        set [x speed] to (abs (x speed));
+    };
+    if (ball is touching right paddle?) {
+        set [x speed] to ((-1) * (abs (x speed)));
     };
 }
 
