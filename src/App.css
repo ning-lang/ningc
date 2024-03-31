@@ -23,8 +23,9 @@
 }
 
 .CodeInput__Highlight {
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: visible;
 }
 
 .CodeInput__Textarea {
@@ -34,12 +35,14 @@
   margin: 0;
   border: 2px solid #74637f;
   border-radius: 0;
-  color: transparent;
+  color: #0000ffaa;
   caret-color: red;
   background-color: transparent;
-  overflow: auto;
   resize: none;
   transition: transform 1s;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: scroll;
 }
 
 /* TODO: Delete */
