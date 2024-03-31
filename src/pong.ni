@@ -158,29 +158,3 @@ Command (if ball is colliding with top or bottom wall, bounce) {
         set [y speed] to ((-1) * (abs (y speed)));
     };
 }
-
-// Difference between commands and queries:
-// - Commands have side effects, but do not return a value.
-//   Commands may not terminate.
-// - Queries return a value, and have no side effects.
-//   Queries always terminate.
-//   However, queries may not be "pure" in the sense that they
-//   may return different outputs for the same inputs.
-//   You can only use a limited subset of commands within a query:
-//   * `let` and `var`
-//   * `create <number|string|boolean> list`
-//   * LOCAL variable and list mutation, excluding parameters.
-//     You CANNOT mutate parameters.
-//   * `repeat #() times` (the finite version)
-//   * `if` and `else`
-//   * `return`
-//   Queries have the additional following restrictions:
-//   * Queries cannot circularly depend on each other.
-//   * Queries must have a return statement covering the end of
-//     every possible branch.
-
-
-
-// Difference between `()` and `[]`:
-// - `()` are used for immutable values
-// - `[]` are used for mutable references
