@@ -20,14 +20,6 @@ export const UNTYPED_BUILTINS = {
     isQuery: false,
     signature: ["while", VAL, BLOCK],
   },
-  repeatUntil: {
-    isQuery: false,
-    signature: ["repeat until", VAL, BLOCK],
-  },
-  forever: {
-    isQuery: false,
-    signature: ["forever", BLOCK],
-  },
   repeat: {
     isQuery: false,
     signature: ["repeat", VAL, "times", BLOCK],
@@ -56,7 +48,7 @@ export const UNTYPED_BUILTINS = {
   },
   increase: {
     isQuery: false,
-    signature: ["change", REF, "by", VAL],
+    signature: ["increase", REF, "by", VAL],
   },
 
   // Lists
@@ -262,10 +254,6 @@ export const UNTYPED_BUILTINS = {
     isQuery: true,
     signature: ["max of", VAL, "and", VAL],
   },
-  opClamp: {
-    isQuery: true,
-    signature: ["clamp", VAL, "between", VAL, "and", VAL],
-  },
 
   opAnd: {
     isQuery: true,
@@ -318,15 +306,6 @@ export const UNTYPED_BUILTINS = {
   numberOrBooleanToString: {
     isQuery: true,
     signature: ["convert", VAL, "to string"],
-  },
-
-  stringCanBeParsedAsNumber: {
-    isQuery: true,
-    signature: ["can", VAL, "be parsed as a number?"],
-  },
-  stringCanBeParsedAsInteger: {
-    isQuery: true,
-    signature: ["can", VAL, "be parsed as an integer?"],
   },
 
   randomInt: {

@@ -71,14 +71,14 @@ Command (update) {
         set [right dy] to (paddle height);
     };
 
-    change [left paddle top] by (left dy);
-    change [right paddle top] by (right dy);
+    increase [left paddle top] by (left dy);
+    increase [right paddle top] by (right dy);
 
     let [ball dx] = ((x speed) * (elapsed time in seconds));
     let [ball dy] = ((y speed) * (elapsed time in seconds));
 
-    change [ball left] by (ball dx);
-    change [ball top] by (ball dy);
+    increase [ball left] by (ball dx);
+    increase [ball top] by (ball dy);
 
     if ball is out of bounds, update score and reset ball;
     if ball is colliding with paddle, bounce;
@@ -102,12 +102,12 @@ Command (reset ball) {
 Command (if ball is out of bounds, update score and reset ball) {
     let [ball right] = ((ball left) + (ball width));
     if ((ball right) < (0)) {
-        change [right score] by (1);
+        increase [right score] by (1);
         reset ball;
         return;
     };
     if ((ball left) > (width)) {
-        change [left score] by (1);
+        increase [left score] by (1);
         reset ball;
         return;
     };

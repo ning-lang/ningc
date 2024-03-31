@@ -441,15 +441,6 @@ class ProgramImpl implements Program {
       );
     }
 
-    if (signature === UNTYPED_BUILTINS.opClamp.signature.join(" ")) {
-      const clampee = this.evalExpr(args[0]) as any;
-      const bound1 = this.evalExpr(args[1]) as any;
-      const bound2 = this.evalExpr(args[2]) as any;
-      const min = Math.min(bound1, bound2);
-      const max = Math.max(bound1, bound2);
-      return Math.min(Math.max(clampee, min), max);
-    }
-
     if (signature === UNTYPED_BUILTINS.opAnd.signature.join(" ")) {
       const a = this.evalExpr(args[0]);
       const b = this.evalExpr(args[1]);
@@ -537,23 +528,6 @@ class ProgramImpl implements Program {
       signature === UNTYPED_BUILTINS.numberOrBooleanToString.signature.join(" ")
     ) {
       return String(this.evalExpr(args[0]));
-    }
-
-    if (
-      signature ===
-      UNTYPED_BUILTINS.stringCanBeParsedAsNumber.signature.join(" ")
-    ) {
-      const s = this.evalExpr(args[0]) as string;
-      return getNingNumberLiteralRegex().test(s);
-    }
-
-    if (
-      signature ===
-      UNTYPED_BUILTINS.stringCanBeParsedAsInteger.signature.join(" ")
-    ) {
-      const s = this.evalExpr(args[0]) as string;
-      const n = parseFloat(s);
-      return getNingNumberLiteralRegex().test(s) && n === Math.floor(n);
     }
 
     if (signature === UNTYPED_BUILTINS.randomInt.signature.join(" ")) {
@@ -729,34 +703,6 @@ class ProgramImpl implements Program {
         }
       }
       return null;
-    }
-
-    if (
-      commandSignatureString ===
-      UNTYPED_BUILTINS.repeatUntil.signature.join(" ")
-    ) {
-      while (!this.evalExpr(args[0])) {
-        const returnVal = this.executeBlockCommandAndGetReturnValue(
-          blockCommands[0]
-        );
-        if (returnVal !== null) {
-          return returnVal;
-        }
-      }
-      return null;
-    }
-
-    if (
-      commandSignatureString === UNTYPED_BUILTINS.forever.signature.join(" ")
-    ) {
-      while (true) {
-        const returnVal = this.executeBlockCommandAndGetReturnValue(
-          blockCommands[0]
-        );
-        if (returnVal !== null) {
-          return returnVal;
-        }
-      }
     }
 
     if (

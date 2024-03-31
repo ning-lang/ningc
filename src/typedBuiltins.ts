@@ -32,14 +32,6 @@ export const TYPED_BUILTINS = {
     returnType: null,
     signature: ["while", BOOLEAN_SENTINEL, COMMAND_SENTINEL],
   },
-  repeatUntil: {
-    returnType: null,
-    signature: ["repeat until", BOOLEAN_SENTINEL, COMMAND_SENTINEL],
-  },
-  forever: {
-    returnType: null,
-    signature: ["forever", COMMAND_SENTINEL],
-  },
   repeat: {
     returnType: null,
     signature: ["repeat", NUMBER_SENTINEL, "times", COMMAND_SENTINEL],
@@ -100,7 +92,7 @@ export const TYPED_BUILTINS = {
   },
   numberIncrease: {
     returnType: null,
-    signature: ["change", NUMBER_REF_SENTINEL, "by", NUMBER_SENTINEL],
+    signature: ["increase", NUMBER_REF_SENTINEL, "by", NUMBER_SENTINEL],
   },
 
   // Lists
@@ -425,17 +417,6 @@ export const TYPED_BUILTINS = {
     returnType: NUMBER_SENTINEL,
     signature: ["max of", NUMBER_SENTINEL, "and", NUMBER_SENTINEL],
   },
-  opClamp: {
-    returnType: NUMBER_SENTINEL,
-    signature: [
-      "clamp",
-      NUMBER_SENTINEL,
-      "between",
-      NUMBER_SENTINEL,
-      "and",
-      NUMBER_SENTINEL,
-    ],
-  },
 
   opAnd: {
     returnType: BOOLEAN_SENTINEL,
@@ -528,15 +509,6 @@ export const TYPED_BUILTINS = {
   booleanToString: {
     returnType: STRING_SENTINEL,
     signature: ["convert", BOOLEAN_SENTINEL, "to string"],
-  },
-
-  stringCanBeParsedAsNumber: {
-    returnType: BOOLEAN_SENTINEL,
-    signature: ["can", STRING_SENTINEL, "be parsed as a number?"],
-  },
-  stringCanBeParsedAsInteger: {
-    returnType: BOOLEAN_SENTINEL,
-    signature: ["can", STRING_SENTINEL, "be parsed as an integer?"],
   },
 
   randomInt: {
