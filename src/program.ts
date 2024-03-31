@@ -128,22 +128,42 @@ class ProgramImpl implements Program {
 
   updateGlobalsBasedOnGlobalDefCommand(command: ast.Command): void {
     const signature = getUntypedCommandApplicationSignatureString(command);
-
-    if (
-      !(
-        signature === UNTYPED_BUILTINS.let_.signature.join(" ") ||
-        signature === UNTYPED_BUILTINS.var_.signature.join(" ")
-      )
-    ) {
-      return;
-    }
-
     const [args, squares] =
       getCommandApplicationArgsAndSquaresAndBlockCommands(command);
 
-    const varName = squares[0].identifiers.map((i) => i.name).join(" ");
-    const varValue = this.evalExpr(args[0]);
-    this.createVariableInTopStackEntry(varName, varValue);
+    if (
+      signature === UNTYPED_BUILTINS.let_.signature.join(" ") ||
+      signature === UNTYPED_BUILTINS.var_.signature.join(" ")
+    ) {
+      const varName = squares[0].identifiers.map((i) => i.name).join(" ");
+      const varValue = this.evalExpr(args[0]);
+      this.createVariableInTopStackEntry(varName, varValue);
+      return;
+    }
+
+    if (signature === UNTYPED_BUILTINS.numberListCreate.signature.join(" ")) {
+      const listName = squares[0].identifiers
+        .map((ident) => ident.name)
+        .join(" ");
+      this.createListInTopStackEntry(listName, "number");
+      return;
+    }
+
+    if (signature === UNTYPED_BUILTINS.stringListCreate.signature.join(" ")) {
+      const listName = squares[0].identifiers
+        .map((ident) => ident.name)
+        .join(" ");
+      this.createListInTopStackEntry(listName, "string");
+      return;
+    }
+
+    if (signature === UNTYPED_BUILTINS.booleanListCreate.signature.join(" ")) {
+      const listName = squares[0].identifiers
+        .map((ident) => ident.name)
+        .join(" ");
+      this.createListInTopStackEntry(listName, "boolean");
+      return;
+    }
   }
 
   update(): void {
@@ -961,6 +981,7 @@ class ProgramImpl implements Program {
   }
 
   createListInTopStackEntry(name: string, kind: ast.NingValKind): void {
+    console.log({ name, kind });
     this.stack[this.stack.length - 1].lists.set(name, { kind, items: [] });
   }
 

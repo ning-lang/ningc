@@ -146,13 +146,6 @@ export class App extends React.Component<{}, State> {
 
     backdrop.scrollTop = textarea.scrollTop;
     backdrop.scrollLeft = textarea.scrollLeft;
-    console.log({
-      textareaScrollLeft: textarea.scrollLeft,
-      backdropScrollLeft: backdrop.scrollLeft,
-
-      textareaScrollTop: textarea.scrollTop,
-      backdropScrollTop: backdrop.scrollTop,
-    });
   }
 
   onRunButtonClicked(): void {
