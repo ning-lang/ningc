@@ -14,6 +14,8 @@ export interface State {
 export class App extends React.Component<{}, State> {
   program: Program | null;
   canvasRef: React.RefObject<HTMLCanvasElement>;
+  codeInputBackdropRef: React.RefObject<HTMLDivElement>;
+  codeInputTextareaRef: React.RefObject<HTMLTextAreaElement>;
 
   mouseClientX: number;
   mouseClientY: number;
@@ -29,6 +31,8 @@ export class App extends React.Component<{}, State> {
 
     this.program = null;
     this.canvasRef = React.createRef();
+    this.codeInputBackdropRef = React.createRef();
+    this.codeInputTextareaRef = React.createRef();
 
     this.mouseClientX = 0;
     this.mouseClientY = 0;
@@ -60,6 +64,8 @@ export class App extends React.Component<{}, State> {
 
   bindMethods() {
     this.onCodeChanged = this.onCodeChanged.bind(this);
+    this.onCodeInputTextareaScrolled =
+      this.onCodeInputTextareaScrolled.bind(this);
     this.onRunButtonClicked = this.onRunButtonClicked.bind(this);
 
     this.onMouseMove = this.onMouseMove.bind(this);
@@ -91,7 +97,7 @@ export class App extends React.Component<{}, State> {
       <div className="App">
         {/* The design for the CodeInput is inspired by https://codersblock.com/blog/highlight-text-inside-a-textarea/ */}
         <div className="CodeInput__Container">
-          <div className="CodeInput__Backdrop">
+          <div className="CodeInput__Backdrop" ref={this.codeInputBackdropRef}>
             <div className="CodeInput__Highlight">
               {highlight(this.state.code)}
             </div>
@@ -99,8 +105,10 @@ export class App extends React.Component<{}, State> {
 
           <textarea
             className="CodeInput__Textarea"
+            ref={this.codeInputTextareaRef}
             value={this.state.code}
-            onChange={this.onCodeChanged}
+            onInput={this.onCodeChanged}
+            onScroll={this.onCodeInputTextareaScrolled}
           ></textarea>
         </div>
 
@@ -127,6 +135,16 @@ export class App extends React.Component<{}, State> {
       parseResultCache: parseResult,
       typecheckResultCache: typecheckResult,
     });
+  }
+
+  onCodeInputTextareaScrolled() {
+    const backdrop = this.codeInputBackdropRef.current;
+    const textarea = this.codeInputTextareaRef.current;
+    if (!(backdrop !== null && textarea !== null)) {
+      return;
+    }
+
+    backdrop.scrollTop = textarea.scrollTop;
   }
 
   onRunButtonClicked(): void {
