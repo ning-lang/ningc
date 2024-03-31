@@ -46,7 +46,7 @@
 }
 
 /* TODO: Delete */
-mark {
+.CodeInput__HighlightSpan {
   background-color: #d4e9ab; /* or whatever */
   border: 0;
 }
