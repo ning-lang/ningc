@@ -8,6 +8,9 @@ Global {
     let [ball height] = (ball width);
     let [ball speed magnitude] = ((ball width) * (10));
 
+    let [min paddle y] = (0);
+    let [max paddle y] = ((height) - (paddle height));
+
     var [left paddle top] = (((height) / (2)) - ((paddle height) / (2)));
     var [right paddle top] = (((height) / (2)) - ((paddle height) / (2)));
     var [ball left] = (((width) / (2)) - ((ball width) / (2)));
@@ -55,19 +58,19 @@ Command (update) {
 
     var [left dy] = (0);
 
-    if ((w down) and (not (w was down))) {
+    if (((w down) and (not (w was down))) and (((left paddle top) - (paddle height)) >= (min paddle y))) {
         set [left dy] to ((-1) * (paddle height));
     };
-    if ((s down) and (not (s was down))) {
+    if (((s down) and (not (s was down))) and (((left paddle top) + (paddle height)) <= (max paddle y))) {
         set [left dy] to (paddle height);
     };
 
     var [right dy] = (0);
 
-    if ((i down) and (not (i was down))) {
+    if (((i down) and (not (i was down))) and (((right paddle top) - (paddle height)) >= (min paddle y))) {
         set [right dy] to ((-1) * (paddle height));
     };
-    if ((k down) and (not (k was down))) {
+    if (((k down) and (not (k was down))) and (((right paddle top) + (paddle height)) <= (max paddle y))) {
         set [right dy] to (paddle height);
     };
 
