@@ -55,8 +55,17 @@ mark {
   letter-spacing: 1px;
 }
 
-*,
-*::before,
-*::after {
+.CodeInput__Container,
+.CodeInput__Container::before,
+.CodeInput__Container::after,
+.CodeInput__Backdrop,
+.CodeInput__Backdrop::before,
+.CodeInput__Backdrop::after,
+.CodeInput__Highlight,
+.CodeInput__Highlight::before,
+.CodeInput__Highlight::after,
+.CodeInput__Textarea,
+.CodeInput__Textarea::before,
+.CodeInput__Textarea::after {
   box-sizing: border-box;
 }
