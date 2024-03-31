@@ -121,48 +121,15 @@ class ProgramImpl implements Program {
   }
 
   updateGlobalsBasedOnGlobalDef(def: ast.GlobalDef): void {
+    // This code is very similar to `evalUserCommandApplicationUsingArgVals`.
+    // The main difference is that we don't modify push a stack entry
+    // at the beginning and we don't pop a stack entry at the end,
+    // since the whole purpose is to initialize variables in the global scope.
     for (const command of def.body.commands) {
-      this.updateGlobalsBasedOnGlobalDefCommand(command);
-    }
-  }
-
-  updateGlobalsBasedOnGlobalDefCommand(command: ast.Command): void {
-    const signature = getUntypedCommandApplicationSignatureString(command);
-    const [args, squares] =
-      getCommandApplicationArgsAndSquaresAndBlockCommands(command);
-
-    if (
-      signature === UNTYPED_BUILTINS.let_.signature.join(" ") ||
-      signature === UNTYPED_BUILTINS.var_.signature.join(" ")
-    ) {
-      const varName = squares[0].identifiers.map((i) => i.name).join(" ");
-      const varValue = this.evalExpr(args[0]);
-      this.createVariableInTopStackEntry(varName, varValue);
-      return;
-    }
-
-    if (signature === UNTYPED_BUILTINS.numberListCreate.signature.join(" ")) {
-      const listName = squares[0].identifiers
-        .map((ident) => ident.name)
-        .join(" ");
-      this.createListInTopStackEntry(listName, "number");
-      return;
-    }
-
-    if (signature === UNTYPED_BUILTINS.stringListCreate.signature.join(" ")) {
-      const listName = squares[0].identifiers
-        .map((ident) => ident.name)
-        .join(" ");
-      this.createListInTopStackEntry(listName, "string");
-      return;
-    }
-
-    if (signature === UNTYPED_BUILTINS.booleanListCreate.signature.join(" ")) {
-      const listName = squares[0].identifiers
-        .map((ident) => ident.name)
-        .join(" ");
-      this.createListInTopStackEntry(listName, "boolean");
-      return;
+      const returnVal = this.executeCommandAndGetReturnValue(command);
+      if (returnVal !== null) {
+        return;
+      }
     }
   }
 
