@@ -150,9 +150,12 @@ Boolean Query (ball is touching right paddle?) {
 Command (if ball is colliding with top or bottom wall, bounce) {
     let [ball bottom] = ((ball top) + (ball height));
     let [is touching top wall?] = ((ball top) <= (0));
+    if (is touching top wall?) {
+        set [y speed] to (abs (y speed));
+    };
     let [is touching bottom wall?] = ((ball bottom) >= (height));
-    if ((is touching top wall?) or (is touching bottom wall?)) {
-        set [y speed] to ((-1) * (y speed));
+    if (is touching bottom wall?) {
+        set [y speed] to ((-1) * (abs (y speed)));
     };
 }
 
