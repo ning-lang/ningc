@@ -13,11 +13,11 @@
 }
 
 .CodeInput__Backdrop {
-  overflow: auto;
-  background-color: #fff; /* or whatever */
   position: absolute;
   z-index: 1;
   border: 2px solid #685972;
+  background-color: #fff;
+  overflow: auto;
   pointer-events: none;
   transition: transform 1s;
 }
@@ -25,7 +25,6 @@
 .CodeInput__Highlight {
   white-space: pre-wrap;
   word-wrap: break-word;
-  font-family: monospace;
   color: transparent;
 }
 
@@ -36,19 +35,29 @@
   margin: 0;
   border: 2px solid #74637f;
   border-radius: 0;
-  color: #444; /* or whatever */
+  color: #444;
   background-color: transparent;
   overflow: auto;
   resize: none;
   transition: transform 1s;
-  outline: none;
-  box-shadow: 0 0 0 2px #c6aada;
-  font-family: monospace;
 }
 
 /* TODO: Delete */
 mark {
   color: transparent;
   background-color: #d4e9ab; /* or whatever */
-  border-radius: 3px;
+  border: 0;
+}
+
+.CodeInput__Highlight,
+.CodeInput__Textarea {
+  padding: 10px;
+  font: 20px/28px monospace, sans-serif;
+  letter-spacing: 1px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
