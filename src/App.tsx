@@ -270,7 +270,7 @@ export class App extends React.Component<{}, State> {
 function highlight(code: string): React.ReactElement[] {
   const result = parse(code);
   return [
-    <mark key={0} style={{ color: result.succeeded ? "transparent" : "red" }}>
+    <mark key={0} style={{ color: result.succeeded ? "purple" : "red" }}>
       {code}
     </mark>,
   ];
