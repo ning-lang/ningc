@@ -304,11 +304,11 @@ class ProgramImpl implements Program {
     }
 
     if (signature === UNTYPED_BUILTINS.opEq.signature.join(" ")) {
-      return this.evalExpr(args[0]) === this.evalExpr(args[1]);
+      return ningEq(this.evalExpr(args[0]), this.evalExpr(args[1]));
     }
 
     if (signature === UNTYPED_BUILTINS.opNe.signature.join(" ")) {
-      return this.evalExpr(args[0]) !== this.evalExpr(args[1]);
+      return !ningEq(this.evalExpr(args[0]), this.evalExpr(args[1]));
     }
 
     if (signature === UNTYPED_BUILTINS.opLt.signature.join(" ")) {
@@ -1311,4 +1311,12 @@ function getUserCommandDefs(defs: ast.Def[]): Map<string, ast.CommandDef> {
   }
 
   return out;
+}
+
+/**
+ * Equality is defined slightly different in Ning than in JavaScript.
+ * Namely, `NaN` is equal to `NaN`.
+ */
+function ningEq(a: NingVal, b: NingVal): boolean {
+  return a === b || (Number.isNaN(a) && Number.isNaN(b));
 }
