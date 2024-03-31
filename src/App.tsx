@@ -89,12 +89,20 @@ export class App extends React.Component<{}, State> {
   render() {
     return (
       <div className="App">
-        <textarea
-          value={this.state.code}
-          onChange={this.onCodeChanged}
-        ></textarea>
+        {/* The design for the CodeInput is inspired by https://codersblock.com/blog/highlight-text-inside-a-textarea/ */}
+        <div className="CodeInput__Container">
+          <div className="CodeInput__Backdrop">
+            <div className="CodeInput__Highlight">
+              {highlight(this.state.code)}
+            </div>
+          </div>
 
-        <div className="highlightedCode">{highlight(this.state.code)}</div>
+          <textarea
+            className="CodeInput__Textarea"
+            value={this.state.code}
+            onChange={this.onCodeChanged}
+          ></textarea>
+        </div>
 
         <button
           disabled={!this.state.typecheckResultCache?.succeeded}
@@ -262,8 +270,8 @@ export class App extends React.Component<{}, State> {
 function highlight(code: string): React.ReactElement[] {
   const result = parse(code);
   return [
-    <span key={0} style={{ color: result.succeeded ? "" : "red" }}>
+    <mark key={0} style={{ color: result.succeeded ? "transparent" : "red" }}>
       {code}
-    </span>,
+    </mark>,
   ];
 }

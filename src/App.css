@@ -1,4 +1,54 @@
-.highlightedCode {
-  white-space: pre;
+.CodeInput__Container,
+.CodeInput__Backdrop,
+.CodeInput__Textarea {
+  width: 460px;
+  height: 180px;
+}
+
+.CodeInput__Container {
+  display: block;
+  margin: 0 auto;
+  transform: translateZ(0);
+  -webkit-text-size-adjust: none;
+}
+
+.CodeInput__Backdrop {
+  overflow: auto;
+  background-color: #fff; /* or whatever */
+  position: absolute;
+  z-index: 1;
+  border: 2px solid #685972;
+  pointer-events: none;
+  transition: transform 1s;
+}
+
+.CodeInput__Highlight {
+  white-space: pre-wrap;
+  word-wrap: break-word;
   font-family: monospace;
+  color: transparent;
+}
+
+.CodeInput__Textarea {
+  display: block;
+  position: absolute;
+  z-index: 2;
+  margin: 0;
+  border: 2px solid #74637f;
+  border-radius: 0;
+  color: #444; /* or whatever */
+  background-color: transparent;
+  overflow: auto;
+  resize: none;
+  transition: transform 1s;
+  outline: none;
+  box-shadow: 0 0 0 2px #c6aada;
+  font-family: monospace;
+}
+
+/* TODO: Delete */
+mark {
+  color: transparent;
+  background-color: #d4e9ab; /* or whatever */
+  border-radius: 3px;
 }
