@@ -105,31 +105,39 @@ export class App extends React.Component<{}, State> {
   render() {
     return (
       <div className="App">
-        {/* The design for the CodeInput is inspired by https://codersblock.com/blog/highlight-text-inside-a-textarea/ */}
-        <div className="CodeInput__Container">
-          <div className="CodeInput__Backdrop" ref={this.codeInputBackdropRef}>
-            <div className="CodeInput__Highlight">
-              {highlight(this.state.code)}
+        <div className="LeftPanel">
+          {/* The design for the CodeInput is inspired by https://codersblock.com/blog/highlight-text-inside-a-textarea/ */}
+          <div className="CodeInput__Container">
+            <div
+              className="CodeInput__Backdrop"
+              ref={this.codeInputBackdropRef}
+            >
+              <div className="CodeInput__Highlight">
+                {highlight(this.state.code)}
+              </div>
             </div>
-          </div>
 
-          <textarea
-            className="CodeInput__Textarea"
-            ref={this.codeInputTextareaRef}
-            value={this.state.code}
-            onInput={this.onCodeChanged}
-            onScroll={this.onCodeInputTextareaScrolled}
-          ></textarea>
+            <textarea
+              className="CodeInput__Textarea"
+              ref={this.codeInputTextareaRef}
+              value={this.state.code}
+              onInput={this.onCodeChanged}
+              onScroll={this.onCodeInputTextareaScrolled}
+            ></textarea>
+          </div>
         </div>
 
-        <button
-          disabled={!this.state.typecheckResultCache?.succeeded}
-          onClick={this.onRunButtonClicked}
-        >
-          Run
-        </button>
+        <div className="RightPanel">
+          <button
+            className="RunButton"
+            disabled={!this.state.typecheckResultCache?.succeeded}
+            onClick={this.onRunButtonClicked}
+          >
+            Run
+          </button>
 
-        <canvas ref={this.canvasRef}></canvas>
+          <canvas className="NingCanvas" ref={this.canvasRef}></canvas>
+        </div>
       </div>
     );
   }

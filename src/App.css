@@ -11,18 +11,44 @@ html {
   --code-color-fire: #ff8c19;
   --code-color-red: #ff6619;
   --code-color-pink: #ff6680;
+
+  --right-panel-padding: 8px;
+  --main-border-radius: 3px;
+
+  --canvas-width: 480px;
+}
+
+.LeftPanel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100vw - (var(--canvas-width) + 2 * var(--right-panel-padding)));
+  height: 100vh;
+}
+
+.RightPanel {
+  position: absolute;
+  top: 0;
+  left: calc(100vw - (var(--canvas-width) + 2 * var(--right-panel-padding)));
+  width: calc((var(--canvas-width) + 2 * var(--right-panel-padding)));
+  height: 100vh;
 }
 
 .CodeInput__Container,
 .CodeInput__Backdrop,
 .CodeInput__Textarea {
-  width: 460px;
-  height: 180px;
+  width: calc(100vw - (var(--canvas-width) + 2 * var(--right-panel-padding)));
+  height: calc(
+    100vh - (4 * var(--right-panel-padding) + 2 * var(--right-panel-padding))
+  );
 }
 
 .CodeInput__Container {
   display: block;
-  margin: 0 auto;
+  margin: 0;
+  margin-top: calc(
+    4 * var(--right-panel-padding) + 2 * var(--right-panel-padding)
+  );
   transform: translateZ(0);
   -webkit-text-size-adjust: none;
 }
@@ -30,7 +56,7 @@ html {
 .CodeInput__Backdrop {
   position: absolute;
   z-index: 1;
-  border: 2px solid var(--code-color-main);
+  border: 1px solid transparent;
   background-color: var(--code-color-background);
   overflow: auto;
   pointer-events: none;
@@ -48,8 +74,9 @@ html {
   position: absolute;
   z-index: 2;
   margin: 0;
-  border: 2px solid var(--code-color-main);
-  border-radius: 0;
+  border: 1px solid var(--code-color-main);
+  border-top-right-radius: var(--main-border-radius);
+  border-bottom-right-radius: var(--main-border-radius);
   color: transparent;
   caret-color: var(--code-color-main);
   background-color: transparent;
@@ -81,4 +108,22 @@ html {
 .CodeInput__Textarea::before,
 .CodeInput__Textarea::after {
   box-sizing: border-box;
+}
+
+.RunButton {
+  margin-top: var(--right-panel-padding);
+  margin-bottom: var(--right-panel-padding);
+  margin-left: var(--right-panel-padding);
+  color: var(--code-color-main);
+  background-color: var(--code-color-background);
+  border: 1px solid var(--code-color-main);
+  font-size: 1.5em;
+  border-radius: var(--main-border-radius);
+  height: calc(4 * var(--right-panel-padding));
+}
+
+.NingCanvas {
+  margin-left: var(--right-panel-padding);
+  margin-right: var(--right-panel-padding);
+  border-radius: var(--main-border-radius);
 }
