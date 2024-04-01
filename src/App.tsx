@@ -105,7 +105,10 @@ export class App extends React.Component<{}, State> {
   render() {
     return (
       <div className="App">
-        <div className="TopBar"></div>
+        <div className="TopBar">
+          <h2 className="NingLogo">ning</h2>
+        </div>
+
         <div className="LeftPanel">
           {/* The design for the CodeInput is inspired by https://codersblock.com/blog/highlight-text-inside-a-textarea/ */}
           <div className="CodeInput__Container">
