@@ -36,7 +36,7 @@ Global {
 }
 
 Command (render) {
-    resize canvas to width (width) height (height);
+    resize canvas to width (width) height (height) and erase everything;
     draw image ("background.png") at x (0) y (0) with width (width) height (height);
     draw image ("left_paddle.png") at x (paddle margin) y (left paddle top) with width (paddle width) height (paddle height);
     draw image ("right_paddle.png") at x (((width) - (paddle margin)) - (paddle width)) y (right paddle top) with width (paddle width) height (paddle height);

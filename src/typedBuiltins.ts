@@ -592,6 +592,7 @@ export const TYPED_BUILTINS = {
       NUMBER_SENTINEL,
       "height",
       NUMBER_SENTINEL,
+      "and erase everything",
     ],
   },
   drawImage: {

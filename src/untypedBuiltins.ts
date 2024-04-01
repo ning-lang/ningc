@@ -373,7 +373,13 @@ export const UNTYPED_BUILTINS = {
   // Looks
   resizeCanvas: {
     isQuery: false,
-    signature: ["resize canvas to width", VAL, "height", VAL],
+    signature: [
+      "resize canvas to width",
+      VAL,
+      "height",
+      VAL,
+      "and erase everything",
+    ],
   },
   drawImage: {
     isQuery: false,
