@@ -610,4 +610,17 @@ export const TYPED_BUILTINS = {
       NUMBER_SENTINEL,
     ],
   },
+  clearRect: {
+    returnType: null,
+    signature: [
+      "erase rectangle at x",
+      NUMBER_SENTINEL,
+      "y",
+      NUMBER_SENTINEL,
+      "width",
+      NUMBER_SENTINEL,
+      "height",
+      NUMBER_SENTINEL,
+    ],
+  },
 } as const;

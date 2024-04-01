@@ -396,4 +396,17 @@ export const UNTYPED_BUILTINS = {
       VAL,
     ],
   },
+  clearRect: {
+    isQuery: false,
+    signature: [
+      "erase rectangle at x",
+      VAL,
+      "y",
+      VAL,
+      "width",
+      VAL,
+      "height",
+      VAL,
+    ],
+  },
 } as const;

@@ -31,7 +31,7 @@ export interface ExecutionEnvironment {
 
 type NingVal = number | string | boolean;
 
-type RenderRequest = ResizeRequest | DrawRequest;
+type RenderRequest = ResizeRequest | DrawRequest | ClearRectRequest;
 
 interface ResizeRequest {
   kind: "resize";
@@ -42,6 +42,14 @@ interface ResizeRequest {
 interface DrawRequest {
   kind: "draw";
   imageName: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface ClearRectRequest {
+  kind: "clear_rect";
   x: number;
   y: number;
   width: number;
@@ -173,6 +181,12 @@ class ProgramImpl implements Program {
         throw new Error("Attempted to draw non-existent image: " + imageName);
       }
       this.env.ctx.drawImage(image, x, y, width, height);
+      return;
+    }
+
+    if (req.kind === "clear_rect") {
+      const { x, y, width, height } = req;
+      this.env.ctx.clearRect(x, y, width, height);
       return;
     }
 
@@ -864,6 +878,35 @@ class ProgramImpl implements Program {
       }
 
       this.renderQueue.push({ kind: "draw", imageName, x, y, width, height });
+      return null;
+    }
+
+    if (
+      commandSignatureString === UNTYPED_BUILTINS.clearRect.signature.join(" ")
+    ) {
+      const imageName = getStringValueIfExprIsString(args[0]);
+      if (imageName === null) {
+        throw new Error("Invalid image name: " + stringifyExpression(args[0]));
+      }
+
+      const x = Math.floor(this.evalExpr(args[1]) as any);
+      const y = Math.floor(this.evalExpr(args[2]) as any);
+      const width = Math.floor(this.evalExpr(args[3]) as any);
+      const height = Math.floor(this.evalExpr(args[4]) as any);
+      if (
+        !(
+          Number.isFinite(x) &&
+          Number.isFinite(y) &&
+          Number.isFinite(width) &&
+          Number.isFinite(height) &&
+          width > 0 &&
+          height > 0
+        )
+      ) {
+        return null;
+      }
+
+      this.renderQueue.push({ kind: "clear_rect", x, y, width, height });
       return null;
     }
 
