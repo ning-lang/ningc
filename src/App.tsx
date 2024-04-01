@@ -7,6 +7,7 @@ import { NingKey, codeToKey } from "./key";
 import { HELLO_WORLD_CODE } from "./helloWorldCode";
 
 const LOCAL_STORAGE_CODE_KEY = "NingPlayground.UserCode";
+const DEFAULT_CANVAS_DIMENSIONS = [480, 360];
 
 export interface State {
   readonly code: string;
@@ -93,6 +94,12 @@ export class App extends React.Component<{}, State> {
     window.addEventListener("mouseup", this.onMouseUp);
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
+
+    const canvas = this.canvasRef.current;
+    if (canvas !== null) {
+      canvas.width = DEFAULT_CANVAS_DIMENSIONS[0];
+      canvas.height = DEFAULT_CANVAS_DIMENSIONS[1];
+    }
   }
 
   render() {
