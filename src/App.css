@@ -18,20 +18,33 @@ html {
   --canvas-width: 480px;
 }
 
-.LeftPanel {
+.TopBar {
   position: absolute;
   top: 0;
   left: 0;
+  width: 100vw;
+  height: calc(4 * var(--right-panel-padding) + 2 * var(--right-panel-padding));
+  background-color: #855cd6;
+}
+
+.LeftPanel {
+  position: absolute;
+  top: calc(4 * var(--right-panel-padding) + 2 * var(--right-panel-padding));
+  left: 0;
   width: calc(100vw - (var(--canvas-width) + 2 * var(--right-panel-padding)));
-  height: 100vh;
+  height: calc(
+    100vh - (4 * var(--right-panel-padding) + 2 * var(--right-panel-padding))
+  );
 }
 
 .RightPanel {
   position: absolute;
-  top: 0;
+  top: calc(4 * var(--right-panel-padding) + 2 * var(--right-panel-padding));
   left: calc(100vw - (var(--canvas-width) + 2 * var(--right-panel-padding)));
   width: calc((var(--canvas-width) + 2 * var(--right-panel-padding)));
-  height: 100vh;
+  height: calc(
+    100vh - (4 * var(--right-panel-padding) + 2 * var(--right-panel-padding))
+  );
 }
 
 .CodeInput__Container,
@@ -39,7 +52,8 @@ html {
 .CodeInput__Textarea {
   width: calc(100vw - (var(--canvas-width) + 2 * var(--right-panel-padding)));
   height: calc(
-    100vh - (4 * var(--right-panel-padding) + 2 * var(--right-panel-padding))
+    100vh - 2 *
+      (4 * var(--right-panel-padding) + 2 * var(--right-panel-padding))
   );
 }
 
