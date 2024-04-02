@@ -52,13 +52,13 @@ class Typechecker {
 
   typecheck(): NingTypeError[] {
     this.reset();
-    this.checkGlobalDefs();
-    this.checkQueryDefs();
-    this.checkCommandDefs();
+    this.checkAndRegisterGlobalDefs();
+    this.checkAndRegisterQueryDefs();
+    this.checkAndRegisterCommandDefs();
     return this.errors;
   }
 
-  checkGlobalDefs() {
+  checkAndRegisterGlobalDefs() {
     const globalDefs: ast.GlobalDef[] = this.file.filter(isGlobalDef);
 
     if (globalDefs.length >= 2) {
@@ -70,21 +70,75 @@ class Typechecker {
     }
 
     for (const def of globalDefs) {
-      this.checkGlobalDef(def);
+      this.checkAndRegisterGlobalDef(def);
     }
   }
 
-  checkGlobalDef(def: ast.GlobalDef) {
+  checkAndRegisterGlobalDef(def: ast.GlobalDef) {
     // TODO
     // for (const command of def.body.commands) {
     // }
   }
 
-  checkQueryDefs() {
+  checkAndRegisterQueryDefs() {
+    for (const def of this.file) {
+      if (def.kind === "query_def") {
+        this.checkRegisterQueryDef(def);
+      }
+    }
+  }
+
+  checkRegisterQueryDef(def: ast.QueryDef) {
+    this.checkSignatureIsAvailable(def.signature);
+    this.checkSignatureParamNamesAreValid(def.signature);
+    this.stack.push(getStackEntryWithUncheckedSignatureParams(def.signature));
+
+    for (const command of def.body.commands) {
+      this.checkCommand(command, def.returnType.value);
+      this.checkCommandIsLegalQueryCommand(command);
+    }
+
+    this.checkReturnInEveryBranch(def);
+
+    this.stack.pop();
+  }
+
+  checkSignatureIsAvailable(signature: readonly ast.FuncSignaturePart[]) {
     // TODO
   }
 
-  checkCommandDefs() {
+  checkSignatureParamNamesAreValid(
+    signature: readonly ast.FuncSignaturePart[]
+  ) {
+    // TODO
+  }
+
+  /**
+   * You can only use a limited subset of commands within a query:
+   * - `let` and `var`
+   * - `create <number|string|boolean> list`
+   * - LOCAL variable and list mutation, excluding parameters.
+   * - You CANNOT mutate parameters.
+   * - `repeat #() times`
+   * - `if` and `if else`
+   * - `return`
+   */
+  checkCommandIsLegalQueryCommand(command: ast.Command) {
+    // TODO
+  }
+
+  checkReturnInEveryBranch(def: ast.QueryDef) {
+    // TODO
+  }
+
+  checkAndRegisterCommandDefs() {
+    // TODO
+  }
+
+  checkCommand(
+    command: ast.Command,
+    expectedReturnType: null | ast.NingValKind
+  ) {
     // TODO
   }
 }
@@ -110,3 +164,44 @@ interface ListInfo {
 function getEmptyStackEntry(): StackEntry {
   return { variables: new Map(), lists: new Map() };
 }
+
+function getStackEntryWithUncheckedSignatureParams(
+  signature: readonly ast.FuncSignaturePart[]
+): StackEntry {
+  const variables = new Map<string, VariableInfo>();
+
+  for (const part of signature) {
+    if (part.kind === "func_param_def") {
+      variables.set(stringifyIdentifierSequence(part.name), {
+        valType: part.paramType.value,
+        mutable: false,
+      });
+    }
+  }
+
+  return { variables, lists: new Map() };
+}
+
+function stringifyIdentifierSequence(seq: readonly ast.Identifier[]): string {
+  return seq.map((id) => id.name).join(" ");
+}
+
+// Difference between commands and queries:
+// - Commands have side effects, but do not return a value.
+//   Commands may not terminate.
+// - Queries return a value, and have no side effects.
+//   Queries always terminate.
+//   However, queries may not be "pure" in the sense that they
+//   may return different outputs for the same inputs.
+//   You can only use a limited subset of commands within a query:
+//   * `let` and `var`
+//   * `create <number|string|boolean> list`
+//   * LOCAL variable and list mutation, excluding parameters.
+//     You CANNOT mutate parameters.
+//   * `repeat #() times` (the finite version)
+//   * `if` and `else`
+//   * `return`
+//   Queries have the additional following restrictions:
+//   * Queries cannot circularly depend on each other.
+//   * Queries must have a return statement covering the end of
+//     every possible branch.
