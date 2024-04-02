@@ -1,4 +1,7 @@
-import { TYPED_BUILTINS } from "./typedBuiltins";
+import {
+  getUntypedFunctionSignatureString,
+  stringifyIdentifierSequence,
+} from "./funcSignatureString";
 import { TysonTypeDict } from "./types/tysonTypeDict";
 import type * as ast from "./types/tysonTypeDict";
 
@@ -180,10 +183,6 @@ function getStackEntryWithUncheckedSignatureParams(
   }
 
   return { variables, lists: new Map() };
-}
-
-function stringifyIdentifierSequence(seq: readonly ast.Identifier[]): string {
-  return seq.map((id) => id.name).join(" ");
 }
 
 // Difference between commands and queries:

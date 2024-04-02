@@ -1,10 +1,10 @@
-import * as ast from "./types/tysonTypeDict";
 import {
-  UNTYPED_BUILTINS,
-  UNTYPED_VAL_SENTINEL,
-  UNTYPED_REF_SENTINEL,
-  UNTYPED_BLOCK_SENTINEL,
-} from "./untypedBuiltins";
+  getUntypedCommandApplicationSignatureString,
+  getUntypedFunctionSignatureString,
+  getUntypedQueryApplicationSignatureString,
+} from "./funcSignatureString";
+import * as ast from "./types/tysonTypeDict";
+import { UNTYPED_BUILTINS } from "./untypedBuiltins";
 
 const RENDER_COMMAND_SIGNATURE = "render";
 const UPDATE_COMMAND_SIGNATURE = "update";
@@ -242,16 +242,16 @@ class ProgramImpl implements Program {
   }
 
   evalQueryApplication(expr: ast.CompoundExpression): NingVal {
-    const signature = getUntypedQueryApplicationSignatureString(expr);
+    const sigString = getUntypedQueryApplicationSignatureString(expr);
     const [args, squares] = getQueryApplicationArgsAndSquares(expr);
 
-    if (signature === UNTYPED_BUILTINS.listLength.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.listLength.signature.join(" ")) {
       const listName = squares[0].identifiers.map((i) => i.name).join(" ");
       const list = this.getMutableList(listName);
       return list.items.length;
     }
 
-    if (signature === UNTYPED_BUILTINS.listItemOf.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.listItemOf.signature.join(" ")) {
       const index = this.evalExpr(args[0]);
       const listName = squares[0].identifiers.map((i) => i.name).join(" ");
       const list = this.getMutableList(listName);
@@ -266,180 +266,180 @@ class ProgramImpl implements Program {
       return getDefaultValueOfKind(list.kind);
     }
 
-    if (signature === UNTYPED_BUILTINS.listOrIndexOf.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.listOrIndexOf.signature.join(" ")) {
       const item = this.evalExpr(args[0]);
       const listName = squares[0].identifiers.map((i) => i.name).join(" ");
       const list = this.getMutableList(listName);
       return list.items.indexOf(item);
     }
 
-    if (signature === UNTYPED_BUILTINS.listContains.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.listContains.signature.join(" ")) {
       const item = this.evalExpr(args[0]);
       const listName = squares[0].identifiers.map((i) => i.name).join(" ");
       const list = this.getMutableList(listName);
       return list.items.includes(item);
     }
 
-    if (signature === UNTYPED_BUILTINS.opAdd.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opAdd.signature.join(" ")) {
       return (this.evalExpr(args[0]) as any) + (this.evalExpr(args[1]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.opSub.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opSub.signature.join(" ")) {
       return (this.evalExpr(args[0]) as any) - (this.evalExpr(args[1]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.opMul.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opMul.signature.join(" ")) {
       return (this.evalExpr(args[0]) as any) * (this.evalExpr(args[1]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.opDiv.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opDiv.signature.join(" ")) {
       return (this.evalExpr(args[0]) as any) / (this.evalExpr(args[1]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.opMod.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opMod.signature.join(" ")) {
       return (this.evalExpr(args[0]) as any) % (this.evalExpr(args[1]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.opPow.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opPow.signature.join(" ")) {
       return (this.evalExpr(args[0]) as any) ** (this.evalExpr(args[1]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.opEq.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opEq.signature.join(" ")) {
       return ningEq(this.evalExpr(args[0]), this.evalExpr(args[1]));
     }
 
-    if (signature === UNTYPED_BUILTINS.opNe.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opNe.signature.join(" ")) {
       return !ningEq(this.evalExpr(args[0]), this.evalExpr(args[1]));
     }
 
-    if (signature === UNTYPED_BUILTINS.opLt.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opLt.signature.join(" ")) {
       return this.evalExpr(args[0]) < this.evalExpr(args[1]);
     }
 
-    if (signature === UNTYPED_BUILTINS.opLe.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opLe.signature.join(" ")) {
       return this.evalExpr(args[0]) <= this.evalExpr(args[1]);
     }
 
-    if (signature === UNTYPED_BUILTINS.opGt.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opGt.signature.join(" ")) {
       return this.evalExpr(args[0]) > this.evalExpr(args[1]);
     }
 
-    if (signature === UNTYPED_BUILTINS.opGe.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opGe.signature.join(" ")) {
       return this.evalExpr(args[0]) >= this.evalExpr(args[1]);
     }
 
-    if (signature === UNTYPED_BUILTINS.opExp.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opExp.signature.join(" ")) {
       return Math.exp(this.evalExpr(args[0]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.opLn.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opLn.signature.join(" ")) {
       return Math.log(this.evalExpr(args[0]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.opSinRad.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opSinRad.signature.join(" ")) {
       const rad = this.evalExpr(args[0]) as any;
       return Math.sin(rad);
     }
 
-    if (signature === UNTYPED_BUILTINS.opCosRad.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opCosRad.signature.join(" ")) {
       const rad = this.evalExpr(args[0]) as any;
       return Math.cos(rad);
     }
 
-    if (signature === UNTYPED_BUILTINS.opTanRad.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opTanRad.signature.join(" ")) {
       const rad = this.evalExpr(args[0]) as any;
       return Math.tan(rad);
     }
 
-    if (signature === UNTYPED_BUILTINS.opAsinRad.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opAsinRad.signature.join(" ")) {
       return Math.asin(this.evalExpr(args[0]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.opAcosRad.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opAcosRad.signature.join(" ")) {
       return Math.acos(this.evalExpr(args[0]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.opAtanRad.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opAtanRad.signature.join(" ")) {
       return Math.atan(this.evalExpr(args[0]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.opAtan2Rad.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opAtan2Rad.signature.join(" ")) {
       const y = this.evalExpr(args[0]) as any;
       const x = this.evalExpr(args[1]) as any;
       return Math.atan2(y, x);
     }
 
-    if (signature === UNTYPED_BUILTINS.opPi.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opPi.signature.join(" ")) {
       return Math.PI;
     }
 
-    if (signature === UNTYPED_BUILTINS.opNaN.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opNaN.signature.join(" ")) {
       return NaN;
     }
 
-    if (signature === UNTYPED_BUILTINS.opInfinity.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opInfinity.signature.join(" ")) {
       return Infinity;
     }
 
-    if (signature === UNTYPED_BUILTINS.opNegInfinity.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opNegInfinity.signature.join(" ")) {
       return -Infinity;
     }
 
-    if (signature === UNTYPED_BUILTINS.opFloor.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opFloor.signature.join(" ")) {
       return Math.floor(this.evalExpr(args[0]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.opCeil.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opCeil.signature.join(" ")) {
       return Math.ceil(this.evalExpr(args[0]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.opRound.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opRound.signature.join(" ")) {
       return Math.round(this.evalExpr(args[0]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.opAbs.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opAbs.signature.join(" ")) {
       return Math.abs(this.evalExpr(args[0]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.opMin.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opMin.signature.join(" ")) {
       return Math.min(
         this.evalExpr(args[0]) as any,
         this.evalExpr(args[1]) as any
       );
     }
 
-    if (signature === UNTYPED_BUILTINS.opMax.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opMax.signature.join(" ")) {
       return Math.max(
         this.evalExpr(args[0]) as any,
         this.evalExpr(args[1]) as any
       );
     }
 
-    if (signature === UNTYPED_BUILTINS.opAnd.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opAnd.signature.join(" ")) {
       const a = this.evalExpr(args[0]);
       const b = this.evalExpr(args[1]);
       return Boolean(a && b);
     }
 
-    if (signature === UNTYPED_BUILTINS.opOr.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opOr.signature.join(" ")) {
       const a = this.evalExpr(args[0]);
       const b = this.evalExpr(args[1]);
       return Boolean(a || b);
     }
 
-    if (signature === UNTYPED_BUILTINS.opNot.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opNot.signature.join(" ")) {
       return !this.evalExpr(args[0]);
     }
 
-    if (signature === UNTYPED_BUILTINS.opConcat.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.opConcat.signature.join(" ")) {
       return (this.evalExpr(args[0]) as any) + (this.evalExpr(args[1]) as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.stringLength.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.stringLength.signature.join(" ")) {
       return (this.evalExpr(args[0]) as string).length;
     }
 
-    if (signature === UNTYPED_BUILTINS.stringLetter.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.stringLetter.signature.join(" ")) {
       const s = this.evalExpr(args[0]) as string;
       const index = this.evalExpr(args[1]);
       if (
@@ -454,7 +454,7 @@ class ProgramImpl implements Program {
       return getDefaultValueOfKind("string");
     }
 
-    if (signature === UNTYPED_BUILTINS.stringSubstring.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.stringSubstring.signature.join(" ")) {
       const s = this.evalExpr(args[0]) as string;
       const start = this.evalExpr(args[1]);
       const end = this.evalExpr(args[2]);
@@ -470,26 +470,26 @@ class ProgramImpl implements Program {
       return getDefaultValueOfKind("string");
     }
 
-    if (signature === UNTYPED_BUILTINS.stringContains.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.stringContains.signature.join(" ")) {
       const haystack = this.evalExpr(args[0]) as string;
       const needle = this.evalExpr(args[1]);
       return haystack.includes(needle as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.stringIndexOf.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.stringIndexOf.signature.join(" ")) {
       const haystack = this.evalExpr(args[0]) as string;
       const needle = this.evalExpr(args[1]);
       return haystack.indexOf(needle as any);
     }
 
-    if (signature === UNTYPED_BUILTINS.ternary.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.ternary.signature.join(" ")) {
       const question = this.evalExpr(args[0]);
       const answer = this.evalExpr(args[1]);
       const else_ = this.evalExpr(args[2]);
       return question ? answer : else_;
     }
 
-    if (signature === UNTYPED_BUILTINS.parseNumber.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.parseNumber.signature.join(" ")) {
       const s = this.evalExpr(args[0]) as string;
       if (getNingNumberLiteralRegex().test(s)) {
         return parseFloat(s);
@@ -499,89 +499,89 @@ class ProgramImpl implements Program {
     }
 
     if (
-      signature === UNTYPED_BUILTINS.numberOrBooleanToString.signature.join(" ")
+      sigString === UNTYPED_BUILTINS.numberOrBooleanToString.signature.join(" ")
     ) {
       return String(this.evalExpr(args[0]));
     }
 
-    if (signature === UNTYPED_BUILTINS.randomInt.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.randomInt.signature.join(" ")) {
       const min = Math.floor(this.evalExpr(args[0]) as number);
       const max = Math.floor(this.evalExpr(args[1]) as number);
       return min + Math.floor(Math.random() * (max - min));
     }
 
-    if (signature === UNTYPED_BUILTINS.windowMouseX.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.windowMouseX.signature.join(" ")) {
       return this.env.getWindowMouseX();
     }
 
-    if (signature === UNTYPED_BUILTINS.windowMouseY.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.windowMouseY.signature.join(" ")) {
       return this.env.getWindowMouseY();
     }
 
-    if (signature === UNTYPED_BUILTINS.canvasMouseX.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.canvasMouseX.signature.join(" ")) {
       return this.env.getCanvasMouseX();
     }
 
-    if (signature === UNTYPED_BUILTINS.canvasMouseY.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.canvasMouseY.signature.join(" ")) {
       return this.env.getCanvasMouseY();
     }
 
-    if (signature === UNTYPED_BUILTINS.mouseDown.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.mouseDown.signature.join(" ")) {
       return this.env.isMouseDown();
     }
 
-    if (signature === UNTYPED_BUILTINS.windowHeight.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.windowHeight.signature.join(" ")) {
       return this.env.getWindowWidth();
     }
 
-    if (signature === UNTYPED_BUILTINS.windowHeight.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.windowHeight.signature.join(" ")) {
       return this.env.getWindowHeight();
     }
 
-    if (signature === UNTYPED_BUILTINS.canvasWidth.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.canvasWidth.signature.join(" ")) {
       return this.env.ctx.canvas.width;
     }
 
-    if (signature === UNTYPED_BUILTINS.canvasHeight.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.canvasHeight.signature.join(" ")) {
       return this.env.ctx.canvas.height;
     }
 
     if (
-      signature ===
+      sigString ===
       UNTYPED_BUILTINS.millisecondsSinceUnixEpoch.signature.join(" ")
     ) {
       return Date.now();
     }
 
-    if (signature === UNTYPED_BUILTINS.currentYear.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.currentYear.signature.join(" ")) {
       return new Date().getFullYear();
     }
 
-    if (signature === UNTYPED_BUILTINS.currentMonth.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.currentMonth.signature.join(" ")) {
       return new Date().getMonth();
     }
 
-    if (signature === UNTYPED_BUILTINS.currentDate.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.currentDate.signature.join(" ")) {
       return new Date().getDate();
     }
 
-    if (signature === UNTYPED_BUILTINS.currentDayOfWeek.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.currentDayOfWeek.signature.join(" ")) {
       return new Date().getDay();
     }
 
-    if (signature === UNTYPED_BUILTINS.currentHour.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.currentHour.signature.join(" ")) {
       return new Date().getHours();
     }
 
-    if (signature === UNTYPED_BUILTINS.currentMinute.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.currentMinute.signature.join(" ")) {
       return new Date().getMinutes();
     }
 
-    if (signature === UNTYPED_BUILTINS.currentSecond.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.currentSecond.signature.join(" ")) {
       return new Date().getSeconds();
     }
 
-    if (signature === UNTYPED_BUILTINS.keyPressed.signature.join(" ")) {
+    if (sigString === UNTYPED_BUILTINS.keyPressed.signature.join(" ")) {
       const key = this.evalExpr(args[0]);
       if (typeof key !== "string") {
         throw new Error(
@@ -593,13 +593,13 @@ class ProgramImpl implements Program {
       return this.env.isKeyPressed(key);
     }
 
-    const userQueryDef = this.userQueryDefs.get(signature);
+    const userQueryDef = this.userQueryDefs.get(sigString);
     if (userQueryDef === undefined) {
       throw new Error(
         "Attempted to evaluate " +
           stringifyExpression(expr) +
           " but could not find a query with signature `" +
-          signature +
+          sigString +
           "`"
       );
     }
@@ -910,8 +910,8 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    const signature = getUntypedCommandApplicationSignatureString(command);
-    const userCommandDef = this.userCommandDefs.get(signature);
+    const sigString = getUntypedCommandApplicationSignatureString(command);
+    const userCommandDef = this.userCommandDefs.get(sigString);
     if (userCommandDef !== undefined) {
       const argVals = args.map((arg) => this.evalExpr(arg));
       this.evalUserCommandApplicationUsingArgVals(userCommandDef, argVals);
@@ -922,7 +922,7 @@ class ProgramImpl implements Program {
       "Attempted to evaluate " +
         stringifyCommand(command) +
         " but could not find a command with signature `" +
-        signature +
+        sigString +
         "`"
     );
   }
@@ -1114,48 +1114,6 @@ function parseNingStringEscapeCodeWithoutCurlyBraces(escape: string): string {
   return String.fromCodePoint(parsed);
 }
 
-function getUntypedQueryApplicationSignatureString(
-  expr: ast.CompoundExpression
-): string {
-  return (
-    expr.parts
-      // eslint-disable-next-line array-callback-return
-      .map((p): string => {
-        switch (p.kind) {
-          case "identifier":
-            return p.name;
-          case "parenthesized_expression":
-            return UNTYPED_VAL_SENTINEL;
-          case "square_bracketed_identifier_sequence":
-            return UNTYPED_REF_SENTINEL;
-        }
-      })
-      .join(" ")
-  );
-}
-
-function getUntypedCommandApplicationSignatureString(
-  expr: ast.Command
-): string {
-  return (
-    expr.parts
-      // eslint-disable-next-line array-callback-return
-      .map((p): string => {
-        switch (p.kind) {
-          case "identifier":
-            return p.name;
-          case "parenthesized_expression":
-            return UNTYPED_VAL_SENTINEL;
-          case "square_bracketed_identifier_sequence":
-            return UNTYPED_REF_SENTINEL;
-          case "block_command":
-            return UNTYPED_BLOCK_SENTINEL;
-        }
-      })
-      .join(" ")
-  );
-}
-
 function stringifyExpression(expr: ast.Expression): string {
   return "TODO IMPLEMENT stringifyExpression";
 }
@@ -1220,24 +1178,6 @@ function getCommandApplicationArgsAndSquaresAndBlockCommands(
     const exhaustivenessCheck: never = part;
   }
   return [args, squares, blockCommands];
-}
-
-function getUntypedFunctionSignatureString(
-  signature: ast.FuncSignaturePart[]
-): string {
-  return (
-    signature
-      // eslint-disable-next-line array-callback-return
-      .map((p): string => {
-        switch (p.kind) {
-          case "identifier":
-            return p.name;
-          case "func_param_def":
-            return UNTYPED_VAL_SENTINEL;
-        }
-      })
-      .join(" ")
-  );
 }
 
 function getVariableMapWithArgs(
@@ -1323,8 +1263,8 @@ function getUserQueryDefs(defs: ast.Def[]): Map<string, ast.QueryDef> {
 
   for (const def of defs) {
     if (def.kind === "query_def") {
-      const signature = getUntypedFunctionSignatureString(def.signature);
-      out.set(signature, def);
+      const sigString = getUntypedFunctionSignatureString(def.signature);
+      out.set(sigString, def);
     }
   }
 
@@ -1336,8 +1276,8 @@ function getUserCommandDefs(defs: ast.Def[]): Map<string, ast.CommandDef> {
 
   for (const def of defs) {
     if (def.kind === "command_def") {
-      const signature = getUntypedFunctionSignatureString(def.signature);
-      out.set(signature, def);
+      const sigString = getUntypedFunctionSignatureString(def.signature);
+      out.set(sigString, def);
     }
   }
 
