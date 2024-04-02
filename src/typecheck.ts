@@ -127,7 +127,7 @@ class Typechecker {
     return this.errors;
   }
 
-  checkAndRegisterGlobalDefs() {
+  checkAndRegisterGlobalDefs(): void {
     const globalDefs: ast.GlobalDef[] = this.file.filter(isGlobalDef);
 
     if (globalDefs.length >= 2) {
@@ -143,13 +143,13 @@ class Typechecker {
     }
   }
 
-  checkAndRegisterGlobalDef(def: ast.GlobalDef) {
+  checkAndRegisterGlobalDef(def: ast.GlobalDef): void {
     // TODO
     // for (const command of def.body.commands) {
     // }
   }
 
-  checkAndRegisterQueryDefs() {
+  checkAndRegisterQueryDefs(): void {
     for (const def of this.file) {
       if (def.kind === "query_def") {
         this.checkAndRegisterQueryDef(def);
@@ -157,9 +157,9 @@ class Typechecker {
     }
   }
 
-  checkAndRegisterQueryDef(def: ast.QueryDef) {
-    this.checkSignatureIsAvailable(def.signature);
-    this.checkSignatureParamNamesAreValid(def.signature);
+  checkAndRegisterQueryDef(def: ast.QueryDef): void {
+    this.checkFuncDefSignatureIsAvailable(def);
+    this.checkFuncDefSignatureParamNamesAreValid(def.signature);
     this.stack.push(getStackEntryWithUncheckedSignatureParams(def.signature));
 
     for (const command of def.body.commands) {
@@ -177,23 +177,53 @@ class Typechecker {
     );
   }
 
-  checkSignatureIsAvailable(signature: readonly ast.FuncSignaturePart[]) {
-    const sigString = getUntypedFunctionSignatureString(signature);
-    const noConflictingVar = this.lookupVar(sigString) === null;
-    const noConflictingList = this.lookupList(sigString) === null;
-    const noConflictingUserQueryDef =
-      this.userQueryDefs.get(sigString) === undefined;
-    const noConflictingUserCommandDef =
-      this.userCommandDefs.get(sigString) === undefined;
-    return (
-      noConflictingVar &&
-      noConflictingList &&
-      noConflictingUserQueryDef &&
-      noConflictingUserCommandDef
-    );
+  checkFuncDefSignatureIsAvailable(
+    funcDef: ast.QueryDef | ast.CommandDef
+  ): void {
+    const sigString = getUntypedFunctionSignatureString(funcDef.signature);
+
+    const conflictingVar = this.lookupVar(sigString);
+    if (conflictingVar !== null) {
+      this.errors.push({
+        kind: TypeErrorKind.NameClash,
+        existingDef: conflictingVar.def,
+        newDef: funcDef,
+      });
+      return;
+    }
+
+    const conflictingList = this.lookupList(sigString);
+    if (conflictingList !== null) {
+      this.errors.push({
+        kind: TypeErrorKind.NameClash,
+        existingDef: conflictingList.def,
+        newDef: funcDef,
+      });
+      return;
+    }
+
+    const conflictingUserQueryDef = this.userQueryDefs.get(sigString);
+    if (conflictingUserQueryDef !== undefined) {
+      this.errors.push({
+        kind: TypeErrorKind.NameClash,
+        existingDef: conflictingUserQueryDef,
+        newDef: funcDef,
+      });
+      return;
+    }
+
+    const conflictingUserCommandDef = this.userCommandDefs.get(sigString);
+    if (conflictingUserCommandDef !== undefined) {
+      this.errors.push({
+        kind: TypeErrorKind.NameClash,
+        existingDef: conflictingUserCommandDef,
+        newDef: funcDef,
+      });
+      return;
+    }
   }
 
-  checkSignatureParamNamesAreValid(
+  checkFuncDefSignatureParamNamesAreValid(
     signature: readonly ast.FuncSignaturePart[]
   ): void {
     const paramDefMap = new Map<string, ast.FuncParamDef>();
@@ -269,14 +299,14 @@ class Typechecker {
    * - `if` and `if else`
    * - `return`
    */
-  checkCommandIsLegalQueryBodyCommand(command: ast.Command) {
+  checkCommandIsLegalQueryBodyCommand(command: ast.Command): void {
     this.checkCommandUntypedSignatureIsLegalQueryBodyCommandSignature(command);
     this.checkCommandDoesNotMutateGlobaVariables(command);
   }
 
   checkCommandUntypedSignatureIsLegalQueryBodyCommandSignature(
     command: ast.Command
-  ) {
+  ): void {
     const sigString = getUntypedCommandApplicationSignatureString(command);
     if (!LEGAL_QUERY_COMMAND_SIGNATURE_STRINGS.has(sigString)) {
       this.errors.push({
@@ -341,7 +371,7 @@ class Typechecker {
     }
   }
 
-  checkQueryDefBodyHasInevitableReturn(def: ast.QueryDef) {
+  checkQueryDefBodyHasInevitableReturn(def: ast.QueryDef): void {
     const hasInevitableReturn = this.doesBlockCommandHaveInevitableReturn(
       def.body
     );
@@ -386,14 +416,54 @@ class Typechecker {
     return false;
   }
 
-  checkAndRegisterCommandDefs() {
-    // TODO
+  checkAndRegisterCommandDefs(): void {
+    // We need to check and register the signatures before we
+    // check the bodies so that recursive references
+    // (possibly including mutually recursive references)
+    // will work properly.
+    this.checkAndRegisterCommandDefSignatures();
+    this.checkCommandDefBodies();
+  }
+
+  checkAndRegisterCommandDefSignatures(): void {
+    for (const def of this.file) {
+      if (def.kind === "command_def") {
+        this.checkAndRegisterCommandDefSignature(def);
+      }
+    }
+  }
+
+  checkAndRegisterCommandDefSignature(def: ast.CommandDef): void {
+    this.checkFuncDefSignatureIsAvailable(def);
+    this.checkFuncDefSignatureParamNamesAreValid(def.signature);
+    this.userCommandDefs.set(
+      getUntypedFunctionSignatureString(def.signature),
+      def
+    );
+  }
+
+  checkCommandDefBodies(): void {
+    for (const def of this.file) {
+      if (def.kind === "command_def") {
+        this.checkCommandDefBody(def);
+      }
+    }
+  }
+
+  checkCommandDefBody(def: ast.CommandDef): void {
+    this.stack.push(getStackEntryWithUncheckedSignatureParams(def.signature));
+
+    for (const command of def.body.commands) {
+      this.checkCommand(command, null);
+    }
+
+    this.stack.pop();
   }
 
   checkCommand(
     command: ast.Command,
     expectedReturnType: null | ast.NingValKind
-  ) {
+  ): void {
     // TODO
   }
 

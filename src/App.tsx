@@ -66,7 +66,7 @@ export class App extends React.Component<{}, State> {
     (window as any).app = this;
   }
 
-  bindMethods() {
+  bindMethods(): void {
     this.onCodeChanged = this.onCodeChanged.bind(this);
     this.onCodeInputTextareaScrolled =
       this.onCodeInputTextareaScrolled.bind(this);
@@ -102,7 +102,7 @@ export class App extends React.Component<{}, State> {
     }
   }
 
-  render() {
+  render(): React.ReactElement {
     return (
       <div className="App">
         <div className="TopBar">
@@ -151,7 +151,7 @@ export class App extends React.Component<{}, State> {
     );
   }
 
-  onCodeChanged(event: React.ChangeEvent<HTMLTextAreaElement>) {
+  onCodeChanged(event: React.ChangeEvent<HTMLTextAreaElement>): void {
     const code = event.target.value;
     const parseResult = parse(code);
     const typeErrors = parseResult.succeeded
@@ -165,7 +165,7 @@ export class App extends React.Component<{}, State> {
     saveCodeToLocalStorage(code);
   }
 
-  onCodeInputTextareaScrolled() {
+  onCodeInputTextareaScrolled(): void {
     const backdrop = this.codeInputBackdropRef.current;
     const textarea = this.codeInputTextareaRef.current;
     if (!(backdrop !== null && textarea !== null)) {
