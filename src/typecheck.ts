@@ -1,3 +1,4 @@
+import { getCommandApplicationArgsAndSquaresAndBlockCommands } from "./funcApplicationInputs";
 import {
   getUntypedCommandApplicationSignatureString,
   getUntypedFunctionSignatureString,
@@ -10,12 +11,16 @@ import { UNTYPED_BUILTINS } from "./untypedBuiltins";
 export type NingTypeError =
   | GlobalDefNotFirstError
   | MultipleGlobalDefsError
-  | NameClashError;
+  | NameClashError
+  | IllegalCommandInQueryError
+  | QueryCommandMutatesGlobalVariableError;
 
 export enum TypeErrorKind {
   GlobalDefNotFirst = "global_def_not_first",
   MultipleGlobalDefs = "multiple_global_defs",
   NameClash = "name_clash",
+  IllegalCommandInQuery = "illegal_command_in_query",
+  QueryCommandMutatesGlobalVariable = "query_command_mutates_global_variable",
 }
 
 export interface GlobalDefNotFirstError {
@@ -32,6 +37,17 @@ export interface NameClashError {
   newDef: NameDef;
 }
 
+export interface IllegalCommandInQueryError {
+  kind: TypeErrorKind.IllegalCommandInQuery;
+  command: ast.Command;
+}
+
+export interface QueryCommandMutatesGlobalVariableError {
+  kind: TypeErrorKind.QueryCommandMutatesGlobalVariable;
+  command: ast.Command;
+  globalVariableDef: NameDef;
+}
+
 export type NameDef =
   | ast.Command
   | ast.FuncParamDef
@@ -41,6 +57,40 @@ export type NameDef =
 export function typecheck(file: TysonTypeDict["file"]): NingTypeError[] {
   return new Typechecker(file).typecheck();
 }
+
+const LEGAL_QUERY_COMMAND_SIGNATURE_STRINGS: Set<string> = new Set([
+  UNTYPED_BUILTINS.let_.signature.join(" "),
+  UNTYPED_BUILTINS.var_.signature.join(" "),
+  UNTYPED_BUILTINS.numberListCreate.signature.join(" "),
+  UNTYPED_BUILTINS.stringListCreate.signature.join(" "),
+  UNTYPED_BUILTINS.booleanListCreate.signature.join(" "),
+  UNTYPED_BUILTINS.assign.signature.join(" "),
+  UNTYPED_BUILTINS.increase.signature.join(" "),
+  UNTYPED_BUILTINS.listReplaceItem.signature.join(" "),
+  UNTYPED_BUILTINS.listInsert.signature.join(" "),
+  UNTYPED_BUILTINS.listDeleteItem.signature.join(" "),
+  UNTYPED_BUILTINS.listDeleteAll.signature.join(" "),
+  UNTYPED_BUILTINS.listAdd.signature.join(" "),
+  UNTYPED_BUILTINS.repeat.signature.join(" "),
+  UNTYPED_BUILTINS.if_.signature.join(" "),
+  UNTYPED_BUILTINS.ifElse.signature.join(" "),
+  UNTYPED_BUILTINS.valReturn.signature.join(" "),
+]);
+
+/**
+ * This set only includes "leaf" commands, not
+ * commands like `if` which contain subcommands.
+ */
+const LEGAL_QUERY_MUTATING_LEAF_COMMAND_SIGNATURE_STRINGS: Set<string> =
+  new Set([
+    UNTYPED_BUILTINS.assign.signature.join(" "),
+    UNTYPED_BUILTINS.increase.signature.join(" "),
+    UNTYPED_BUILTINS.listReplaceItem.signature.join(" "),
+    UNTYPED_BUILTINS.listInsert.signature.join(" "),
+    UNTYPED_BUILTINS.listDeleteItem.signature.join(" "),
+    UNTYPED_BUILTINS.listDeleteAll.signature.join(" "),
+    UNTYPED_BUILTINS.listAdd.signature.join(" "),
+  ]);
 
 class Typechecker {
   errors: NingTypeError[];
@@ -214,39 +264,74 @@ class Typechecker {
    */
   checkCommandIsLegalQueryBodyCommand(command: ast.Command) {
     this.checkCommandUntypedSignatureIsLegalQueryBodyCommandSignature(command);
-    this.checkCommandOnlyMutatesLocalVariables(command);
+    this.checkCommandDoesNotMutateGlobaVariables(command);
   }
 
   checkCommandUntypedSignatureIsLegalQueryBodyCommandSignature(
     command: ast.Command
   ) {
-    const LEGAL_QUERY_COMMAND_SIGNATURE_STRINGS: Set<string> = new Set([
-      UNTYPED_BUILTINS.let_.signature.join(" "),
-      UNTYPED_BUILTINS.var_.signature.join(" "),
-      UNTYPED_BUILTINS.numberListCreate.signature.join(" "),
-      UNTYPED_BUILTINS.stringListCreate.signature.join(" "),
-      UNTYPED_BUILTINS.booleanListCreate.signature.join(" "),
-      UNTYPED_BUILTINS.assign.signature.join(" "),
-      UNTYPED_BUILTINS.increase.signature.join(" "),
-      UNTYPED_BUILTINS.listReplaceItem.signature.join(" "),
-      UNTYPED_BUILTINS.listInsert.signature.join(" "),
-      UNTYPED_BUILTINS.listDeleteItem.signature.join(" "),
-      UNTYPED_BUILTINS.listDeleteAll.signature.join(" "),
-      UNTYPED_BUILTINS.listAdd.signature.join(" "),
-      UNTYPED_BUILTINS.repeat.signature.join(" "),
-      UNTYPED_BUILTINS.if_.signature.join(" "),
-      UNTYPED_BUILTINS.ifElse.signature.join(" "),
-      UNTYPED_BUILTINS.valReturn.signature.join(" "),
-    ]);
     const sigString = getUntypedCommandApplicationSignatureString(command);
     if (!LEGAL_QUERY_COMMAND_SIGNATURE_STRINGS.has(sigString)) {
-      this.errors.push({});
+      this.errors.push({
+        kind: TypeErrorKind.IllegalCommandInQuery,
+        command,
+      });
     }
   }
 
-  checkCommandOnlyMutatesLocalVariables(command: ast.Command): void {
-    // TODO
-    // Don't forget to recurse in the event of an `if`, `if else` or `repeat`.
+  checkCommandDoesNotMutateGlobaVariables(command: ast.Command): void {
+    const sigString = getUntypedCommandApplicationSignatureString(command);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_args, squares, blockCommands] =
+      getCommandApplicationArgsAndSquaresAndBlockCommands(command);
+
+    if (sigString === UNTYPED_BUILTINS.if_.signature.join(" ")) {
+      this.checkBlockCommandDoesNotMutateGlobalVariables(blockCommands[0]);
+      return;
+    }
+
+    if (sigString === UNTYPED_BUILTINS.ifElse.signature.join(" ")) {
+      this.checkBlockCommandDoesNotMutateGlobalVariables(blockCommands[0]);
+      this.checkBlockCommandDoesNotMutateGlobalVariables(blockCommands[1]);
+      return;
+    }
+
+    if (sigString === UNTYPED_BUILTINS.repeat.signature.join(" ")) {
+      this.checkBlockCommandDoesNotMutateGlobalVariables(blockCommands[0]);
+      return;
+    }
+
+    if (!LEGAL_QUERY_MUTATING_LEAF_COMMAND_SIGNATURE_STRINGS.has(sigString)) {
+      return;
+    }
+
+    // Every mutating leaf command that is legal in a query body
+    // has exactly one square bracketed identifier sequence,
+    // so we can safely assume the target is at index 0.
+    const targetName = stringifyIdentifierSequence(squares[0].identifiers);
+
+    const definingStackEntryIndex =
+      this.indexOfStackEntryThatDefinesVar(targetName);
+    if (definingStackEntryIndex === -1) {
+      // If the variable is not defined, we won't complain.
+      return;
+    }
+
+    if (definingStackEntryIndex === 0) {
+      this.errors.push({
+        kind: TypeErrorKind.QueryCommandMutatesGlobalVariable,
+        command,
+        globalVariableDef: this.stack[0].variables.get(targetName)!.def,
+      });
+    }
+  }
+
+  checkBlockCommandDoesNotMutateGlobalVariables(
+    blockCommand: ast.BlockCommand
+  ): void {
+    for (const command of blockCommand.commands) {
+      this.checkCommandDoesNotMutateGlobaVariables(command);
+    }
   }
 
   checkReturnInEveryBranch(def: ast.QueryDef) {
@@ -273,6 +358,17 @@ class Typechecker {
       }
     }
     return null;
+  }
+
+  indexOfStackEntryThatDefinesVar(name: string): number {
+    for (let i = this.stack.length - 1; i >= 0; --i) {
+      const entry = this.stack[i];
+      const info = entry.variables.get(name);
+      if (info !== undefined) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   lookupList(name: string): ListInfo | null {
