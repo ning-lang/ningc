@@ -12,7 +12,8 @@ export type NingTypeError =
   | GlobalDefNotFirstError
   | MultipleGlobalDefsError
   | NameClashError
-  | IllegalCommandInQueryError
+  | IllegalCommandInGlobalDefError
+  | IllegalCommandInQueryDefError
   | QueryCommandMutatesGlobalVariableError
   | QueryDefBodyLacksInevitableReturnError;
 
@@ -20,7 +21,8 @@ export enum TypeErrorKind {
   GlobalDefNotFirst = "global_def_not_first",
   MultipleGlobalDefs = "multiple_global_defs",
   NameClash = "name_clash",
-  IllegalCommandInQuery = "illegal_command_in_query",
+  IllegalCommandInGlobalDef = "illegal_command_in_global_def",
+  IllegalCommandInQueryDef = "illegal_command_in_query_def",
   QueryCommandMutatesGlobalVariable = "query_command_mutates_global_variable",
   QueryDefBodyLacksInevitableReturn = "query_def_body_lacks_inevitable_return",
 }
@@ -39,8 +41,13 @@ export interface NameClashError {
   newDef: NameDef;
 }
 
-export interface IllegalCommandInQueryError {
-  kind: TypeErrorKind.IllegalCommandInQuery;
+export interface IllegalCommandInGlobalDefError {
+  kind: TypeErrorKind.IllegalCommandInGlobalDef;
+  command: ast.Command;
+}
+
+export interface IllegalCommandInQueryDefError {
+  kind: TypeErrorKind.IllegalCommandInQueryDef;
   command: ast.Command;
 }
 
@@ -65,7 +72,15 @@ export function typecheck(file: TysonTypeDict["file"]): NingTypeError[] {
   return new Typechecker(file).typecheck();
 }
 
-const LEGAL_QUERY_COMMAND_SIGNATURE_STRINGS: Set<string> = new Set([
+const LEGAL_GLOBAL_DEF_BODY_COMMAND_SIGNATURE_STRINGS: Set<string> = new Set([
+  UNTYPED_BUILTINS.let_.signature.join(" "),
+  UNTYPED_BUILTINS.var_.signature.join(" "),
+  UNTYPED_BUILTINS.numberListCreate.signature.join(" "),
+  UNTYPED_BUILTINS.stringListCreate.signature.join(" "),
+  UNTYPED_BUILTINS.booleanListCreate.signature.join(" "),
+]);
+
+const LEGAL_QUERY_DEF_BODY_COMMAND_SIGNATURE_STRINGS: Set<string> = new Set([
   UNTYPED_BUILTINS.let_.signature.join(" "),
   UNTYPED_BUILTINS.var_.signature.join(" "),
   UNTYPED_BUILTINS.numberListCreate.signature.join(" "),
@@ -88,7 +103,7 @@ const LEGAL_QUERY_COMMAND_SIGNATURE_STRINGS: Set<string> = new Set([
  * This set only includes "leaf" commands, not
  * commands like `if` which contain subcommands.
  */
-const LEGAL_QUERY_MUTATING_LEAF_COMMAND_SIGNATURE_STRINGS: Set<string> =
+const LEGAL_QUERY_DEF_BODY_MUTATING_LEAF_COMMAND_SIGNATURE_STRINGS: Set<string> =
   new Set([
     UNTYPED_BUILTINS.assign.signature.join(" "),
     UNTYPED_BUILTINS.increase.signature.join(" "),
@@ -144,9 +159,20 @@ class Typechecker {
   }
 
   checkAndRegisterGlobalDef(def: ast.GlobalDef): void {
-    // TODO
-    // for (const command of def.body.commands) {
-    // }
+    for (const command of def.body.commands) {
+      this.checkCommand(command, null);
+      this.checkCommandIsLegalGlobalDefBodyCommand(command);
+    }
+  }
+
+  checkCommandIsLegalGlobalDefBodyCommand(command: ast.Command): void {
+    const sigString = getUntypedCommandApplicationSignatureString(command);
+    if (!LEGAL_GLOBAL_DEF_BODY_COMMAND_SIGNATURE_STRINGS.has(sigString)) {
+      this.errors.push({
+        kind: TypeErrorKind.IllegalCommandInGlobalDef,
+        command,
+      });
+    }
   }
 
   checkAndRegisterQueryDefs(): void {
@@ -164,7 +190,7 @@ class Typechecker {
 
     for (const command of def.body.commands) {
       this.checkCommand(command, def.returnType.value);
-      this.checkCommandIsLegalQueryBodyCommand(command);
+      this.checkCommandIsLegalQueryDefBodyCommand(command);
     }
 
     this.checkQueryDefBodyHasInevitableReturn(def);
@@ -299,7 +325,7 @@ class Typechecker {
    * - `if` and `if else`
    * - `return`
    */
-  checkCommandIsLegalQueryBodyCommand(command: ast.Command): void {
+  checkCommandIsLegalQueryDefBodyCommand(command: ast.Command): void {
     this.checkCommandUntypedSignatureIsLegalQueryBodyCommandSignature(command);
     this.checkCommandDoesNotMutateGlobaVariables(command);
   }
@@ -308,9 +334,9 @@ class Typechecker {
     command: ast.Command
   ): void {
     const sigString = getUntypedCommandApplicationSignatureString(command);
-    if (!LEGAL_QUERY_COMMAND_SIGNATURE_STRINGS.has(sigString)) {
+    if (!LEGAL_QUERY_DEF_BODY_COMMAND_SIGNATURE_STRINGS.has(sigString)) {
       this.errors.push({
-        kind: TypeErrorKind.IllegalCommandInQuery,
+        kind: TypeErrorKind.IllegalCommandInQueryDef,
         command,
       });
     }
@@ -338,7 +364,11 @@ class Typechecker {
       return;
     }
 
-    if (!LEGAL_QUERY_MUTATING_LEAF_COMMAND_SIGNATURE_STRINGS.has(sigString)) {
+    if (
+      !LEGAL_QUERY_DEF_BODY_MUTATING_LEAF_COMMAND_SIGNATURE_STRINGS.has(
+        sigString
+      )
+    ) {
       return;
     }
 
