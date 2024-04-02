@@ -32,16 +32,22 @@ export function typecheck(file: TysonTypeDict["file"]): NingTypeError[] {
 
 class Typechecker {
   errors: NingTypeError[];
-  globals: VariableInfo[];
+  stack: StackEntry[];
+  userQueryDefs: Map<string, ast.QueryDef>;
+  userCommandDefs: Map<string, ast.CommandDef>;
 
   constructor(private file: TysonTypeDict["file"]) {
     this.errors = [];
-    this.globals = [];
+    this.stack = [getEmptyStackEntry()];
+    this.userQueryDefs = new Map();
+    this.userCommandDefs = new Map();
   }
 
   reset(): void {
     this.errors = [];
-    this.globals = [];
+    this.stack = [getEmptyStackEntry()];
+    this.userQueryDefs = new Map();
+    this.userCommandDefs = new Map();
   }
 
   typecheck(): NingTypeError[] {
@@ -69,42 +75,9 @@ class Typechecker {
   }
 
   checkGlobalDef(def: ast.GlobalDef) {
-    for (const command of def.body.commands) {
-      this.checkGlobalBodyCommand(command);
-    }
-  }
-
-  checkGlobalBodyCommand(command: ast.Command) {
-    if (this.checkGlobalBodyCommandNumberLetCase(command)) {
-      return;
-    }
-
     // TODO
-  }
-
-  // Returns true if the command is a (possibly malformed) number let command, false otherwise.
-  checkGlobalBodyCommandNumberLetCase(command: ast.Command): boolean {
-    const commandMatch = checkCommandMatch(
-      command,
-      TYPED_BUILTINS.numberLet.signature
-    );
-    if (!commandMatch.succeeded) {
-      return false;
-    }
-
-    const square = checkStaticSquare(commandMatch.args[0]);
-    if (!square.succeeded) {
-      this.errors.push({
-        kind: TypeErrorKind.InvalidVariableName,
-        attemptedName: commandMatch.args[0],
-      });
-      return true;
-    }
-
-    // TODO: Properly implement this.
-    return true;
-
-    // TODO check for name conflict, and if there is none, define the variable.
+    // for (const command of def.body.commands) {
+    // }
   }
 }
 
@@ -112,45 +85,20 @@ function isGlobalDef(def: ast.Def): def is ast.GlobalDef {
   return def.kind === "global_def";
 }
 
-type CommandMatchResult = CommandMatchOk | CommandMatchErr;
-
-export interface CommandMatchOk {
-  succeeded: true;
-  args: ast.NonIdentifierCommandPart[];
-}
-
-export interface CommandMatchErr {
-  succeeded: false;
-}
-
-function checkCommandMatch(
-  command: ast.Command,
-  signature: readonly string[]
-): CommandMatchResult {
-  // TODO: Properly implement this.
-  return { succeeded: false };
+interface StackEntry {
+  variables: Map<string, VariableInfo>;
+  lists: Map<string, ListInfo>;
 }
 
 interface VariableInfo {
-  name: string;
+  valType: ast.NingValKind;
   mutable: boolean;
 }
 
-type StaticSquareResult = StaticSquareOk | StaticSquareErr;
-
-export interface StaticSquareOk {
-  succeeded: true;
-  nameParts: ast.Identifier[];
+interface ListInfo {
+  elementType: ast.NingValKind;
 }
 
-export interface StaticSquareErr {
-  succeeded: false;
-}
-
-function checkStaticSquare(part: ast.CommandPart): StaticSquareResult {
-  if (!(part.kind === "square_bracketed_identifier_sequence")) {
-    return { succeeded: false };
-  }
-
-  return { succeeded: true, nameParts: part.identifiers };
+function getEmptyStackEntry(): StackEntry {
+  return { variables: new Map(), lists: new Map() };
 }
