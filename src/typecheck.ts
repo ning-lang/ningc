@@ -8,12 +8,12 @@ import type * as ast from "./types/tysonTypeDict";
 export type NingTypeError =
   | GlobalDefNotFirstError
   | MultipleGlobalDefsError
-  | InvalidVariableNameError;
+  | NameClashError;
 
 export enum TypeErrorKind {
   GlobalDefNotFirst = "global_def_not_first",
   MultipleGlobalDefs = "multiple_global_defs",
-  InvalidVariableName = "invalid_variable_name",
+  NameClash = "name_clash",
 }
 
 export interface GlobalDefNotFirstError {
@@ -24,10 +24,17 @@ export interface MultipleGlobalDefsError {
   kind: TypeErrorKind.MultipleGlobalDefs;
 }
 
-export interface InvalidVariableNameError {
-  kind: TypeErrorKind.InvalidVariableName;
-  attemptedName: ast.NonIdentifierCommandPart;
+export interface NameClashError {
+  kind: TypeErrorKind.NameClash;
+  existingDef: NameDef;
+  newDef: NameDef;
 }
+
+export type NameDef =
+  | ast.Command
+  | ast.FuncParamDef
+  | ast.QueryDef
+  | ast.CommandDef;
 
 export function typecheck(file: TysonTypeDict["file"]): NingTypeError[] {
   return new Typechecker(file).typecheck();
@@ -129,8 +136,68 @@ class Typechecker {
 
   checkSignatureParamNamesAreValid(
     signature: readonly ast.FuncSignaturePart[]
-  ) {
-    // TODO
+  ): void {
+    const paramDefMap = new Map<string, ast.FuncParamDef>();
+
+    for (const part of signature) {
+      if (part.kind === "identifier") {
+        continue;
+      }
+
+      const name = stringifyIdentifierSequence(part.name);
+
+      const conflictingVar = this.lookupVar(name);
+      if (conflictingVar !== null) {
+        this.errors.push({
+          kind: TypeErrorKind.NameClash,
+          existingDef: conflictingVar.def,
+          newDef: part,
+        });
+        return;
+      }
+
+      const conflictingList = this.lookupList(name);
+      if (conflictingList !== null) {
+        this.errors.push({
+          kind: TypeErrorKind.NameClash,
+          existingDef: conflictingList.def,
+          newDef: part,
+        });
+        return;
+      }
+
+      const conflictingUserQueryDef = this.userQueryDefs.get(name);
+      if (conflictingUserQueryDef !== undefined) {
+        this.errors.push({
+          kind: TypeErrorKind.NameClash,
+          existingDef: conflictingUserQueryDef,
+          newDef: part,
+        });
+        return;
+      }
+
+      const conflictingUserCommandDef = this.userCommandDefs.get(name);
+      if (conflictingUserCommandDef !== undefined) {
+        this.errors.push({
+          kind: TypeErrorKind.NameClash,
+          existingDef: conflictingUserCommandDef,
+          newDef: part,
+        });
+        return;
+      }
+
+      const conflictingParamDef = paramDefMap.get(name);
+      if (conflictingParamDef !== undefined) {
+        this.errors.push({
+          kind: TypeErrorKind.NameClash,
+          existingDef: conflictingParamDef,
+          newDef: part,
+        });
+        return;
+      }
+
+      paramDefMap.set(name, part);
+    }
   }
 
   /**
@@ -197,10 +264,12 @@ interface StackEntry {
 interface VariableInfo {
   valType: ast.NingValKind;
   mutable: boolean;
+  def: NameDef;
 }
 
 interface ListInfo {
   elementType: ast.NingValKind;
+  def: ast.Command;
 }
 
 function getEmptyStackEntry(): StackEntry {
@@ -217,6 +286,7 @@ function getStackEntryWithUncheckedSignatureParams(
       variables.set(stringifyIdentifierSequence(part.name), {
         valType: part.paramType.value,
         mutable: false,
+        def: part,
       });
     }
   }
