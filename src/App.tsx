@@ -311,12 +311,14 @@ export class App extends React.Component<{}, State> {
 }
 
 function highlight(code: string): React.ReactElement[] {
-  const result = parse(code);
+  const parseResult = parse(code);
+  const noErrors =
+    parseResult.succeeded && typecheck(parseResult.value).length === 0;
   return [
     <span
       className="CodeInput__HighlightSpan"
       key={0}
-      style={{ color: result.succeeded ? "#4c97ff" : "#ff6619" }}
+      style={{ color: noErrors ? "#4c97ff" : "#ff6619" }}
     >
       {
         /**
