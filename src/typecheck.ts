@@ -53,9 +53,9 @@ class Typechecker {
   typecheck(): NingTypeError[] {
     this.reset();
     this.checkGlobalDefs();
-
-    // TODO: Properly implement this.
-    return [];
+    this.checkQueryDefs();
+    this.checkCommandDefs();
+    return this.errors;
   }
 
   checkGlobalDefs() {
@@ -78,6 +78,14 @@ class Typechecker {
     // TODO
     // for (const command of def.body.commands) {
     // }
+  }
+
+  checkQueryDefs() {
+    // TODO
+  }
+
+  checkCommandDefs() {
+    // TODO
   }
 }
 
