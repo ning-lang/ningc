@@ -1,7 +1,7 @@
 import React from "react";
 import "./App.css";
 import { ParseResult, parse } from "./parser";
-import { TypecheckResult, typecheck } from "./typecheck";
+import { typecheck, NingTypeError } from "./typecheck";
 import { ExecutionEnvironment, Program, getUncheckedProgram } from "./program";
 import { NingKey, codeToKey } from "./key";
 import { HELLO_WORLD_CODE } from "./helloWorldCode";
@@ -12,7 +12,7 @@ const DEFAULT_CANVAS_DIMENSIONS = [480, 360];
 export interface State {
   readonly code: string;
   readonly parseResultCache: ParseResult;
-  readonly typecheckResultCache: null | TypecheckResult;
+  readonly typeErrorsCache: NingTypeError[];
 }
 
 export class App extends React.Component<{}, State> {
@@ -47,11 +47,11 @@ export class App extends React.Component<{}, State> {
     const parseResult = parse(initialCode);
     const typecheckResult = parseResult.succeeded
       ? typecheck(parseResult.value)
-      : null;
+      : [];
     this.state = {
       code: initialCode,
       parseResultCache: parseResult,
-      typecheckResultCache: typecheckResult,
+      typeErrorsCache: typecheckResult,
     };
 
     this.bindMethods();
@@ -134,7 +134,12 @@ export class App extends React.Component<{}, State> {
         <div className="RightPanel">
           <button
             className="RunButton"
-            disabled={!this.state.typecheckResultCache?.succeeded}
+            disabled={
+              !(
+                this.state.parseResultCache.succeeded &&
+                this.state.typeErrorsCache.length === 0
+              )
+            }
             onClick={this.onRunButtonClicked}
           >
             Run
@@ -149,13 +154,13 @@ export class App extends React.Component<{}, State> {
   onCodeChanged(event: React.ChangeEvent<HTMLTextAreaElement>) {
     const code = event.target.value;
     const parseResult = parse(code);
-    const typecheckResult = parseResult.succeeded
+    const typeErrors = parseResult.succeeded
       ? typecheck(parseResult.value)
-      : null;
+      : [];
     this.setState({
       code,
       parseResultCache: parseResult,
-      typecheckResultCache: typecheckResult,
+      typeErrorsCache: typeErrors,
     });
     saveCodeToLocalStorage(code);
   }
@@ -172,13 +177,9 @@ export class App extends React.Component<{}, State> {
   }
 
   onRunButtonClicked(): void {
-    const typecheckResult = this.state.typecheckResultCache;
+    const typeErrors = this.state.typeErrorsCache;
     const parseResult = this.state.parseResultCache;
-    if (
-      !parseResult.succeeded ||
-      typecheckResult === null ||
-      !typecheckResult.succeeded
-    ) {
+    if (!(parseResult.succeeded && typeErrors.length === 0)) {
       return;
     }
 

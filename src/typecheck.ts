@@ -2,18 +2,7 @@ import { TYPED_BUILTINS } from "./typedBuiltins";
 import { TysonTypeDict } from "./types/tysonTypeDict";
 import type * as ast from "./types/tysonTypeDict";
 
-export type TypecheckResult = TypecheckOk | TypecheckErr;
-
-export interface TypecheckOk {
-  succeeded: true;
-}
-
-export interface TypecheckErr {
-  succeeded: false;
-  errors: TypeError[];
-}
-
-export type TypeError =
+export type NingTypeError =
   | GlobalDefNotFirstError
   | MultipleGlobalDefsError
   | InvalidVariableNameError;
@@ -37,12 +26,12 @@ export interface InvalidVariableNameError {
   attemptedName: ast.NonIdentifierCommandPart;
 }
 
-export function typecheck(file: TysonTypeDict["file"]): TypecheckResult {
+export function typecheck(file: TysonTypeDict["file"]): NingTypeError[] {
   return new Typechecker(file).typecheck();
 }
 
 class Typechecker {
-  errors: TypeError[];
+  errors: NingTypeError[];
   globals: VariableInfo[];
 
   constructor(private file: TysonTypeDict["file"]) {
@@ -50,11 +39,11 @@ class Typechecker {
     this.globals = [];
   }
 
-  typecheck(): TypecheckResult {
+  typecheck(): NingTypeError[] {
     this.checkGlobalDefs();
 
     // TODO: Properly implement this.
-    return { succeeded: true };
+    return [];
   }
 
   checkGlobalDefs() {
