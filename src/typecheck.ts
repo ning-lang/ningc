@@ -13,7 +13,8 @@ export type NingTypeError =
   | MultipleGlobalDefsError
   | NameClashError
   | IllegalCommandInQueryError
-  | QueryCommandMutatesGlobalVariableError;
+  | QueryCommandMutatesGlobalVariableError
+  | QueryDefBodyLacksInevitableReturnError;
 
 export enum TypeErrorKind {
   GlobalDefNotFirst = "global_def_not_first",
@@ -21,6 +22,7 @@ export enum TypeErrorKind {
   NameClash = "name_clash",
   IllegalCommandInQuery = "illegal_command_in_query",
   QueryCommandMutatesGlobalVariable = "query_command_mutates_global_variable",
+  QueryDefBodyLacksInevitableReturn = "query_def_body_lacks_inevitable_return",
 }
 
 export interface GlobalDefNotFirstError {
@@ -46,6 +48,11 @@ export interface QueryCommandMutatesGlobalVariableError {
   kind: TypeErrorKind.QueryCommandMutatesGlobalVariable;
   command: ast.Command;
   globalVariableDef: NameDef;
+}
+
+export interface QueryDefBodyLacksInevitableReturnError {
+  kind: TypeErrorKind.QueryDefBodyLacksInevitableReturn;
+  def: ast.QueryDef;
 }
 
 export type NameDef =
@@ -160,7 +167,7 @@ class Typechecker {
       this.checkCommandIsLegalQueryBodyCommand(command);
     }
 
-    this.checkReturnInEveryBranch(def);
+    this.checkQueryDefBodyHasInevitableReturn(def);
 
     this.stack.pop();
 
@@ -334,8 +341,49 @@ class Typechecker {
     }
   }
 
-  checkReturnInEveryBranch(def: ast.QueryDef) {
-    // TODO
+  checkQueryDefBodyHasInevitableReturn(def: ast.QueryDef) {
+    const hasInevitableReturn = this.doesBlockCommandHaveInevitableReturn(
+      def.body
+    );
+    if (!hasInevitableReturn) {
+      this.errors.push({
+        kind: TypeErrorKind.QueryDefBodyLacksInevitableReturn,
+        def,
+      });
+    }
+  }
+
+  doesBlockCommandHaveInevitableReturn(
+    blockCommand: ast.BlockCommand
+  ): boolean {
+    for (const command of blockCommand.commands) {
+      if (this.doesCommandHaveInevitableReturn(command)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  doesCommandHaveInevitableReturn(command: ast.Command): boolean {
+    const sigString = getUntypedCommandApplicationSignatureString(command);
+
+    if (
+      sigString === UNTYPED_BUILTINS.valReturn.signature.join(" ") ||
+      sigString === UNTYPED_BUILTINS.voidReturn.signature.join(" ")
+    ) {
+      return true;
+    }
+
+    if (sigString === UNTYPED_BUILTINS.ifElse.signature.join(" ")) {
+      const blockCommands =
+        getCommandApplicationArgsAndSquaresAndBlockCommands(command)[2];
+      return (
+        this.doesBlockCommandHaveInevitableReturn(blockCommands[0]) &&
+        this.doesBlockCommandHaveInevitableReturn(blockCommands[1])
+      );
+    }
+
+    return false;
   }
 
   checkAndRegisterCommandDefs() {
