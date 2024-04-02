@@ -39,7 +39,13 @@ class Typechecker {
     this.globals = [];
   }
 
+  reset(): void {
+    this.errors = [];
+    this.globals = [];
+  }
+
   typecheck(): NingTypeError[] {
+    this.reset();
     this.checkGlobalDefs();
 
     // TODO: Properly implement this.
