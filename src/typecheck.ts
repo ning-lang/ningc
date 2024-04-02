@@ -86,12 +86,12 @@ class Typechecker {
   checkAndRegisterQueryDefs() {
     for (const def of this.file) {
       if (def.kind === "query_def") {
-        this.checkRegisterQueryDef(def);
+        this.checkAndRegisterQueryDef(def);
       }
     }
   }
 
-  checkRegisterQueryDef(def: ast.QueryDef) {
+  checkAndRegisterQueryDef(def: ast.QueryDef) {
     this.checkSignatureIsAvailable(def.signature);
     this.checkSignatureParamNamesAreValid(def.signature);
     this.stack.push(getStackEntryWithUncheckedSignatureParams(def.signature));
@@ -104,10 +104,27 @@ class Typechecker {
     this.checkReturnInEveryBranch(def);
 
     this.stack.pop();
+
+    this.userQueryDefs.set(
+      getUntypedFunctionSignatureString(def.signature),
+      def
+    );
   }
 
   checkSignatureIsAvailable(signature: readonly ast.FuncSignaturePart[]) {
-    // TODO
+    const sigString = getUntypedFunctionSignatureString(signature);
+    const noConflictingVar = this.lookupVar(sigString) === null;
+    const noConflictingList = this.lookupList(sigString) === null;
+    const noConflictingUserQueryDef =
+      this.userQueryDefs.get(sigString) === undefined;
+    const noConflictingUserCommandDef =
+      this.userCommandDefs.get(sigString) === undefined;
+    return (
+      noConflictingVar &&
+      noConflictingList &&
+      noConflictingUserQueryDef &&
+      noConflictingUserCommandDef
+    );
   }
 
   checkSignatureParamNamesAreValid(
@@ -143,6 +160,28 @@ class Typechecker {
     expectedReturnType: null | ast.NingValKind
   ) {
     // TODO
+  }
+
+  lookupVar(name: string): VariableInfo | null {
+    for (let i = this.stack.length - 1; i >= 0; --i) {
+      const entry = this.stack[i];
+      const info = entry.variables.get(name);
+      if (info !== undefined) {
+        return info;
+      }
+    }
+    return null;
+  }
+
+  lookupList(name: string): ListInfo | null {
+    for (let i = this.stack.length - 1; i >= 0; --i) {
+      const entry = this.stack[i];
+      const info = entry.lists.get(name);
+      if (info !== undefined) {
+        return info;
+      }
+    }
+    return null;
   }
 }
 
