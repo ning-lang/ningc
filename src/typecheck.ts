@@ -1,9 +1,11 @@
 import {
+  getUntypedCommandApplicationSignatureString,
   getUntypedFunctionSignatureString,
   stringifyIdentifierSequence,
 } from "./funcSignatureString";
 import { TysonTypeDict } from "./types/tysonTypeDict";
 import type * as ast from "./types/tysonTypeDict";
+import { UNTYPED_BUILTINS } from "./untypedBuiltins";
 
 export type NingTypeError =
   | GlobalDefNotFirstError
@@ -105,7 +107,7 @@ class Typechecker {
 
     for (const command of def.body.commands) {
       this.checkCommand(command, def.returnType.value);
-      this.checkCommandIsLegalQueryCommand(command);
+      this.checkCommandIsLegalQueryBodyCommand(command);
     }
 
     this.checkReturnInEveryBranch(def);
@@ -210,8 +212,41 @@ class Typechecker {
    * - `if` and `if else`
    * - `return`
    */
-  checkCommandIsLegalQueryCommand(command: ast.Command) {
+  checkCommandIsLegalQueryBodyCommand(command: ast.Command) {
+    this.checkCommandUntypedSignatureIsLegalQueryBodyCommandSignature(command);
+    this.checkCommandOnlyMutatesLocalVariables(command);
+  }
+
+  checkCommandUntypedSignatureIsLegalQueryBodyCommandSignature(
+    command: ast.Command
+  ) {
+    const LEGAL_QUERY_COMMAND_SIGNATURE_STRINGS: Set<string> = new Set([
+      UNTYPED_BUILTINS.let_.signature.join(" "),
+      UNTYPED_BUILTINS.var_.signature.join(" "),
+      UNTYPED_BUILTINS.numberListCreate.signature.join(" "),
+      UNTYPED_BUILTINS.stringListCreate.signature.join(" "),
+      UNTYPED_BUILTINS.booleanListCreate.signature.join(" "),
+      UNTYPED_BUILTINS.assign.signature.join(" "),
+      UNTYPED_BUILTINS.increase.signature.join(" "),
+      UNTYPED_BUILTINS.listReplaceItem.signature.join(" "),
+      UNTYPED_BUILTINS.listInsert.signature.join(" "),
+      UNTYPED_BUILTINS.listDeleteItem.signature.join(" "),
+      UNTYPED_BUILTINS.listDeleteAll.signature.join(" "),
+      UNTYPED_BUILTINS.listAdd.signature.join(" "),
+      UNTYPED_BUILTINS.repeat.signature.join(" "),
+      UNTYPED_BUILTINS.if_.signature.join(" "),
+      UNTYPED_BUILTINS.ifElse.signature.join(" "),
+      UNTYPED_BUILTINS.valReturn.signature.join(" "),
+    ]);
+    const sigString = getUntypedCommandApplicationSignatureString(command);
+    if (!LEGAL_QUERY_COMMAND_SIGNATURE_STRINGS.has(sigString)) {
+      this.errors.push({});
+    }
+  }
+
+  checkCommandOnlyMutatesLocalVariables(command: ast.Command): void {
     // TODO
+    // Don't forget to recurse in the event of an `if`, `if else` or `repeat`.
   }
 
   checkReturnInEveryBranch(def: ast.QueryDef) {
