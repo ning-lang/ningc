@@ -524,6 +524,10 @@ class Typechecker {
       squareTypes
     );
 
+    if (sigString === UNTYPED_BUILTINS.assign.signature.join(" ")) {
+      // TODO: Check that the target is mutable.
+    }
+
     // If `attemptedOverload` is null, it means
     // there were zero overloads.
     // In other words,
