@@ -492,9 +492,83 @@ class Typechecker {
 
   checkCommand(
     command: ast.Command,
-    expectedReturnType: null | ast.NingValKind
+    expectedReturnType: null | ast.NingType
   ): void {
+    const sigString = getUntypedCommandApplicationSignatureString(command);
+    const [args, squares, blockCommands] =
+      getCommandApplicationArgsAndSquaresAndBlockCommands(command);
+
+    const argTypes: (ast.NingType | null)[] = args.map((arg) =>
+      this.checkExpressionAndGetType(arg)
+    );
+
+    const squareTypes: (SquareType | null)[] = squares.map((square) =>
+      this.checkSquareAndGetType(square)
+    );
+
+    for (const blockCommand of blockCommands) {
+      this.checkBlockCommand(blockCommand, expectedReturnType);
+    }
+
+    const typePossibilities =
+      this.lookupCommandArgAndSquareTypePossibilities(sigString);
+
+    if (sigString === UNTYPED_BUILTINS.valReturn.signature.join(" ")) {
+      // TODO: Check return type.
+    } else if (sigString === UNTYPED_BUILTINS.voidReturn.signature.join(" ")) {
+      // TODO: Check return type.
+    }
+
+    if (typePossibilities.length === 0) {
+      // TODO: Could not find command signature.
+      this.errors.push({});
+      return;
+    }
+
+    const attemptedOverload = guessAttemptedOverload(
+      typePossibilities,
+      argTypes,
+      squareTypes
+    );
+  }
+
+  checkBlockCommand(
+    blockCommand: ast.BlockCommand,
+    expectedReturnType: null | ast.NingType
+  ): void {
+    for (const command of blockCommand.commands) {
+      this.checkCommand(command, expectedReturnType);
+    }
+  }
+
+  checkExpressionAndGetType(expr: ast.Expression): ast.NingType | null {
     // TODO
+    return null;
+  }
+
+  checkSquareAndGetType(
+    square: ast.SquareBracketedIdentifierSequence
+  ): SquareType | null {
+    // TODO
+    const name = stringifyIdentifierSequence(square.identifiers);
+
+    for (let i = this.stack.length - 1; i >= 0; --i) {
+      const entry = this.stack[i];
+      const info = entry.variables.get(name);
+      if (info !== undefined) {
+        return { isList: false, typeOrElementType: info.valType };
+      }
+    }
+
+    for (let i = this.stack.length - 1; i >= 0; --i) {
+      const entry = this.stack[i];
+      const info = entry.lists.get(name);
+      if (info !== undefined) {
+        return { isList: true, typeOrElementType: info.elementType };
+      }
+    }
+
+    return null;
   }
 
   lookupVar(name: string): VariableInfo | null {
@@ -529,6 +603,13 @@ class Typechecker {
     }
     return null;
   }
+
+  lookupCommandArgAndSquareTypePossibilities(
+    sigString: string
+  ): CommandArgAndSquareTypePossibility[] {
+    // TODO
+    return [];
+  }
 }
 
 function isGlobalDef(def: ast.Def): def is ast.GlobalDef {
@@ -541,14 +622,24 @@ interface StackEntry {
 }
 
 interface VariableInfo {
-  valType: ast.NingValKind;
+  valType: ast.NingType;
   mutable: boolean;
   def: NameDef;
 }
 
 interface ListInfo {
-  elementType: ast.NingValKind;
+  elementType: ast.NingType;
   def: ast.Command;
+}
+
+interface CommandArgAndSquareTypePossibility {
+  argTypes: ast.NingType[];
+  squareTypes: ast.NingType[];
+}
+
+interface SquareType {
+  isList: boolean;
+  typeOrElementType: ast.NingType;
 }
 
 function getEmptyStackEntry(): StackEntry {

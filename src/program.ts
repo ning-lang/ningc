@@ -994,7 +994,7 @@ class ProgramImpl implements Program {
     throw new Error("Attempted to set value of non-existent variable: " + name);
   }
 
-  createListInTopStackEntry(name: string, kind: ast.NingValKind): void {
+  createListInTopStackEntry(name: string, kind: ast.NingType): void {
     console.log({ name, kind });
     this.stack[this.stack.length - 1].lists.set(name, { kind, items: [] });
   }
@@ -1147,7 +1147,7 @@ interface StackEntry {
 }
 
 interface NingList {
-  kind: ast.NingValKind;
+  kind: ast.NingType;
   items: NingVal[];
 }
 
@@ -1164,7 +1164,7 @@ function getStringValueIfExprIsString(expr: ast.Expression): null | string {
   return null;
 }
 
-function getDefaultValueOfKind(kind: ast.NingValKind): NingVal {
+function getDefaultValueOfKind(kind: ast.NingType): NingVal {
   if (kind === "number") {
     return 0;
   }

@@ -173,10 +173,10 @@ export interface TypeNode {
   kind: "type";
 
   tokens: Token<TokenKind>[];
-  value: NingValKind;
+  value: NingType;
 }
 
-export type NingValKind = "number" | "string" | "boolean";
+export type NingType = "number" | "string" | "boolean";
 
 export interface Token<K extends TokenKind> {
   location: JisonTokenLocation;
