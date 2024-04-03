@@ -528,6 +528,8 @@ class Typechecker {
       // TODO: Check that the target is mutable.
     }
 
+    // TODO: Register variable or list def, if the command `let`, `var`, or `create * list`.
+
     // If `attemptedOverload` is null, it means
     // there were zero overloads.
     // In other words,
