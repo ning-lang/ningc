@@ -510,8 +510,7 @@ class Typechecker {
       this.checkBlockCommand(blockCommand, expectedReturnType);
     }
 
-    const typePossibilities =
-      this.lookupCommandArgAndSquareTypePossibilities(sigString);
+    const overloads = this.lookupCommandOverloads(sigString);
 
     if (sigString === UNTYPED_BUILTINS.valReturn.signature.join(" ")) {
       // TODO: Check return type.
@@ -519,17 +518,50 @@ class Typechecker {
       // TODO: Check return type.
     }
 
-    if (typePossibilities.length === 0) {
-      // TODO: Could not find command signature.
-      this.errors.push({});
-      return;
-    }
-
-    const attemptedOverload = guessAttemptedOverload(
-      typePossibilities,
+    const attemptedOverloadGuess = guessAttemptedCommandOverload(
+      overloads,
       argTypes,
       squareTypes
     );
+
+    // If `attemptedOverload` is null, it means
+    // there were zero overloads.
+    // In other words,
+    // we could not find a matching command signature.
+    if (attemptedOverloadGuess === null) {
+      this.errors.push({
+        kind: TODO_unknown_command,
+        command,
+      });
+      return;
+    }
+
+    for (let i = 0; i < attemptedOverloadGuess.argTypes.length; ++i) {
+      const actualType = argTypes[i];
+      if (actualType === null) {
+        continue;
+      }
+
+      const expectedType = attemptedOverloadGuess.argTypes[i];
+      if (expectedType !== actualType) {
+        this.errors.push({
+          kind: TODO_arg_is_wrong_type,
+          arg: args[i],
+          expectedType,
+          actualType,
+        });
+      }
+    }
+
+    for (let i = 0; i < attemptedOverloadGuess.squareTypes.length; ++i) {
+      const actualType = squareTypes[i];
+      if (actualType === null) {
+        continue;
+      }
+
+      const expectedType = attemptedOverloadGuess.squareTypes[i];
+      // todo
+    }
   }
 
   checkBlockCommand(
@@ -604,9 +636,7 @@ class Typechecker {
     return null;
   }
 
-  lookupCommandArgAndSquareTypePossibilities(
-    sigString: string
-  ): CommandArgAndSquareTypePossibility[] {
+  lookupCommandOverloads(commandSigString: string): CommandOverload[] {
     // TODO
     return [];
   }
@@ -632,7 +662,7 @@ interface ListInfo {
   def: ast.Command;
 }
 
-interface CommandArgAndSquareTypePossibility {
+interface CommandOverload {
   argTypes: ast.NingType[];
   squareTypes: ast.NingType[];
 }
@@ -662,6 +692,24 @@ function getStackEntryWithUncheckedSignatureParams(
   }
 
   return { variables, lists: new Map() };
+}
+
+/**
+ * @precondition For every overload `o`,
+ * `argTypes.length === o.argTypes.length`
+ * and `squareTypes.length === o.squareTypes.length`.
+ */
+function guessAttemptedCommandOverload(
+  overloads: CommandOverload[],
+  argTypes: (ast.NingType | null)[],
+  squareTypes: (SquareType | null)[]
+): null | CommandOverload {
+  if (overloads.length === 0) {
+    return null;
+  }
+
+  // TODO
+  return null;
 }
 
 // Difference between commands and queries:
