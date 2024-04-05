@@ -587,8 +587,13 @@ class Typechecker {
       [argTypes, squareTypes]
     );
 
-    // TODO: Register variable or list def, if the command `let`, `var`, or `create * list`.
-    // In such a case, CHECK for no name conflict.
+    if (signature === BUILTIN_COMMANDS.let_.signature) {
+      const name = stringifyIdentifierSequence(squares[0].identifiers);
+      this.checkVarDefAndRegisterIfNotTaken(name, argTypes[0], false, command);
+    } else if (signature === BUILTIN_COMMANDS.var_.signature) {
+      const name = stringifyIdentifierSequence(squares[0].identifiers);
+      this.checkVarDefAndRegisterIfNotTaken(name, argTypes[0], true, command);
+    }
   }
 
   checkBlockCommand(
@@ -729,6 +734,36 @@ class Typechecker {
   ): null | [TypeSet[], SquareTypeSet[]] {
     // TODO
     return null;
+  }
+
+  checkVarDefAndRegisterIfNotTaken(
+    name: string,
+    type_: ast.NingType,
+    mutable: boolean,
+    command: ast.Command
+  ): void {
+    const conflictingVar = this.lookupVar(name);
+    if (conflictingVar !== null) {
+      this.errors.push({
+        kind: TypeErrorKind.NameClash,
+        existingDef: conflictingVar.def,
+        newDef: command,
+      });
+      return;
+    }
+
+    const conflictingList = this.lookupList(name);
+    if (conflictingList !== null) {
+      this.errors.push({
+        kind: TypeErrorKind.NameClash,
+        existingDef: conflictingList.def,
+        newDef: command,
+      });
+      return;
+    }
+
+    const entry = this.stack[this.stack.length - 1];
+    entry.variables.set(name, { valType: type_, mutable, def: command });
   }
 
   checkExpressionAndGetType(
