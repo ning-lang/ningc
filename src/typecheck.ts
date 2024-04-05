@@ -75,7 +75,7 @@ export function typecheck(file: TysonTypeDict["file"]): NingTypeError[] {
   return new Typechecker(file).typecheck();
 }
 
-const LEGAL_GLOBAL_DEF_BODY_COMMAND_SIGNATURE_STRINGS: Set<string> = new Set([
+const LEGAL_GLOBAL_DEF_BODY_COMMAND_SIGNATURES: ReadonlySet<string> = new Set([
   BUILTIN_COMMANDS.let_.signature,
   BUILTIN_COMMANDS.var_.signature,
   BUILTIN_COMMANDS.numberListCreate.signature,
@@ -83,7 +83,7 @@ const LEGAL_GLOBAL_DEF_BODY_COMMAND_SIGNATURE_STRINGS: Set<string> = new Set([
   BUILTIN_COMMANDS.booleanListCreate.signature,
 ]);
 
-const LEGAL_QUERY_DEF_BODY_COMMAND_SIGNATURE_STRINGS: Set<string> = new Set([
+const LEGAL_QUERY_DEF_BODY_COMMAND_SIGNATURES: ReadonlySet<string> = new Set([
   BUILTIN_COMMANDS.let_.signature,
   BUILTIN_COMMANDS.var_.signature,
   BUILTIN_COMMANDS.numberListCreate.signature,
@@ -106,7 +106,7 @@ const LEGAL_QUERY_DEF_BODY_COMMAND_SIGNATURE_STRINGS: Set<string> = new Set([
  * This set only includes "leaf" commands, not
  * commands like `if` which contain subcommands.
  */
-const LEGAL_QUERY_DEF_BODY_MUTATING_LEAF_COMMAND_SIGNATURE_STRINGS: Set<string> =
+const LEGAL_QUERY_DEF_BODY_MUTATING_LEAF_COMMAND_SIGNATURES: ReadonlySet<string> =
   new Set([
     BUILTIN_COMMANDS.assign.signature,
     BUILTIN_COMMANDS.increase.signature,
@@ -172,7 +172,7 @@ class Typechecker {
 
   checkCommandIsLegalGlobalDefBodyCommand(command: ast.Command): void {
     const signature = getCommandSignature(command);
-    if (!LEGAL_GLOBAL_DEF_BODY_COMMAND_SIGNATURE_STRINGS.has(signature)) {
+    if (!LEGAL_GLOBAL_DEF_BODY_COMMAND_SIGNATURES.has(signature)) {
       this.errors.push({
         kind: TypeErrorKind.IllegalCommandInGlobalDef,
         command,
@@ -336,7 +336,7 @@ class Typechecker {
     command: ast.Command
   ): void {
     const signature = getCommandSignature(command);
-    if (!LEGAL_QUERY_DEF_BODY_COMMAND_SIGNATURE_STRINGS.has(signature)) {
+    if (!LEGAL_QUERY_DEF_BODY_COMMAND_SIGNATURES.has(signature)) {
       this.errors.push({
         kind: TypeErrorKind.IllegalCommandInQueryDef,
         command,
@@ -365,11 +365,7 @@ class Typechecker {
       return;
     }
 
-    if (
-      !LEGAL_QUERY_DEF_BODY_MUTATING_LEAF_COMMAND_SIGNATURE_STRINGS.has(
-        signature
-      )
-    ) {
+    if (!LEGAL_QUERY_DEF_BODY_MUTATING_LEAF_COMMAND_SIGNATURES.has(signature)) {
       return;
     }
 
@@ -508,13 +504,6 @@ class Typechecker {
       this.checkBlockCommand(blockCommand, expectedReturnType);
     }
 
-    // if (
-    //  ( signature === BUILTIN_COMMANDS.valReturn.signature ||
-    //   signature === BUILTIN_COMMANDS.voidReturn.signature) &&
-    // ) {
-    //   this.checkReturnCommandInputType(arg)
-    // }
-
     if (signature === BUILTIN_COMMANDS.valReturn.signature) {
       this.checkValReturnCommandInputType(
         command,
@@ -523,15 +512,28 @@ class Typechecker {
       );
     }
 
-    // TODO: Check void return case.
-
-    if (signature === BUILTIN_COMMANDS.assign.signature) {
-      // TODO: Check that the target is mutable.
+    if (signature === BUILTIN_COMMANDS.voidReturn.signature) {
+      this.checkVoidReturnCommandInputType(command, expectedReturnType);
     }
 
-    // TODO: Check input types.
+    if (
+      (signature === BUILTIN_COMMANDS.assign.signature ||
+        signature === BUILTIN_COMMANDS.increase.signature) &&
+      this.isSquareImmutable(squares[0])
+    ) {
+      this.errors.push({
+        kind: todo_mutated_immutable_square,
+      });
+    }
+
+    this.checkCommandInputTypes(
+      signature,
+      [args, squares],
+      [argTypes, squareTypes]
+    );
 
     // TODO: Register variable or list def, if the command `let`, `var`, or `create * list`.
+    // In such a case, CHECK for no name conflict.
   }
 
   checkBlockCommand(
@@ -554,13 +556,65 @@ class Typechecker {
 
     if (expectedReturnType === VOID_RETURN_TYPE) {
       this.errors.push({
-        kind: todo,
+        kind: TypeErrorKind.ExpectedVoidReturnButGotValueReturn,
         command,
       });
       return;
     }
 
-    // TODO
+    if (inputType !== expectedReturnType) {
+      this.errors.push({
+        kind: TypeErrorKind.ReturnTypeMismatch,
+        command,
+        expectedReturnType,
+        actualReturnType: inputType,
+      });
+      return;
+    }
+  }
+
+  checkVoidReturnCommandInputType(
+    command: ast.Command,
+    expectedReturnType: ast.NingType | typeof VOID_RETURN_TYPE
+  ): void {
+    if (expectedReturnType !== VOID_RETURN_TYPE) {
+      this.errors.push({
+        kind: TypeErrorKind.ExpectedValReturnButGotVoidReturn,
+        command,
+        expectedReturnType,
+      });
+    }
+  }
+
+  checkCommandInputTypes(
+    signature: string,
+    inputs: [ast.Expression[], ast.SquareBracketedIdentifierSequence[]],
+    inputTypes: [
+      (ast.NingType | typeof MALTYPED)[],
+      (SquareType | typeof MALTYPED)[]
+    ]
+  ): void {
+    if (signature === BUILTIN_COMMANDS.assign.signature) {
+      // TODO: Handle specially
+      return;
+    }
+
+    if (signature === BUILTIN_COMMANDS.listReplaceItem.signature) {
+      // TODO: Handle specially
+      return;
+    }
+
+    if (signature === BUILTIN_COMMANDS.listInsert.signature) {
+      // TODO: Handle specially
+      return;
+    }
+
+    if (signature === BUILTIN_COMMANDS.listAdd.signature) {
+      // TODO: Handle specially
+      return;
+    }
+
+    // TODO: normal case
   }
 
   checkExpressionAndGetType(
@@ -577,21 +631,34 @@ class Typechecker {
 
     for (let i = this.stack.length - 1; i >= 0; --i) {
       const entry = this.stack[i];
-      const info = entry.variables.get(name);
-      if (info !== undefined) {
-        return { isList: false, typeOrElementType: info.valType };
-      }
-    }
 
-    for (let i = this.stack.length - 1; i >= 0; --i) {
-      const entry = this.stack[i];
-      const info = entry.lists.get(name);
-      if (info !== undefined) {
-        return { isList: true, typeOrElementType: info.elementType };
+      const varInfo = entry.variables.get(name);
+      if (varInfo !== undefined) {
+        return { isList: false, typeOrElementType: varInfo.valType };
+      }
+
+      const listInfo = entry.lists.get(name);
+      if (listInfo !== undefined) {
+        return { isList: true, typeOrElementType: listInfo.elementType };
       }
     }
 
     return MALTYPED;
+  }
+
+  isSquareImmutable(square: ast.SquareBracketedIdentifierSequence): boolean {
+    const name = stringifyIdentifierSequence(square.identifiers);
+
+    for (let i = this.stack.length - 1; i >= 0; --i) {
+      const entry = this.stack[i];
+      const info = entry.variables.get(name);
+      if (info !== undefined) {
+        return !info.mutable;
+      }
+    }
+
+    // If the square is a list or undefined, then it is not immutable.
+    return false;
   }
 
   checkThatCommandSignatureIsRecognized(command: ast.Command): void {
