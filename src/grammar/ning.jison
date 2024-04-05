@@ -44,13 +44,13 @@ def : commandDef
     ;
 
 commandDef
-    : commandKw lparen zeroOrMoreFuncSignatureParts rparen blockCommand
-        { $$ = { location: @$, kind: "command_def", commandKw: $1, lparen: $2, signature: $3, rparen: $4, body: $5 }; }
+    : commandKw lparen zeroOrMoreFuncHeaderParts rparen blockCommand
+        { $$ = { location: @$, kind: "command_def", commandKw: $1, lparen: $2, header: $3, rparen: $4, body: $5 }; }
 ;
 
 queryDef
-    : type_ queryKw lparen zeroOrMoreFuncSignatureParts rparen blockCommand
-        { $$ = { location: @$, kind: "query_def", returnType: $1, queryKw: $2, lparen: $3, signature: $4, rparen: $5, body: $6 }; }
+    : type_ queryKw lparen zeroOrMoreFuncHeaderParts rparen blockCommand
+        { $$ = { location: @$, kind: "query_def", returnType: $1, queryKw: $2, lparen: $3, header: $4, rparen: $5, body: $6 }; }
 ;
 
 globalDef
@@ -58,14 +58,14 @@ globalDef
         { $$ = { location: @$, kind: "global_def", globalKw: $1, body: $2 }; }
 ;
 
-zeroOrMoreFuncSignatureParts
-    : zeroOrMoreFuncSignatureParts funcSignaturePart
+zeroOrMoreFuncHeaderParts
+    : zeroOrMoreFuncHeaderParts funcHeaderPart
         { $$ = $1; $$.push($2); }
     | /* empty */
         { $$ = []; }
 ;
 
-funcSignaturePart
+funcHeaderPart
     : identifier
     | lparen type_ oneOrMoreIdentifiers rparen
         { $$ = { location: @$, kind: "func_param_def", lparen: $1, paramType: $2, name: $3, rparen: $4 }; }

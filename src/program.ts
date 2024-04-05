@@ -604,7 +604,7 @@ class ProgramImpl implements Program {
   }
 
   evalUserQueryUsingArgVals(def: ast.QueryDef, argVals: NingVal[]): NingVal {
-    const argMap = getVariableMapWithArgs(def.signature, argVals);
+    const argMap = getVariableMapWithArgs(def.header, argVals);
     this.stack.push({ variables: argMap, lists: new Map() });
 
     for (const command of def.body.commands) {
@@ -614,7 +614,7 @@ class ProgramImpl implements Program {
         if (returnVal === VOID_RETURN_VAL) {
           throw new Error(
             "Attempted to evaluate the query `" +
-              getFunctionDefSignature(def.signature) +
+              getFunctionDefSignature(def.header) +
               "` with args (" +
               argVals.map((v) => JSON.stringify(v)).join(", ") +
               ") but a void `return` statement (i.e., one with no return value) was reached."
@@ -625,7 +625,7 @@ class ProgramImpl implements Program {
     }
     throw new Error(
       "Attempted to evaluate the query `" +
-        getFunctionDefSignature(def.signature) +
+        getFunctionDefSignature(def.header) +
         "` with args (" +
         argVals.map((v) => JSON.stringify(v)).join(", ") +
         ") but no `return` command was executed."
@@ -893,7 +893,7 @@ class ProgramImpl implements Program {
   }
 
   evalUserCommandUsingArgVals(def: ast.CommandDef, argVals: NingVal[]): void {
-    const argMap = getVariableMapWithArgs(def.signature, argVals);
+    const argMap = getVariableMapWithArgs(def.header, argVals);
     this.stack.push({ variables: argMap, lists: new Map() });
 
     for (const command of def.body.commands) {
@@ -1063,7 +1063,7 @@ function stringifyExpression(expr: ast.Expression): string {
 }
 
 function getVariableMapWithArgs(
-  signature: ast.FuncSignaturePart[],
+  signature: ast.FuncHeaderPart[],
   argVals: NingVal[]
 ): Map<string, NingVal> {
   const argMap = new Map<string, NingVal>();
@@ -1145,7 +1145,7 @@ function getUserQueryDefs(defs: ast.Def[]): Map<string, ast.QueryDef> {
 
   for (const def of defs) {
     if (def.kind === "query_def") {
-      const signature = getFunctionDefSignature(def.signature);
+      const signature = getFunctionDefSignature(def.header);
       out.set(signature, def);
     }
   }
@@ -1158,7 +1158,7 @@ function getUserCommandDefs(defs: ast.Def[]): Map<string, ast.CommandDef> {
 
   for (const def of defs) {
     if (def.kind === "command_def") {
-      const signature = getFunctionDefSignature(def.signature);
+      const signature = getFunctionDefSignature(def.header);
       out.set(signature, def);
     }
   }

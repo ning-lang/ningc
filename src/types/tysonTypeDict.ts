@@ -32,8 +32,8 @@ interface NodeTypeDict {
   commandDef: CommandDef;
   queryDef: QueryDef;
   globalDef: GlobalDef;
-  zeroOrMoreFuncSignatureParts: FuncSignaturePart[];
-  funcSignaturePart: FuncSignaturePart;
+  zeroOrMoreFuncHeaderParts: FuncHeaderPart[];
+  funcHeaderPart: FuncHeaderPart;
   oneOrMoreIdentifiers: Identifier[];
   blockCommand: BlockCommand;
   zeroOrMoreCommands: Command[];
@@ -74,7 +74,7 @@ export interface CommandDef {
 
   commandKw: Token<"command_kw">;
   lparen: Token<"lparen">;
-  signature: FuncSignaturePart[];
+  header: FuncHeaderPart[];
   rparen: Token<"rparen">;
   body: BlockCommand;
 }
@@ -86,7 +86,7 @@ export interface QueryDef {
   returnType: TypeNode;
   queryKw: Token<"query_kw">;
   lparen: Token<"lparen">;
-  signature: FuncSignaturePart[];
+  header: FuncHeaderPart[];
   rparen: Token<"rparen">;
   body: BlockCommand;
 }
@@ -99,7 +99,7 @@ export interface GlobalDef {
   body: BlockCommand;
 }
 
-export type FuncSignaturePart = Identifier | FuncParamDef;
+export type FuncHeaderPart = Identifier | FuncParamDef;
 
 export interface FuncParamDef {
   location: JisonTokenLocation;

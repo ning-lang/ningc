@@ -50,12 +50,12 @@ const semanticActions = {
     return $$;
   },
 
-  "commandDef -> commandKw lparen zeroOrMoreFuncSignatureParts rparen blockCommand"(
+  "commandDef -> commandKw lparen zeroOrMoreFuncHeaderParts rparen blockCommand"(
     yylstack: { "@$": TokenLocation },
 
     $1: TysonTypeDict["commandKw"],
     $2: TysonTypeDict["lparen"],
-    $3: TysonTypeDict["zeroOrMoreFuncSignatureParts"],
+    $3: TysonTypeDict["zeroOrMoreFuncHeaderParts"],
     $4: TysonTypeDict["rparen"],
     $5: TysonTypeDict["blockCommand"]
   ): TysonTypeDict["commandDef"] {
@@ -65,20 +65,20 @@ const semanticActions = {
       kind: "command_def",
       commandKw: $1,
       lparen: $2,
-      signature: $3,
+      header: $3,
       rparen: $4,
       body: $5,
     };
     return $$;
   },
 
-  "queryDef -> type_ queryKw lparen zeroOrMoreFuncSignatureParts rparen blockCommand"(
+  "queryDef -> type_ queryKw lparen zeroOrMoreFuncHeaderParts rparen blockCommand"(
     yylstack: { "@$": TokenLocation },
 
     $1: TysonTypeDict["type_"],
     $2: TysonTypeDict["queryKw"],
     $3: TysonTypeDict["lparen"],
-    $4: TysonTypeDict["zeroOrMoreFuncSignatureParts"],
+    $4: TysonTypeDict["zeroOrMoreFuncHeaderParts"],
     $5: TysonTypeDict["rparen"],
     $6: TysonTypeDict["blockCommand"]
   ): TysonTypeDict["queryDef"] {
@@ -89,7 +89,7 @@ const semanticActions = {
       returnType: $1,
       queryKw: $2,
       lparen: $3,
-      signature: $4,
+      header: $4,
       rparen: $5,
       body: $6,
     };
@@ -112,39 +112,39 @@ const semanticActions = {
     return $$;
   },
 
-  "zeroOrMoreFuncSignatureParts -> zeroOrMoreFuncSignatureParts funcSignaturePart"(
-    $1: TysonTypeDict["zeroOrMoreFuncSignatureParts"],
-    $2: TysonTypeDict["funcSignaturePart"]
-  ): TysonTypeDict["zeroOrMoreFuncSignatureParts"] {
-    let $$: TysonTypeDict["zeroOrMoreFuncSignatureParts"];
+  "zeroOrMoreFuncHeaderParts -> zeroOrMoreFuncHeaderParts funcHeaderPart"(
+    $1: TysonTypeDict["zeroOrMoreFuncHeaderParts"],
+    $2: TysonTypeDict["funcHeaderPart"]
+  ): TysonTypeDict["zeroOrMoreFuncHeaderParts"] {
+    let $$: TysonTypeDict["zeroOrMoreFuncHeaderParts"];
     $$ = $1;
     $$.push($2);
     return $$;
   },
 
-  "zeroOrMoreFuncSignatureParts -> "(): TysonTypeDict["zeroOrMoreFuncSignatureParts"] {
-    let $$: TysonTypeDict["zeroOrMoreFuncSignatureParts"];
+  "zeroOrMoreFuncHeaderParts -> "(): TysonTypeDict["zeroOrMoreFuncHeaderParts"] {
+    let $$: TysonTypeDict["zeroOrMoreFuncHeaderParts"];
     $$ = [];
     return $$;
   },
 
-  "funcSignaturePart -> identifier"(
+  "funcHeaderPart -> identifier"(
     $1: TysonTypeDict["identifier"]
-  ): TysonTypeDict["funcSignaturePart"] {
-    let $$: TysonTypeDict["funcSignaturePart"];
+  ): TysonTypeDict["funcHeaderPart"] {
+    let $$: TysonTypeDict["funcHeaderPart"];
     $$ = $1;
     return $$;
   },
 
-  "funcSignaturePart -> lparen type_ oneOrMoreIdentifiers rparen"(
+  "funcHeaderPart -> lparen type_ oneOrMoreIdentifiers rparen"(
     yylstack: { "@$": TokenLocation },
 
     $1: TysonTypeDict["lparen"],
     $2: TysonTypeDict["type_"],
     $3: TysonTypeDict["oneOrMoreIdentifiers"],
     $4: TysonTypeDict["rparen"]
-  ): TysonTypeDict["funcSignaturePart"] {
-    let $$: TysonTypeDict["funcSignaturePart"];
+  ): TysonTypeDict["funcHeaderPart"] {
+    let $$: TysonTypeDict["funcHeaderPart"];
     $$ = {
       location: yylstack["@$"],
       kind: "func_param_def",

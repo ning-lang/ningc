@@ -12,7 +12,7 @@ export function stringifyIdentifierSequence(
 }
 
 export function getFunctionDefSignature(
-  signature: readonly ast.FuncSignaturePart[]
+  signature: readonly ast.FuncHeaderPart[]
 ): string {
   return (
     signature

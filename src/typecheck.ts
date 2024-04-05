@@ -255,8 +255,8 @@ class Typechecker {
 
   checkAndRegisterQueryDef(def: ast.QueryDef): void {
     this.checkFuncDefSignatureIsAvailable(def);
-    this.checkFuncDefSignatureParamNamesAreValid(def.signature);
-    this.stack.push(getStackEntryWithUncheckedSignatureParams(def.signature));
+    this.checkFuncDefSignatureParamNamesAreValid(def.header);
+    this.stack.push(getStackEntryWithUncheckedSignatureParams(def.header));
 
     for (const command of def.body.commands) {
       this.checkCommand(command, def.returnType.value);
@@ -267,13 +267,13 @@ class Typechecker {
 
     this.stack.pop();
 
-    this.userQueryDefs.set(getFunctionDefSignature(def.signature), def);
+    this.userQueryDefs.set(getFunctionDefSignature(def.header), def);
   }
 
   checkFuncDefSignatureIsAvailable(
     funcDef: ast.QueryDef | ast.CommandDef
   ): void {
-    const signature = getFunctionDefSignature(funcDef.signature);
+    const signature = getFunctionDefSignature(funcDef.header);
 
     const conflictingVar = this.lookupVar(signature);
     if (conflictingVar !== null) {
@@ -317,7 +317,7 @@ class Typechecker {
   }
 
   checkFuncDefSignatureParamNamesAreValid(
-    signature: readonly ast.FuncSignaturePart[]
+    signature: readonly ast.FuncHeaderPart[]
   ): void {
     const paramDefMap = new Map<string, ast.FuncParamDef>();
 
@@ -526,8 +526,8 @@ class Typechecker {
 
   checkAndRegisterCommandDefSignature(def: ast.CommandDef): void {
     this.checkFuncDefSignatureIsAvailable(def);
-    this.checkFuncDefSignatureParamNamesAreValid(def.signature);
-    this.userCommandDefs.set(getFunctionDefSignature(def.signature), def);
+    this.checkFuncDefSignatureParamNamesAreValid(def.header);
+    this.userCommandDefs.set(getFunctionDefSignature(def.header), def);
   }
 
   checkCommandDefBodies(): void {
@@ -539,7 +539,7 @@ class Typechecker {
   }
 
   checkCommandDefBody(def: ast.CommandDef): void {
-    this.stack.push(getStackEntryWithUncheckedSignatureParams(def.signature));
+    this.stack.push(getStackEntryWithUncheckedSignatureParams(def.header));
 
     for (const command of def.body.commands) {
       this.checkCommand(command, VOID_RETURN_TYPE);
@@ -814,7 +814,7 @@ class Typechecker {
 
     const userCommandDef = this.userCommandDefs.get(signature);
     if (userCommandDef !== undefined) {
-      return [getFunctionDefArgTypeSet(userCommandDef.signature), []];
+      return [getFunctionDefArgTypeSet(userCommandDef.header), []];
     }
 
     return null;
@@ -1012,7 +1012,7 @@ function getEmptyStackEntry(): StackEntry {
 }
 
 function getStackEntryWithUncheckedSignatureParams(
-  signature: readonly ast.FuncSignaturePart[]
+  signature: readonly ast.FuncHeaderPart[]
 ): StackEntry {
   const variables = new Map<string, VariableInfo>();
 
@@ -1034,7 +1034,7 @@ function areSquareTypesEqual(a: SquareType, b: SquareType): boolean {
 }
 
 function getFunctionDefArgTypeSet(
-  labelAndParams: ast.FuncSignaturePart[]
+  labelAndParams: ast.FuncHeaderPart[]
 ): TypeSet[] {
   const argTypeSets: TypeSet[] = [];
   for (const part of labelAndParams) {
