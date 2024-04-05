@@ -738,7 +738,7 @@ class Typechecker {
 
   checkVarDefAndRegisterIfNotTaken(
     name: string,
-    type_: ast.NingType,
+    type_: ast.NingType | typeof MALTYPED,
     mutable: boolean,
     command: ast.Command
   ): void {
@@ -783,6 +783,10 @@ class Typechecker {
 
       const varInfo = entry.variables.get(name);
       if (varInfo !== undefined) {
+        if (varInfo.valType === MALTYPED) {
+          return MALTYPED;
+        }
+
         return { isList: false, typeOrElementType: varInfo.valType };
       }
 
@@ -858,7 +862,7 @@ interface StackEntry {
 }
 
 interface VariableInfo {
-  valType: ast.NingType;
+  valType: ast.NingType | typeof MALTYPED;
   mutable: boolean;
   def: NameDef;
 }
