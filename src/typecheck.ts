@@ -29,7 +29,8 @@ export type NingTypeError =
   | ExpectedValReturnButGotVoidReturnError
   | ReturnTypeMismatchError
   | ArgTypeMismatchError
-  | SquareTypeMismatchError;
+  | SquareTypeMismatchError
+  | CommandNotFoundError;
 
 export enum TypeErrorKind {
   GlobalDefNotFirst = "global_def_not_first",
@@ -45,6 +46,7 @@ export enum TypeErrorKind {
   ReturnTypeMismatch = "return_type_mismatch",
   ArgTypeMismatch = "arg_type_mismatch",
   SquareTypeMismatch = "square_type_mismatch",
+  CommandNotFound = "command_not_found",
 }
 
 export interface GlobalDefNotFirstError {
@@ -121,6 +123,11 @@ export interface SquareTypeMismatchError {
   square: ast.SquareBracketedIdentifierSequence;
   expectedTypes: SquareTypeSet;
   actualType: SquareType;
+}
+
+export interface CommandNotFoundError {
+  kind: TypeErrorKind.CommandNotFound;
+  command: ast.Command;
 }
 
 export type NameDef =
@@ -921,7 +928,24 @@ class Typechecker {
   }
 
   checkThatCommandSignatureIsRecognized(command: ast.Command): void {
-    // TODO: Check builtins and userCommands.
+    const signature = getCommandSignature(command);
+
+    const matchesBuiltinSignature = Object.values(BUILTIN_COMMANDS).some(
+      (builtin) => builtin.signature === signature
+    );
+    if (matchesBuiltinSignature) {
+      return;
+    }
+
+    const userCommand = this.userCommandDefs.get(getCommandSignature(command));
+    if (userCommand !== undefined) {
+      return;
+    }
+
+    this.errors.push({
+      kind: TypeErrorKind.CommandNotFound,
+      command,
+    });
   }
 
   lookupVar(name: string): VariableInfo | null {
