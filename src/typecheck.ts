@@ -6,7 +6,7 @@ import {
 } from "./funcSignature";
 import { TysonTypeDict } from "./types/tysonTypeDict";
 import type * as ast from "./types/tysonTypeDict";
-import { BUILTIN_COMMANDS } from "./builtins";
+import { BUILTIN_COMMANDS, SquareTypeSet, TypeSet } from "./builtins";
 
 const MALTYPED = Symbol("UNKNOWN_TYPE");
 const VOID_RETURN_TYPE: unique symbol = Symbol("VOID_RETURN_TYPE");
@@ -22,7 +22,9 @@ export type NingTypeError =
   | ReassignedImmutableVariableError
   | ExpectedVoidReturnButGotValueReturnError
   | ExpectedValReturnButGotVoidReturnError
-  | ReturnTypeMismatchError;
+  | ReturnTypeMismatchError
+  | ArgTypeMismatchError
+  | SquareTypeMismatchError;
 
 export enum TypeErrorKind {
   GlobalDefNotFirst = "global_def_not_first",
@@ -36,6 +38,8 @@ export enum TypeErrorKind {
   ExpectedVoidReturnButGotValueReturn = "expected_void_return_but_got_value_return",
   ExpectedValReturnButGotVoidReturn = "expected_val_return_but_got_void_return",
   ReturnTypeMismatch = "return_type_mismatch",
+  ArgTypeMismatch = "arg_type_mismatch",
+  SquareTypeMismatch = "square_type_mismatch",
 }
 
 export interface GlobalDefNotFirstError {
@@ -94,6 +98,24 @@ export interface ReturnTypeMismatchError {
   command: ast.Command;
   expectedReturnType: ast.NingType;
   actualReturnType: ast.NingType;
+}
+
+export interface ArgTypeMismatchError {
+  kind: TypeErrorKind.ArgTypeMismatch;
+  command: ast.Command;
+  argIndex: number;
+  arg: ast.Expression;
+  expectedTypes: TypeSet;
+  actualType: ast.NingType;
+}
+
+export interface SquareTypeMismatchError {
+  kind: TypeErrorKind.SquareTypeMismatch;
+  command: ast.Command;
+  squareIndex: number;
+  square: ast.SquareBracketedIdentifierSequence;
+  expectedTypes: SquareTypeSet;
+  actualType: SquareType;
 }
 
 export type NameDef =
@@ -559,6 +581,7 @@ class Typechecker {
     }
 
     this.checkCommandInputTypes(
+      command,
       signature,
       [args, squares],
       [argTypes, squareTypes]
@@ -619,9 +642,13 @@ class Typechecker {
   }
 
   checkCommandInputTypes(
+    command: ast.Command,
     signature: string,
-    inputs: [ast.Expression[], ast.SquareBracketedIdentifierSequence[]],
-    inputTypes: [
+    [args, squares]: [
+      ast.Expression[],
+      ast.SquareBracketedIdentifierSequence[]
+    ],
+    [argTypes, squareTypes]: [
       (ast.NingType | typeof MALTYPED)[],
       (SquareType | typeof MALTYPED)[]
     ]
@@ -646,7 +673,62 @@ class Typechecker {
       return;
     }
 
-    // TODO: normal case
+    const expectedInputTypeSets =
+      this.getExpectedCommandInputTypeSets(signature);
+    if (expectedInputTypeSets === null) {
+      return;
+    }
+
+    const [expectedArgTypeSets, expectedSquareTypeSets] = expectedInputTypeSets;
+
+    for (let i = 0; i < argTypes.length; ++i) {
+      const argType = argTypes[i];
+      if (argType === MALTYPED) {
+        continue;
+      }
+
+      const expectedSet = expectedArgTypeSets[i];
+      if (!expectedSet.includes(argType)) {
+        this.errors.push({
+          kind: TypeErrorKind.ArgTypeMismatch,
+          command,
+          argIndex: i,
+          arg: args[i],
+          expectedTypes: expectedSet,
+          actualType: argType,
+        });
+      }
+    }
+
+    for (let i = 0; i < squareTypes.length; ++i) {
+      const squareType = squareTypes[i];
+      if (squareType === MALTYPED) {
+        continue;
+      }
+
+      const expectedSet = expectedSquareTypeSets[i];
+      if (
+        !expectedSet.some((expectedType) =>
+          areSquareTypesEqual(expectedType, squareType)
+        )
+      ) {
+        this.errors.push({
+          kind: TypeErrorKind.SquareTypeMismatch,
+          command,
+          squareIndex: i,
+          square: squares[i],
+          expectedTypes: expectedSet,
+          actualType: squareType,
+        });
+      }
+    }
+  }
+
+  getExpectedCommandInputTypeSets(
+    signature: string
+  ): null | [TypeSet[], SquareTypeSet[]] {
+    // TODO
+    return null;
   }
 
   checkExpressionAndGetType(
@@ -751,7 +833,7 @@ interface ListInfo {
   def: ast.Command;
 }
 
-interface SquareType {
+export interface SquareType {
   isList: boolean;
   typeOrElementType: ast.NingType;
 }
@@ -776,6 +858,10 @@ function getStackEntryWithUncheckedSignatureParams(
   }
 
   return { variables, lists: new Map() };
+}
+
+function areSquareTypesEqual(a: SquareType, b: SquareType): boolean {
+  return a.isList === b.isList && a.typeOrElementType === b.typeOrElementType;
 }
 
 // Difference between commands and queries:

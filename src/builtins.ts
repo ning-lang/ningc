@@ -1,8 +1,20 @@
+import { SquareType } from "./typecheck";
+import * as ast from "./types/tysonTypeDict";
+
 export const UNTYPED_VAL_SENTINEL = "()";
 export const UNTYPED_REF_SENTINEL = "[]";
 export const UNTYPED_BLOCK_SENTINEL = "{}";
 
 export const SPECIAL_TYPE_SETS = Symbol("SPECIAL_TYPE_SETS");
+
+export type TypeSet = ast.NingType[];
+export type SquareTypeSet = SquareType[];
+
+const ANY_LIST = [
+  { isList: true, typeOrElementType: "boolean" },
+  { isList: true, typeOrElementType: "number" },
+  { isList: true, typeOrElementType: "string" },
+] as const;
 
 export const BUILTIN_COMMANDS = {
   // Control
@@ -36,50 +48,62 @@ export const BUILTIN_COMMANDS = {
   let_: {
     signature: "let [] = ()",
     argTypeSets: [["boolean", "number", "string"]],
+    squareTypeSets: SPECIAL_TYPE_SETS,
   },
   var_: {
     signature: "var [] = ()",
     argTypeSets: [["boolean", "number", "string"]],
+    squareTypeSets: SPECIAL_TYPE_SETS,
   },
   assign: {
     signature: "set [] to ()",
     argTypeSets: SPECIAL_TYPE_SETS,
+    squareTypeSets: SPECIAL_TYPE_SETS,
   },
   increase: {
     signature: "increase [] by ()",
     argTypeSets: [["number"]],
+    squareTypeSets: [[{ isList: false, typeOrElementType: "number" }]],
   },
 
   // Lists
 
   numberListCreate: {
     signature: "create number list []",
+    squareTypeSets: SPECIAL_TYPE_SETS,
   },
   stringListCreate: {
     signature: "create string list []",
+    squareTypeSets: SPECIAL_TYPE_SETS,
   },
   booleanListCreate: {
     signature: "create boolean list []",
+    squareTypeSets: SPECIAL_TYPE_SETS,
   },
 
   listReplaceItem: {
     signature: "replace item () of [] with ()",
     argTypeSets: SPECIAL_TYPE_SETS,
+    squareTypeSets: SPECIAL_TYPE_SETS,
   },
   listInsert: {
     signature: "insert () at () of []",
     argTypeSets: SPECIAL_TYPE_SETS,
+    squareTypeSets: SPECIAL_TYPE_SETS,
   },
   listDeleteItem: {
     signature: "delete item () of []",
     argTypeSets: [["number"]],
+    squareTypeSets: [ANY_LIST],
   },
   listDeleteAll: {
     signature: "delete all of []",
+    squareTypeSets: [ANY_LIST],
   },
   listAdd: {
     signature: "add () to []",
     argTypeSets: SPECIAL_TYPE_SETS,
+    squareTypeSets: SPECIAL_TYPE_SETS,
   },
 
   // Looks
@@ -102,18 +126,22 @@ export const BUILTIN_QUERIES = {
 
   listLength: {
     signature: "length of []",
+    squareTypeSets: [ANY_LIST],
   },
   listItemOf: {
     signature: "item () of []",
     argTypeSets: [["number"]],
+    squareTypeSets: [ANY_LIST],
   },
   listOrIndexOf: {
     signature: "index of () in []",
     argTypeSets: SPECIAL_TYPE_SETS,
+    squareTypeSets: SPECIAL_TYPE_SETS,
   },
   listContains: {
     signature: "[] contains ()?",
     argTypeSets: SPECIAL_TYPE_SETS,
+    squareTypeSets: SPECIAL_TYPE_SETS,
   },
 
   // Operators
