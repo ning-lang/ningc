@@ -18,7 +18,11 @@ export type NingTypeError =
   | IllegalCommandInGlobalDefError
   | IllegalCommandInQueryDefError
   | QueryCommandMutatesGlobalVariableError
-  | QueryDefBodyLacksInevitableReturnError;
+  | QueryDefBodyLacksInevitableReturnError
+  | ReassignedImmutableVariableError
+  | ExpectedVoidReturnButGotValueReturnError
+  | ExpectedValReturnButGotVoidReturnError
+  | ReturnTypeMismatchError;
 
 export enum TypeErrorKind {
   GlobalDefNotFirst = "global_def_not_first",
@@ -28,6 +32,10 @@ export enum TypeErrorKind {
   IllegalCommandInQueryDef = "illegal_command_in_query_def",
   QueryCommandMutatesGlobalVariable = "query_command_mutates_global_variable",
   QueryDefBodyLacksInevitableReturn = "query_def_body_lacks_inevitable_return",
+  ReassignedImmutableVariable = "reassigned_immutable_variable",
+  ExpectedVoidReturnButGotValueReturn = "expected_void_return_but_got_value_return",
+  ExpectedValReturnButGotVoidReturn = "expected_val_return_but_got_void_return",
+  ReturnTypeMismatch = "return_type_mismatch",
 }
 
 export interface GlobalDefNotFirstError {
@@ -63,6 +71,29 @@ export interface QueryCommandMutatesGlobalVariableError {
 export interface QueryDefBodyLacksInevitableReturnError {
   kind: TypeErrorKind.QueryDefBodyLacksInevitableReturn;
   def: ast.QueryDef;
+}
+
+export interface ReassignedImmutableVariableError {
+  kind: TypeErrorKind.ReassignedImmutableVariable;
+  command: ast.Command;
+}
+
+export interface ExpectedVoidReturnButGotValueReturnError {
+  kind: TypeErrorKind.ExpectedVoidReturnButGotValueReturn;
+  command: ast.Command;
+}
+
+export interface ExpectedValReturnButGotVoidReturnError {
+  kind: TypeErrorKind.ExpectedValReturnButGotVoidReturn;
+  command: ast.Command;
+  expectedReturnType: ast.NingType;
+}
+
+export interface ReturnTypeMismatchError {
+  kind: TypeErrorKind.ReturnTypeMismatch;
+  command: ast.Command;
+  expectedReturnType: ast.NingType;
+  actualReturnType: ast.NingType;
 }
 
 export type NameDef =
@@ -519,10 +550,11 @@ class Typechecker {
     if (
       (signature === BUILTIN_COMMANDS.assign.signature ||
         signature === BUILTIN_COMMANDS.increase.signature) &&
-      this.isSquareImmutable(squares[0])
+      this.isSquareImmutableVar(squares[0])
     ) {
       this.errors.push({
-        kind: todo_mutated_immutable_square,
+        kind: TypeErrorKind.ReassignedImmutableVariable,
+        command,
       });
     }
 
@@ -646,7 +678,7 @@ class Typechecker {
     return MALTYPED;
   }
 
-  isSquareImmutable(square: ast.SquareBracketedIdentifierSequence): boolean {
+  isSquareImmutableVar(square: ast.SquareBracketedIdentifierSequence): boolean {
     const name = stringifyIdentifierSequence(square.identifiers);
 
     for (let i = this.stack.length - 1; i >= 0; --i) {
@@ -657,7 +689,7 @@ class Typechecker {
       }
     }
 
-    // If the square is a list or undefined, then it is not immutable.
+    // If the square is a list or undefined, then it is not an immutable variable.
     return false;
   }
 
