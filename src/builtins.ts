@@ -2,23 +2,30 @@ export const UNTYPED_VAL_SENTINEL = "()";
 export const UNTYPED_REF_SENTINEL = "[]";
 export const UNTYPED_BLOCK_SENTINEL = "{}";
 
+export const SPECIAL_TYPE_SETS = Symbol("SPECIAL_TYPE_SETS");
+
 export const BUILTIN_COMMANDS = {
   // Control
 
   if_: {
     signature: "if () {}",
+    argTypeSets: [["boolean"]],
   },
   ifElse: {
     signature: "if () {} else {}",
+    argTypeSets: [["boolean"]],
   },
   while_: {
     signature: "while () {}",
+    argTypeSets: [["boolean"]],
   },
   repeat: {
     signature: "repeat () times {}",
+    argTypeSets: [["number"]],
   },
   valReturn: {
     signature: "return ()",
+    argTypeSets: [["boolean", "number", "string"]],
   },
   voidReturn: {
     signature: "return",
@@ -28,15 +35,19 @@ export const BUILTIN_COMMANDS = {
 
   let_: {
     signature: "let [] = ()",
+    argTypeSets: [["boolean", "number", "string"]],
   },
   var_: {
     signature: "var [] = ()",
+    argTypeSets: [["boolean", "number", "string"]],
   },
   assign: {
     signature: "set [] to ()",
+    argTypeSets: SPECIAL_TYPE_SETS,
   },
   increase: {
     signature: "increase [] by ()",
+    argTypeSets: [["number"]],
   },
 
   // Lists
@@ -53,27 +64,33 @@ export const BUILTIN_COMMANDS = {
 
   listReplaceItem: {
     signature: "replace item () of [] with ()",
+    argTypeSets: SPECIAL_TYPE_SETS,
   },
   listInsert: {
     signature: "insert () at () of []",
+    argTypeSets: SPECIAL_TYPE_SETS,
   },
   listDeleteItem: {
     signature: "delete item () of []",
+    argTypeSets: [["number"]],
   },
   listDeleteAll: {
     signature: "delete all of []",
   },
   listAdd: {
     signature: "add () to []",
+    argTypeSets: SPECIAL_TYPE_SETS,
   },
 
   // Looks
 
   resizeCanvas: {
     signature: "resize canvas to width () height () and erase everything",
+    argTypeSets: [["number"], ["number"]],
   },
   drawImage: {
     signature: "draw image () at x () y () with width () height ()",
+    argTypeSets: [["string"], ["number"], ["number"], ["number"], ["number"]],
   },
   clearRect: {
     signature: "erase rectangle at x () y () width () height ()",
@@ -88,71 +105,105 @@ export const BUILTIN_QUERIES = {
   },
   listItemOf: {
     signature: "item () of []",
+    argTypeSets: [["number"]],
   },
   listOrIndexOf: {
     signature: "index of () in []",
+    argTypeSets: SPECIAL_TYPE_SETS,
   },
   listContains: {
     signature: "[] contains ()?",
+    argTypeSets: SPECIAL_TYPE_SETS,
   },
 
   // Operators
 
-  opAdd: { signature: "() + ()" },
-  opSub: { signature: "() - ()" },
-  opMul: { signature: "() * ()" },
-  opDiv: { signature: "() / ()" },
-  opMod: { signature: "() mod ()" },
-  opPow: { signature: "() to the power of ()" },
+  opAdd: { signature: "() + ()", argTypeSets: [["number"], ["number"]] },
+  opSub: { signature: "() - ()", argTypeSets: [["number"], ["number"]] },
+  opMul: { signature: "() * ()", argTypeSets: [["number"], ["number"]] },
+  opDiv: { signature: "() / ()", argTypeSets: [["number"], ["number"]] },
+  opMod: { signature: "() mod ()", argTypeSets: [["number"], ["number"]] },
+  opPow: {
+    signature: "() to the power of ()",
+    argTypeSets: [["number"], ["number"]],
+  },
 
-  opEq: { signature: "() == ()" },
-  opNe: { signature: "() != ()" },
-  opLt: { signature: "() < ()" },
-  opLe: { signature: "() <= ()" },
-  opGt: { signature: "() > ()" },
-  opGe: { signature: "() >= ()" },
+  opEq: { signature: "() == ()", argTypeSets: SPECIAL_TYPE_SETS },
+  opNe: { signature: "() != ()", argTypeSets: SPECIAL_TYPE_SETS },
+  opLt: { signature: "() < ()", argTypeSets: [["number"], ["number"]] },
+  opLe: { signature: "() <= ()", argTypeSets: [["number"], ["number"]] },
+  opGt: { signature: "() > ()", argTypeSets: [["number"], ["number"]] },
+  opGe: { signature: "() >= ()", argTypeSets: [["number"], ["number"]] },
 
-  opExp: { signature: "exp ()" },
-  opLn: { signature: "ln ()" },
-  opSinRad: { signature: "sin of () radians" },
-  opCosRad: { signature: "cos of () radians" },
-  opTanRad: { signature: "tan of () radians" },
-  opAsinRad: { signature: "asin of () in radians" },
-  opAcosRad: { signature: "acos of () in radians" },
-  opAtanRad: { signature: "atan of () in radians" },
-  opAtan2Rad: { signature: "atan2 of y () x () in radians" },
+  opExp: { signature: "exp ()", argTypeSets: [["number"]] },
+  opLn: { signature: "ln ()", argTypeSets: [["number"]] },
+  opSinRad: { signature: "sin of () radians", argTypeSets: [["number"]] },
+  opCosRad: { signature: "cos of () radians", argTypeSets: [["number"]] },
+  opTanRad: { signature: "tan of () radians", argTypeSets: [["number"]] },
+  opAsinRad: { signature: "asin of () in radians", argTypeSets: [["number"]] },
+  opAcosRad: { signature: "acos of () in radians", argTypeSets: [["number"]] },
+  opAtanRad: { signature: "atan of () in radians", argTypeSets: [["number"]] },
+  opAtan2Rad: {
+    signature: "atan2 of y () x () in radians",
+    argTypeSets: [["number"], ["number"]],
+  },
   opPi: { signature: "pi" },
   opNaN: { signature: "NaN" },
   opInfinity: { signature: "Infinity" },
   opNegInfinity: { signature: "-Infinity" },
 
-  opFloor: { signature: "floor ()" },
-  opCeil: { signature: "ceiling ()" },
-  opRound: { signature: "round ()" },
-  opAbs: { signature: "abs ()" },
-  opMin: { signature: "min of () and ()" },
-  opMax: { signature: "max of () and ()" },
+  opFloor: { signature: "floor ()", argTypeSets: [["number"]] },
+  opCeil: { signature: "ceiling ()", argTypeSets: [["number"]] },
+  opRound: { signature: "round ()", argTypeSets: [["number"]] },
+  opAbs: { signature: "abs ()", argTypeSets: [["number"]] },
+  opMin: {
+    signature: "min of () and ()",
+    argTypeSets: [["number"], ["number"]],
+  },
+  opMax: {
+    signature: "max of () and ()",
+    argTypeSets: [["number"], ["number"]],
+  },
 
-  opAnd: { signature: "() and ()" },
-  opOr: { signature: "() or ()" },
-  opNot: { signature: "not ()" },
+  opAnd: { signature: "() and ()", argTypeSets: [["boolean"], ["boolean"]] },
+  opOr: { signature: "() or ()", argTypeSets: [["boolean"], ["boolean"]] },
+  opNot: { signature: "not ()", argTypeSets: [["boolean"]] },
 
-  opConcat: { signature: "() ++ ()" },
-  stringLength: { signature: "length of ()" },
-  stringLetter: { signature: "letter () of ()" },
+  opConcat: { signature: "() ++ ()", argTypeSets: [["string"], ["string"]] },
+  stringLength: { signature: "length of ()", argTypeSets: [["string"]] },
+  stringLetter: {
+    signature: "letter () of ()",
+    argTypeSets: [["number"], ["string"]],
+  },
   stringSubstring: {
     signature: "substring of () from () to ()",
+    argTypeSets: [["string"], ["number"], ["number"]],
   },
-  stringContains: { signature: "() contains ()?" },
-  stringIndexOf: { signature: "index of () in ()" },
+  stringContains: {
+    signature: "() contains ()?",
+    argTypeSets: [["string"], ["string"]],
+  },
+  stringIndexOf: {
+    signature: "index of () in ()",
+    argTypeSets: [["string"], ["string"]],
+  },
 
-  ternary: { signature: "if () then () else ()" },
+  ternary: {
+    signature: "if () then () else ()",
+    argTypeSets: SPECIAL_TYPE_SETS,
+  },
 
-  parseNumber: { signature: "parse () as number" },
+  parseNumber: { signature: "parse () as number", argTypeSets: [["string"]] },
 
-  numberOrBooleanToString: { signature: "convert () to string" },
+  numberOrBooleanToString: {
+    signature: "convert () to string",
+    argTypeSets: [["boolean", "number"]],
+  },
 
-  randomInt: { signature: "random integer from () up to but not including ()" },
+  randomInt: {
+    signature: "random integer from () up to but not including ()",
+    argTypeSets: [["number"], ["number"]],
+  },
 
   // Sensing
 
@@ -178,5 +229,5 @@ export const BUILTIN_QUERIES = {
   currentMinute: { signature: "current minute" },
   currentSecond: { signature: "current second" },
 
-  keyPressed: { signature: "key () pressed?" },
+  keyPressed: { signature: "key () pressed?", argTypeSets: [["string"]] },
 } as const;
