@@ -9,7 +9,7 @@ import { BUILTIN_COMMANDS, BUILTIN_QUERIES } from "./builtins";
 
 const RENDER_COMMAND_SIGNATURE = "render";
 const UPDATE_COMMAND_SIGNATURE = "update";
-const VOID_RETURN_SENTINEL = Symbol("VOID_RETURN_SENTINEL");
+const VOID_RETURN_VAL: unique symbol = Symbol("VOID_RETURN_VAL");
 
 export interface Program {
   start(env: ExecutionEnvironment): void;
@@ -611,7 +611,7 @@ class ProgramImpl implements Program {
       const returnVal = this.executeCommandAndGetReturnValue(command);
       if (returnVal !== null) {
         this.stack.pop();
-        if (returnVal === VOID_RETURN_SENTINEL) {
+        if (returnVal === VOID_RETURN_VAL) {
           throw new Error(
             "Attempted to evaluate the query `" +
               getFunctionDefSignature(def.signature) +
@@ -636,7 +636,7 @@ class ProgramImpl implements Program {
   // Otherwise, it will return `null`.
   executeCommandAndGetReturnValue(
     command: ast.Command
-  ): null | typeof VOID_RETURN_SENTINEL | NingVal {
+  ): null | typeof VOID_RETURN_VAL | NingVal {
     const signature = getCommandSignature(command);
     const [args, squares, blockCommands] = getCommandInputs(command);
 
@@ -689,7 +689,7 @@ class ProgramImpl implements Program {
     }
 
     if (signature === BUILTIN_COMMANDS.voidReturn.signature) {
-      return VOID_RETURN_SENTINEL;
+      return VOID_RETURN_VAL;
     }
 
     if (
@@ -878,7 +878,7 @@ class ProgramImpl implements Program {
   // Otherwise, it will return `null`.
   executeBlockCommandAndGetReturnValue(
     command: ast.BlockCommand
-  ): null | typeof VOID_RETURN_SENTINEL | NingVal {
+  ): null | typeof VOID_RETURN_VAL | NingVal {
     this.stack.push(getEmptyStackEntry());
     for (const subCommand of command.commands) {
       const returnVal = this.executeCommandAndGetReturnValue(subCommand);

@@ -8,6 +8,9 @@ import { TysonTypeDict } from "./types/tysonTypeDict";
 import type * as ast from "./types/tysonTypeDict";
 import { BUILTIN_COMMANDS } from "./builtins";
 
+const MALTYPED = Symbol("UNKNOWN_TYPE");
+const VOID_RETURN_TYPE: unique symbol = Symbol("VOID_RETURN_TYPE");
+
 export type NingTypeError =
   | GlobalDefNotFirstError
   | MultipleGlobalDefsError
@@ -162,7 +165,7 @@ class Typechecker {
 
   checkAndRegisterGlobalDef(def: ast.GlobalDef): void {
     for (const command of def.body.commands) {
-      this.checkCommand(command, null);
+      this.checkCommand(command, VOID_RETURN_TYPE);
       this.checkCommandIsLegalGlobalDefBodyCommand(command);
     }
   }
@@ -478,7 +481,7 @@ class Typechecker {
     this.stack.push(getStackEntryWithUncheckedSignatureParams(def.signature));
 
     for (const command of def.body.commands) {
-      this.checkCommand(command, null);
+      this.checkCommand(command, VOID_RETURN_TYPE);
     }
 
     this.stack.pop();
@@ -486,30 +489,41 @@ class Typechecker {
 
   checkCommand(
     command: ast.Command,
-    expectedReturnType: null | ast.NingType
+    expectedReturnType: ast.NingType | typeof VOID_RETURN_TYPE
   ): void {
     this.checkThatCommandSignatureIsRecognized(command);
 
     const signature = getCommandSignature(command);
     const [args, squares, blockCommands] = getCommandInputs(command);
 
-    const argTypes: (ast.NingType | null)[] = args.map((arg) =>
+    const argTypes: (ast.NingType | typeof MALTYPED)[] = args.map((arg) =>
       this.checkExpressionAndGetType(arg)
     );
 
-    const squareTypes: (SquareType | null)[] = squares.map((square) =>
-      this.checkSquareAndGetType(square)
+    const squareTypes: (SquareType | typeof MALTYPED)[] = squares.map(
+      (square) => this.checkSquareAndGetType(square)
     );
 
     for (const blockCommand of blockCommands) {
       this.checkBlockCommand(blockCommand, expectedReturnType);
     }
 
+    // if (
+    //  ( signature === BUILTIN_COMMANDS.valReturn.signature ||
+    //   signature === BUILTIN_COMMANDS.voidReturn.signature) &&
+    // ) {
+    //   this.checkReturnCommandInputType(arg)
+    // }
+
     if (signature === BUILTIN_COMMANDS.valReturn.signature) {
-      // TODO: Check return type.
-    } else if (signature === BUILTIN_COMMANDS.voidReturn.signature) {
-      // TODO: Check return type.
+      this.checkValReturnCommandInputType(
+        command,
+        expectedReturnType,
+        argTypes[0]
+      );
     }
+
+    // TODO: Check void return case.
 
     if (signature === BUILTIN_COMMANDS.assign.signature) {
       // TODO: Check that the target is mutable.
@@ -522,21 +536,43 @@ class Typechecker {
 
   checkBlockCommand(
     blockCommand: ast.BlockCommand,
-    expectedReturnType: null | ast.NingType
+    expectedReturnType: ast.NingType | typeof VOID_RETURN_TYPE
   ): void {
     for (const command of blockCommand.commands) {
       this.checkCommand(command, expectedReturnType);
     }
   }
 
-  checkExpressionAndGetType(expr: ast.Expression): ast.NingType | null {
+  checkValReturnCommandInputType(
+    command: ast.Command,
+    expectedReturnType: ast.NingType | typeof VOID_RETURN_TYPE,
+    inputType: typeof MALTYPED | ast.NingType
+  ): void {
+    if (inputType === MALTYPED) {
+      return;
+    }
+
+    if (expectedReturnType === VOID_RETURN_TYPE) {
+      this.errors.push({
+        kind: todo,
+        command,
+      });
+      return;
+    }
+
     // TODO
-    return null;
+  }
+
+  checkExpressionAndGetType(
+    expr: ast.Expression
+  ): ast.NingType | typeof MALTYPED {
+    // TODO
+    return MALTYPED;
   }
 
   checkSquareAndGetType(
     square: ast.SquareBracketedIdentifierSequence
-  ): SquareType | null {
+  ): SquareType | typeof MALTYPED {
     const name = stringifyIdentifierSequence(square.identifiers);
 
     for (let i = this.stack.length - 1; i >= 0; --i) {
@@ -555,7 +591,7 @@ class Typechecker {
       }
     }
 
-    return null;
+    return MALTYPED;
   }
 
   checkThatCommandSignatureIsRecognized(command: ast.Command): void {
