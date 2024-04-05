@@ -1,6 +1,6 @@
 import type * as ast from "./types/tysonTypeDict";
 
-export function getQueryApplicationArgsAndSquares(
+export function getQueryInputs(
   expr: ast.CompoundExpression
 ): [ast.Expression[], ast.SquareBracketedIdentifierSequence[]] {
   const args: ast.Expression[] = [];
@@ -26,7 +26,7 @@ export function getQueryApplicationArgsAndSquares(
   return [args, squares];
 }
 
-export function getCommandApplicationArgsAndSquaresAndBlockCommands(
+export function getCommandInputs(
   command: ast.Command
 ): [
   ast.Expression[],

@@ -1,4 +1,4 @@
-import { getCommandApplicationArgsAndSquaresAndBlockCommands } from "./funcApplicationInputs";
+import { getCommandInputs } from "./funcInputs";
 import {
   getCommandSignature,
   getFunctionDefSignature,
@@ -117,7 +117,9 @@ const LEGAL_QUERY_DEF_BODY_MUTATING_LEAF_COMMAND_SIGNATURE_STRINGS: Set<string> 
 class Typechecker {
   errors: NingTypeError[];
   stack: StackEntry[];
+  /** A map of signatures to their corresponding query definitions. */
   userQueryDefs: Map<string, ast.QueryDef>;
+  /** A map of signatures to their corresponding command definitions. */
   userCommandDefs: Map<string, ast.CommandDef>;
 
   constructor(private file: TysonTypeDict["file"]) {
@@ -342,8 +344,7 @@ class Typechecker {
   checkCommandDoesNotMutateGlobaVariables(command: ast.Command): void {
     const signature = getCommandSignature(command);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_args, squares, blockCommands] =
-      getCommandApplicationArgsAndSquaresAndBlockCommands(command);
+    const [_args, squares, blockCommands] = getCommandInputs(command);
 
     if (signature === BUILTIN_COMMANDS.if_.signature) {
       this.checkBlockCommandDoesNotMutateGlobalVariables(blockCommands[0]);
@@ -432,8 +433,7 @@ class Typechecker {
     }
 
     if (signature === BUILTIN_COMMANDS.ifElse.signature) {
-      const blockCommands =
-        getCommandApplicationArgsAndSquaresAndBlockCommands(command)[2];
+      const blockCommands = getCommandInputs(command)[2];
       return (
         this.doesBlockCommandHaveInevitableReturn(blockCommands[0]) &&
         this.doesBlockCommandHaveInevitableReturn(blockCommands[1])
@@ -491,8 +491,7 @@ class Typechecker {
     this.checkThatCommandSignatureIsRecognized(command);
 
     const signature = getCommandSignature(command);
-    const [args, squares, blockCommands] =
-      getCommandApplicationArgsAndSquaresAndBlockCommands(command);
+    const [args, squares, blockCommands] = getCommandInputs(command);
 
     const argTypes: (ast.NingType | null)[] = args.map((arg) =>
       this.checkExpressionAndGetType(arg)

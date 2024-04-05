@@ -1,7 +1,4 @@
-import {
-  getCommandApplicationArgsAndSquaresAndBlockCommands,
-  getQueryApplicationArgsAndSquares,
-} from "./funcApplicationInputs";
+import { getCommandInputs, getQueryInputs } from "./funcInputs";
 import {
   getCommandSignature,
   getFunctionDefSignature,
@@ -68,9 +65,9 @@ class ProgramImpl implements Program {
   animationFrameId: number | null;
   env: ExecutionEnvironment;
   stack: StackEntry[];
-  /** A map of signature strings to their corresponding query definitions. */
+  /** A map of signatures to their corresponding query definitions. */
   readonly userQueryDefs: ReadonlyMap<string, ast.QueryDef>;
-  /** A map of signature strings to their corresponding command definitions. */
+  /** A map of signatures to their corresponding command definitions. */
   readonly userCommandDefs: ReadonlyMap<string, ast.CommandDef>;
   renderQueue: RenderRequest[];
 
@@ -133,7 +130,7 @@ class ProgramImpl implements Program {
   }
 
   updateGlobalsBasedOnGlobalDef(def: ast.GlobalDef): void {
-    // This code is very similar to `evalUserCommandApplicationUsingArgVals`.
+    // This code is very similar to `evalUserCommandUsingArgVals`.
     // The main difference is that we don't modify push a stack entry
     // at the beginning and we don't pop a stack entry at the end,
     // since the whole purpose is to initialize variables in the global scope.
@@ -150,7 +147,7 @@ class ProgramImpl implements Program {
     if (updateCommandDef === undefined) {
       throw new Error("Could not find `update` command definition.");
     }
-    this.evalUserCommandApplicationUsingArgVals(updateCommandDef, []);
+    this.evalUserCommandUsingArgVals(updateCommandDef, []);
   }
 
   render(): void {
@@ -160,7 +157,7 @@ class ProgramImpl implements Program {
     if (renderCommandDef === undefined) {
       throw new Error("Could not find `render` command definition.");
     }
-    this.evalUserCommandApplicationUsingArgVals(renderCommandDef, []);
+    this.evalUserCommandUsingArgVals(renderCommandDef, []);
 
     this.processRenderQueue();
   }
@@ -232,7 +229,7 @@ class ProgramImpl implements Program {
       }
     }
 
-    return this.evalQueryApplication(expr);
+    return this.evalQuery(expr);
   }
 
   getVarValOrNull(name: string): null | NingVal {
@@ -245,9 +242,9 @@ class ProgramImpl implements Program {
     return null;
   }
 
-  evalQueryApplication(expr: ast.CompoundExpression): NingVal {
+  evalQuery(expr: ast.CompoundExpression): NingVal {
     const signature = getQuerySignature(expr);
-    const [args, squares] = getQueryApplicationArgsAndSquares(expr);
+    const [args, squares] = getQueryInputs(expr);
 
     if (signature === BUILTIN_QUERIES.listLength.signature) {
       const listName = squares[0].identifiers.map((i) => i.name).join(" ");
@@ -603,13 +600,10 @@ class ProgramImpl implements Program {
       );
     }
     const argVals = args.map((arg) => this.evalExpr(arg));
-    return this.evalUserQueryApplicationUsingArgVals(userQueryDef, argVals);
+    return this.evalUserQueryUsingArgVals(userQueryDef, argVals);
   }
 
-  evalUserQueryApplicationUsingArgVals(
-    def: ast.QueryDef,
-    argVals: NingVal[]
-  ): NingVal {
+  evalUserQueryUsingArgVals(def: ast.QueryDef, argVals: NingVal[]): NingVal {
     const argMap = getVariableMapWithArgs(def.signature, argVals);
     this.stack.push({ variables: argMap, lists: new Map() });
 
@@ -644,8 +638,7 @@ class ProgramImpl implements Program {
     command: ast.Command
   ): null | typeof VOID_RETURN_SENTINEL | NingVal {
     const signature = getCommandSignature(command);
-    const [args, squares, blockCommands] =
-      getCommandApplicationArgsAndSquaresAndBlockCommands(command);
+    const [args, squares, blockCommands] = getCommandInputs(command);
 
     if (signature === BUILTIN_COMMANDS.if_.signature) {
       if (this.evalExpr(args[0])) {
@@ -868,7 +861,7 @@ class ProgramImpl implements Program {
     const userCommandDef = this.userCommandDefs.get(signature);
     if (userCommandDef !== undefined) {
       const argVals = args.map((arg) => this.evalExpr(arg));
-      this.evalUserCommandApplicationUsingArgVals(userCommandDef, argVals);
+      this.evalUserCommandUsingArgVals(userCommandDef, argVals);
       return null;
     }
 
@@ -899,10 +892,7 @@ class ProgramImpl implements Program {
     return null;
   }
 
-  evalUserCommandApplicationUsingArgVals(
-    def: ast.CommandDef,
-    argVals: NingVal[]
-  ): void {
+  evalUserCommandUsingArgVals(def: ast.CommandDef, argVals: NingVal[]): void {
     const argMap = getVariableMapWithArgs(def.signature, argVals);
     this.stack.push({ variables: argMap, lists: new Map() });
 
