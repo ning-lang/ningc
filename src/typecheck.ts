@@ -494,6 +494,8 @@ class Typechecker {
     command: ast.Command,
     expectedReturnType: null | ast.NingType
   ): void {
+    this.checkThatCommandSignatureStringIsRecognized(command);
+
     const sigString = getUntypedCommandApplicationSignatureString(command);
     const [args, squares, blockCommands] =
       getCommandApplicationArgsAndSquaresAndBlockCommands(command);
@@ -510,64 +512,19 @@ class Typechecker {
       this.checkBlockCommand(blockCommand, expectedReturnType);
     }
 
-    const overloads = this.lookupCommandOverloads(sigString);
-
     if (sigString === UNTYPED_BUILTINS.valReturn.signature.join(" ")) {
       // TODO: Check return type.
     } else if (sigString === UNTYPED_BUILTINS.voidReturn.signature.join(" ")) {
       // TODO: Check return type.
     }
 
-    const attemptedOverloadGuess = guessAttemptedCommandOverload(
-      overloads,
-      argTypes,
-      squareTypes
-    );
-
     if (sigString === UNTYPED_BUILTINS.assign.signature.join(" ")) {
       // TODO: Check that the target is mutable.
     }
 
+    // TODO: Check input types.
+
     // TODO: Register variable or list def, if the command `let`, `var`, or `create * list`.
-
-    // If `attemptedOverload` is null, it means
-    // there were zero overloads.
-    // In other words,
-    // we could not find a matching command signature.
-    if (attemptedOverloadGuess === null) {
-      this.errors.push({
-        kind: TODO_unknown_command,
-        command,
-      });
-      return;
-    }
-
-    for (let i = 0; i < attemptedOverloadGuess.argTypes.length; ++i) {
-      const actualType = argTypes[i];
-      if (actualType === null) {
-        continue;
-      }
-
-      const expectedType = attemptedOverloadGuess.argTypes[i];
-      if (expectedType !== actualType) {
-        this.errors.push({
-          kind: TODO_arg_is_wrong_type,
-          arg: args[i],
-          expectedType,
-          actualType,
-        });
-      }
-    }
-
-    for (let i = 0; i < attemptedOverloadGuess.squareTypes.length; ++i) {
-      const actualType = squareTypes[i];
-      if (actualType === null) {
-        continue;
-      }
-
-      const expectedType = attemptedOverloadGuess.squareTypes[i];
-      // todo
-    }
   }
 
   checkBlockCommand(
@@ -609,6 +566,10 @@ class Typechecker {
     return null;
   }
 
+  checkThatCommandSignatureStringIsRecognized(command: ast.Command): void {
+    // TODO: Check builtins and userCommands.
+  }
+
   lookupVar(name: string): VariableInfo | null {
     for (let i = this.stack.length - 1; i >= 0; --i) {
       const entry = this.stack[i];
@@ -641,11 +602,6 @@ class Typechecker {
     }
     return null;
   }
-
-  lookupCommandOverloads(commandSigString: string): CommandOverload[] {
-    // TODO
-    return [];
-  }
 }
 
 function isGlobalDef(def: ast.Def): def is ast.GlobalDef {
@@ -666,11 +622,6 @@ interface VariableInfo {
 interface ListInfo {
   elementType: ast.NingType;
   def: ast.Command;
-}
-
-interface CommandOverload {
-  argTypes: ast.NingType[];
-  squareTypes: ast.NingType[];
 }
 
 interface SquareType {
@@ -698,24 +649,6 @@ function getStackEntryWithUncheckedSignatureParams(
   }
 
   return { variables, lists: new Map() };
-}
-
-/**
- * @precondition For every overload `o`,
- * `argTypes.length === o.argTypes.length`
- * and `squareTypes.length === o.squareTypes.length`.
- */
-function guessAttemptedCommandOverload(
-  overloads: CommandOverload[],
-  argTypes: (ast.NingType | null)[],
-  squareTypes: (SquareType | null)[]
-): null | CommandOverload {
-  if (overloads.length === 0) {
-    return null;
-  }
-
-  // TODO
-  return null;
 }
 
 // Difference between commands and queries:
