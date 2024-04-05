@@ -6,7 +6,7 @@ import {
 } from "./funcSignatureString";
 import { TysonTypeDict } from "./types/tysonTypeDict";
 import type * as ast from "./types/tysonTypeDict";
-import { UNTYPED_BUILTINS } from "./untypedBuiltins";
+import { BUILTIN_COMMANDS } from "./builtins";
 
 export type NingTypeError =
   | GlobalDefNotFirstError
@@ -73,30 +73,30 @@ export function typecheck(file: TysonTypeDict["file"]): NingTypeError[] {
 }
 
 const LEGAL_GLOBAL_DEF_BODY_COMMAND_SIGNATURE_STRINGS: Set<string> = new Set([
-  UNTYPED_BUILTINS.let_.signature.join(" "),
-  UNTYPED_BUILTINS.var_.signature.join(" "),
-  UNTYPED_BUILTINS.numberListCreate.signature.join(" "),
-  UNTYPED_BUILTINS.stringListCreate.signature.join(" "),
-  UNTYPED_BUILTINS.booleanListCreate.signature.join(" "),
+  BUILTIN_COMMANDS.let_.signature,
+  BUILTIN_COMMANDS.var_.signature,
+  BUILTIN_COMMANDS.numberListCreate.signature,
+  BUILTIN_COMMANDS.stringListCreate.signature,
+  BUILTIN_COMMANDS.booleanListCreate.signature,
 ]);
 
 const LEGAL_QUERY_DEF_BODY_COMMAND_SIGNATURE_STRINGS: Set<string> = new Set([
-  UNTYPED_BUILTINS.let_.signature.join(" "),
-  UNTYPED_BUILTINS.var_.signature.join(" "),
-  UNTYPED_BUILTINS.numberListCreate.signature.join(" "),
-  UNTYPED_BUILTINS.stringListCreate.signature.join(" "),
-  UNTYPED_BUILTINS.booleanListCreate.signature.join(" "),
-  UNTYPED_BUILTINS.assign.signature.join(" "),
-  UNTYPED_BUILTINS.increase.signature.join(" "),
-  UNTYPED_BUILTINS.listReplaceItem.signature.join(" "),
-  UNTYPED_BUILTINS.listInsert.signature.join(" "),
-  UNTYPED_BUILTINS.listDeleteItem.signature.join(" "),
-  UNTYPED_BUILTINS.listDeleteAll.signature.join(" "),
-  UNTYPED_BUILTINS.listAdd.signature.join(" "),
-  UNTYPED_BUILTINS.repeat.signature.join(" "),
-  UNTYPED_BUILTINS.if_.signature.join(" "),
-  UNTYPED_BUILTINS.ifElse.signature.join(" "),
-  UNTYPED_BUILTINS.valReturn.signature.join(" "),
+  BUILTIN_COMMANDS.let_.signature,
+  BUILTIN_COMMANDS.var_.signature,
+  BUILTIN_COMMANDS.numberListCreate.signature,
+  BUILTIN_COMMANDS.stringListCreate.signature,
+  BUILTIN_COMMANDS.booleanListCreate.signature,
+  BUILTIN_COMMANDS.assign.signature,
+  BUILTIN_COMMANDS.increase.signature,
+  BUILTIN_COMMANDS.listReplaceItem.signature,
+  BUILTIN_COMMANDS.listInsert.signature,
+  BUILTIN_COMMANDS.listDeleteItem.signature,
+  BUILTIN_COMMANDS.listDeleteAll.signature,
+  BUILTIN_COMMANDS.listAdd.signature,
+  BUILTIN_COMMANDS.repeat.signature,
+  BUILTIN_COMMANDS.if_.signature,
+  BUILTIN_COMMANDS.ifElse.signature,
+  BUILTIN_COMMANDS.valReturn.signature,
 ]);
 
 /**
@@ -105,13 +105,13 @@ const LEGAL_QUERY_DEF_BODY_COMMAND_SIGNATURE_STRINGS: Set<string> = new Set([
  */
 const LEGAL_QUERY_DEF_BODY_MUTATING_LEAF_COMMAND_SIGNATURE_STRINGS: Set<string> =
   new Set([
-    UNTYPED_BUILTINS.assign.signature.join(" "),
-    UNTYPED_BUILTINS.increase.signature.join(" "),
-    UNTYPED_BUILTINS.listReplaceItem.signature.join(" "),
-    UNTYPED_BUILTINS.listInsert.signature.join(" "),
-    UNTYPED_BUILTINS.listDeleteItem.signature.join(" "),
-    UNTYPED_BUILTINS.listDeleteAll.signature.join(" "),
-    UNTYPED_BUILTINS.listAdd.signature.join(" "),
+    BUILTIN_COMMANDS.assign.signature,
+    BUILTIN_COMMANDS.increase.signature,
+    BUILTIN_COMMANDS.listReplaceItem.signature,
+    BUILTIN_COMMANDS.listInsert.signature,
+    BUILTIN_COMMANDS.listDeleteItem.signature,
+    BUILTIN_COMMANDS.listDeleteAll.signature,
+    BUILTIN_COMMANDS.listAdd.signature,
   ]);
 
 class Typechecker {
@@ -348,18 +348,18 @@ class Typechecker {
     const [_args, squares, blockCommands] =
       getCommandApplicationArgsAndSquaresAndBlockCommands(command);
 
-    if (sigString === UNTYPED_BUILTINS.if_.signature.join(" ")) {
+    if (sigString === BUILTIN_COMMANDS.if_.signature) {
       this.checkBlockCommandDoesNotMutateGlobalVariables(blockCommands[0]);
       return;
     }
 
-    if (sigString === UNTYPED_BUILTINS.ifElse.signature.join(" ")) {
+    if (sigString === BUILTIN_COMMANDS.ifElse.signature) {
       this.checkBlockCommandDoesNotMutateGlobalVariables(blockCommands[0]);
       this.checkBlockCommandDoesNotMutateGlobalVariables(blockCommands[1]);
       return;
     }
 
-    if (sigString === UNTYPED_BUILTINS.repeat.signature.join(" ")) {
+    if (sigString === BUILTIN_COMMANDS.repeat.signature) {
       this.checkBlockCommandDoesNotMutateGlobalVariables(blockCommands[0]);
       return;
     }
@@ -428,13 +428,13 @@ class Typechecker {
     const sigString = getUntypedCommandApplicationSignatureString(command);
 
     if (
-      sigString === UNTYPED_BUILTINS.valReturn.signature.join(" ") ||
-      sigString === UNTYPED_BUILTINS.voidReturn.signature.join(" ")
+      sigString === BUILTIN_COMMANDS.valReturn.signature ||
+      sigString === BUILTIN_COMMANDS.voidReturn.signature
     ) {
       return true;
     }
 
-    if (sigString === UNTYPED_BUILTINS.ifElse.signature.join(" ")) {
+    if (sigString === BUILTIN_COMMANDS.ifElse.signature) {
       const blockCommands =
         getCommandApplicationArgsAndSquaresAndBlockCommands(command)[2];
       return (
@@ -512,13 +512,13 @@ class Typechecker {
       this.checkBlockCommand(blockCommand, expectedReturnType);
     }
 
-    if (sigString === UNTYPED_BUILTINS.valReturn.signature.join(" ")) {
+    if (sigString === BUILTIN_COMMANDS.valReturn.signature) {
       // TODO: Check return type.
-    } else if (sigString === UNTYPED_BUILTINS.voidReturn.signature.join(" ")) {
+    } else if (sigString === BUILTIN_COMMANDS.voidReturn.signature) {
       // TODO: Check return type.
     }
 
-    if (sigString === UNTYPED_BUILTINS.assign.signature.join(" ")) {
+    if (sigString === BUILTIN_COMMANDS.assign.signature) {
       // TODO: Check that the target is mutable.
     }
 

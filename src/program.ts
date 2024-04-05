@@ -8,7 +8,7 @@ import {
   getUntypedQueryApplicationSignatureString,
 } from "./funcSignatureString";
 import * as ast from "./types/tysonTypeDict";
-import { UNTYPED_BUILTINS } from "./untypedBuiltins";
+import { BUILTIN_COMMANDS, BUILTIN_QUERIES } from "./builtins";
 
 const RENDER_COMMAND_SIGNATURE = "render";
 const UPDATE_COMMAND_SIGNATURE = "update";
@@ -249,13 +249,13 @@ class ProgramImpl implements Program {
     const sigString = getUntypedQueryApplicationSignatureString(expr);
     const [args, squares] = getQueryApplicationArgsAndSquares(expr);
 
-    if (sigString === UNTYPED_BUILTINS.listLength.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.listLength.signature) {
       const listName = squares[0].identifiers.map((i) => i.name).join(" ");
       const list = this.getMutableList(listName);
       return list.items.length;
     }
 
-    if (sigString === UNTYPED_BUILTINS.listItemOf.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.listItemOf.signature) {
       const index = this.evalExpr(args[0]);
       const listName = squares[0].identifiers.map((i) => i.name).join(" ");
       const list = this.getMutableList(listName);
@@ -270,180 +270,180 @@ class ProgramImpl implements Program {
       return getDefaultValueOfKind(list.kind);
     }
 
-    if (sigString === UNTYPED_BUILTINS.listOrIndexOf.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.listOrIndexOf.signature) {
       const item = this.evalExpr(args[0]);
       const listName = squares[0].identifiers.map((i) => i.name).join(" ");
       const list = this.getMutableList(listName);
       return list.items.indexOf(item);
     }
 
-    if (sigString === UNTYPED_BUILTINS.listContains.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.listContains.signature) {
       const item = this.evalExpr(args[0]);
       const listName = squares[0].identifiers.map((i) => i.name).join(" ");
       const list = this.getMutableList(listName);
       return list.items.includes(item);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opAdd.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opAdd.signature) {
       return (this.evalExpr(args[0]) as any) + (this.evalExpr(args[1]) as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opSub.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opSub.signature) {
       return (this.evalExpr(args[0]) as any) - (this.evalExpr(args[1]) as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opMul.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opMul.signature) {
       return (this.evalExpr(args[0]) as any) * (this.evalExpr(args[1]) as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opDiv.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opDiv.signature) {
       return (this.evalExpr(args[0]) as any) / (this.evalExpr(args[1]) as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opMod.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opMod.signature) {
       return (this.evalExpr(args[0]) as any) % (this.evalExpr(args[1]) as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opPow.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opPow.signature) {
       return (this.evalExpr(args[0]) as any) ** (this.evalExpr(args[1]) as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opEq.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opEq.signature) {
       return ningEq(this.evalExpr(args[0]), this.evalExpr(args[1]));
     }
 
-    if (sigString === UNTYPED_BUILTINS.opNe.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opNe.signature) {
       return !ningEq(this.evalExpr(args[0]), this.evalExpr(args[1]));
     }
 
-    if (sigString === UNTYPED_BUILTINS.opLt.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opLt.signature) {
       return this.evalExpr(args[0]) < this.evalExpr(args[1]);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opLe.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opLe.signature) {
       return this.evalExpr(args[0]) <= this.evalExpr(args[1]);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opGt.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opGt.signature) {
       return this.evalExpr(args[0]) > this.evalExpr(args[1]);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opGe.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opGe.signature) {
       return this.evalExpr(args[0]) >= this.evalExpr(args[1]);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opExp.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opExp.signature) {
       return Math.exp(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opLn.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opLn.signature) {
       return Math.log(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opSinRad.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opSinRad.signature) {
       const rad = this.evalExpr(args[0]) as any;
       return Math.sin(rad);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opCosRad.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opCosRad.signature) {
       const rad = this.evalExpr(args[0]) as any;
       return Math.cos(rad);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opTanRad.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opTanRad.signature) {
       const rad = this.evalExpr(args[0]) as any;
       return Math.tan(rad);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opAsinRad.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opAsinRad.signature) {
       return Math.asin(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opAcosRad.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opAcosRad.signature) {
       return Math.acos(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opAtanRad.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opAtanRad.signature) {
       return Math.atan(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opAtan2Rad.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opAtan2Rad.signature) {
       const y = this.evalExpr(args[0]) as any;
       const x = this.evalExpr(args[1]) as any;
       return Math.atan2(y, x);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opPi.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opPi.signature) {
       return Math.PI;
     }
 
-    if (sigString === UNTYPED_BUILTINS.opNaN.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opNaN.signature) {
       return NaN;
     }
 
-    if (sigString === UNTYPED_BUILTINS.opInfinity.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opInfinity.signature) {
       return Infinity;
     }
 
-    if (sigString === UNTYPED_BUILTINS.opNegInfinity.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opNegInfinity.signature) {
       return -Infinity;
     }
 
-    if (sigString === UNTYPED_BUILTINS.opFloor.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opFloor.signature) {
       return Math.floor(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opCeil.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opCeil.signature) {
       return Math.ceil(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opRound.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opRound.signature) {
       return Math.round(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opAbs.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opAbs.signature) {
       return Math.abs(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opMin.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opMin.signature) {
       return Math.min(
         this.evalExpr(args[0]) as any,
         this.evalExpr(args[1]) as any
       );
     }
 
-    if (sigString === UNTYPED_BUILTINS.opMax.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opMax.signature) {
       return Math.max(
         this.evalExpr(args[0]) as any,
         this.evalExpr(args[1]) as any
       );
     }
 
-    if (sigString === UNTYPED_BUILTINS.opAnd.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opAnd.signature) {
       const a = this.evalExpr(args[0]);
       const b = this.evalExpr(args[1]);
       return Boolean(a && b);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opOr.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opOr.signature) {
       const a = this.evalExpr(args[0]);
       const b = this.evalExpr(args[1]);
       return Boolean(a || b);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opNot.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opNot.signature) {
       return !this.evalExpr(args[0]);
     }
 
-    if (sigString === UNTYPED_BUILTINS.opConcat.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.opConcat.signature) {
       return (this.evalExpr(args[0]) as any) + (this.evalExpr(args[1]) as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.stringLength.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.stringLength.signature) {
       return (this.evalExpr(args[0]) as string).length;
     }
 
-    if (sigString === UNTYPED_BUILTINS.stringLetter.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.stringLetter.signature) {
       const s = this.evalExpr(args[0]) as string;
       const index = this.evalExpr(args[1]);
       if (
@@ -458,7 +458,7 @@ class ProgramImpl implements Program {
       return getDefaultValueOfKind("string");
     }
 
-    if (sigString === UNTYPED_BUILTINS.stringSubstring.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.stringSubstring.signature) {
       const s = this.evalExpr(args[0]) as string;
       const start = this.evalExpr(args[1]);
       const end = this.evalExpr(args[2]);
@@ -474,26 +474,26 @@ class ProgramImpl implements Program {
       return getDefaultValueOfKind("string");
     }
 
-    if (sigString === UNTYPED_BUILTINS.stringContains.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.stringContains.signature) {
       const haystack = this.evalExpr(args[0]) as string;
       const needle = this.evalExpr(args[1]);
       return haystack.includes(needle as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.stringIndexOf.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.stringIndexOf.signature) {
       const haystack = this.evalExpr(args[0]) as string;
       const needle = this.evalExpr(args[1]);
       return haystack.indexOf(needle as any);
     }
 
-    if (sigString === UNTYPED_BUILTINS.ternary.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.ternary.signature) {
       const question = this.evalExpr(args[0]);
       const answer = this.evalExpr(args[1]);
       const else_ = this.evalExpr(args[2]);
       return question ? answer : else_;
     }
 
-    if (sigString === UNTYPED_BUILTINS.parseNumber.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.parseNumber.signature) {
       const s = this.evalExpr(args[0]) as string;
       if (getNingNumberLiteralRegex().test(s)) {
         return parseFloat(s);
@@ -502,90 +502,85 @@ class ProgramImpl implements Program {
       return NaN;
     }
 
-    if (
-      sigString === UNTYPED_BUILTINS.numberOrBooleanToString.signature.join(" ")
-    ) {
+    if (sigString === BUILTIN_QUERIES.numberOrBooleanToString.signature) {
       return String(this.evalExpr(args[0]));
     }
 
-    if (sigString === UNTYPED_BUILTINS.randomInt.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.randomInt.signature) {
       const min = Math.floor(this.evalExpr(args[0]) as number);
       const max = Math.floor(this.evalExpr(args[1]) as number);
       return min + Math.floor(Math.random() * (max - min));
     }
 
-    if (sigString === UNTYPED_BUILTINS.windowMouseX.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.windowMouseX.signature) {
       return this.env.getWindowMouseX();
     }
 
-    if (sigString === UNTYPED_BUILTINS.windowMouseY.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.windowMouseY.signature) {
       return this.env.getWindowMouseY();
     }
 
-    if (sigString === UNTYPED_BUILTINS.canvasMouseX.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.canvasMouseX.signature) {
       return this.env.getCanvasMouseX();
     }
 
-    if (sigString === UNTYPED_BUILTINS.canvasMouseY.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.canvasMouseY.signature) {
       return this.env.getCanvasMouseY();
     }
 
-    if (sigString === UNTYPED_BUILTINS.mouseDown.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.mouseDown.signature) {
       return this.env.isMouseDown();
     }
 
-    if (sigString === UNTYPED_BUILTINS.windowHeight.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.windowHeight.signature) {
       return this.env.getWindowWidth();
     }
 
-    if (sigString === UNTYPED_BUILTINS.windowHeight.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.windowHeight.signature) {
       return this.env.getWindowHeight();
     }
 
-    if (sigString === UNTYPED_BUILTINS.canvasWidth.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.canvasWidth.signature) {
       return this.env.ctx.canvas.width;
     }
 
-    if (sigString === UNTYPED_BUILTINS.canvasHeight.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.canvasHeight.signature) {
       return this.env.ctx.canvas.height;
     }
 
-    if (
-      sigString ===
-      UNTYPED_BUILTINS.millisecondsSinceUnixEpoch.signature.join(" ")
-    ) {
+    if (sigString === BUILTIN_QUERIES.millisecondsSinceUnixEpoch.signature) {
       return Date.now();
     }
 
-    if (sigString === UNTYPED_BUILTINS.currentYear.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.currentYear.signature) {
       return new Date().getFullYear();
     }
 
-    if (sigString === UNTYPED_BUILTINS.currentMonth.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.currentMonth.signature) {
       return new Date().getMonth();
     }
 
-    if (sigString === UNTYPED_BUILTINS.currentDate.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.currentDate.signature) {
       return new Date().getDate();
     }
 
-    if (sigString === UNTYPED_BUILTINS.currentDayOfWeek.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.currentDayOfWeek.signature) {
       return new Date().getDay();
     }
 
-    if (sigString === UNTYPED_BUILTINS.currentHour.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.currentHour.signature) {
       return new Date().getHours();
     }
 
-    if (sigString === UNTYPED_BUILTINS.currentMinute.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.currentMinute.signature) {
       return new Date().getMinutes();
     }
 
-    if (sigString === UNTYPED_BUILTINS.currentSecond.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.currentSecond.signature) {
       return new Date().getSeconds();
     }
 
-    if (sigString === UNTYPED_BUILTINS.keyPressed.signature.join(" ")) {
+    if (sigString === BUILTIN_QUERIES.keyPressed.signature) {
       const key = this.evalExpr(args[0]);
       if (typeof key !== "string") {
         throw new Error(
@@ -653,25 +648,21 @@ class ProgramImpl implements Program {
     const [args, squares, blockCommands] =
       getCommandApplicationArgsAndSquaresAndBlockCommands(command);
 
-    if (commandSignatureString === UNTYPED_BUILTINS.if_.signature.join(" ")) {
+    if (commandSignatureString === BUILTIN_COMMANDS.if_.signature) {
       if (this.evalExpr(args[0])) {
         return this.executeBlockCommandAndGetReturnValue(blockCommands[0]);
       }
       return null;
     }
 
-    if (
-      commandSignatureString === UNTYPED_BUILTINS.ifElse.signature.join(" ")
-    ) {
+    if (commandSignatureString === BUILTIN_COMMANDS.ifElse.signature) {
       if (this.evalExpr(args[0])) {
         return this.executeBlockCommandAndGetReturnValue(blockCommands[0]);
       }
       return this.executeBlockCommandAndGetReturnValue(blockCommands[1]);
     }
 
-    if (
-      commandSignatureString === UNTYPED_BUILTINS.while_.signature.join(" ")
-    ) {
+    if (commandSignatureString === BUILTIN_COMMANDS.while_.signature) {
       while (this.evalExpr(args[0])) {
         const returnVal = this.executeBlockCommandAndGetReturnValue(
           blockCommands[0]
@@ -683,9 +674,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (
-      commandSignatureString === UNTYPED_BUILTINS.repeat.signature.join(" ")
-    ) {
+    if (commandSignatureString === BUILTIN_COMMANDS.repeat.signature) {
       const rawTimes = this.evalExpr(args[0]);
       if (!Number.isFinite(rawTimes)) {
         throw new Error("Repeat iteration count was not a finite number.");
@@ -703,21 +692,17 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (
-      commandSignatureString === UNTYPED_BUILTINS.valReturn.signature.join(" ")
-    ) {
+    if (commandSignatureString === BUILTIN_COMMANDS.valReturn.signature) {
       return this.evalExpr(args[0]);
     }
 
-    if (
-      commandSignatureString === UNTYPED_BUILTINS.voidReturn.signature.join(" ")
-    ) {
+    if (commandSignatureString === BUILTIN_COMMANDS.voidReturn.signature) {
       return VOID_RETURN_SENTINEL;
     }
 
     if (
-      commandSignatureString === UNTYPED_BUILTINS.let_.signature.join(" ") ||
-      commandSignatureString === UNTYPED_BUILTINS.var_.signature.join(" ")
+      commandSignatureString === BUILTIN_COMMANDS.let_.signature ||
+      commandSignatureString === BUILTIN_COMMANDS.var_.signature
     ) {
       const varName = squares[0].identifiers
         .map((ident) => ident.name)
@@ -727,9 +712,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (
-      commandSignatureString === UNTYPED_BUILTINS.assign.signature.join(" ")
-    ) {
+    if (commandSignatureString === BUILTIN_COMMANDS.assign.signature) {
       const varName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -738,9 +721,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (
-      commandSignatureString === UNTYPED_BUILTINS.increase.signature.join(" ")
-    ) {
+    if (commandSignatureString === BUILTIN_COMMANDS.increase.signature) {
       const varName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -750,8 +731,7 @@ class ProgramImpl implements Program {
     }
 
     if (
-      commandSignatureString ===
-      UNTYPED_BUILTINS.numberListCreate.signature.join(" ")
+      commandSignatureString === BUILTIN_COMMANDS.numberListCreate.signature
     ) {
       const listName = squares[0].identifiers
         .map((ident) => ident.name)
@@ -761,8 +741,7 @@ class ProgramImpl implements Program {
     }
 
     if (
-      commandSignatureString ===
-      UNTYPED_BUILTINS.stringListCreate.signature.join(" ")
+      commandSignatureString === BUILTIN_COMMANDS.stringListCreate.signature
     ) {
       const listName = squares[0].identifiers
         .map((ident) => ident.name)
@@ -772,8 +751,7 @@ class ProgramImpl implements Program {
     }
 
     if (
-      commandSignatureString ===
-      UNTYPED_BUILTINS.booleanListCreate.signature.join(" ")
+      commandSignatureString === BUILTIN_COMMANDS.booleanListCreate.signature
     ) {
       const listName = squares[0].identifiers
         .map((ident) => ident.name)
@@ -782,10 +760,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (
-      commandSignatureString ===
-      UNTYPED_BUILTINS.listReplaceItem.signature.join(" ")
-    ) {
+    if (commandSignatureString === BUILTIN_COMMANDS.listReplaceItem.signature) {
       const listName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -795,9 +770,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (
-      commandSignatureString === UNTYPED_BUILTINS.listInsert.signature.join(" ")
-    ) {
+    if (commandSignatureString === BUILTIN_COMMANDS.listInsert.signature) {
       const listName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -807,10 +780,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (
-      commandSignatureString ===
-      UNTYPED_BUILTINS.listDeleteItem.signature.join(" ")
-    ) {
+    if (commandSignatureString === BUILTIN_COMMANDS.listDeleteItem.signature) {
       const listName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -819,10 +789,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (
-      commandSignatureString ===
-      UNTYPED_BUILTINS.listDeleteAll.signature.join(" ")
-    ) {
+    if (commandSignatureString === BUILTIN_COMMANDS.listDeleteAll.signature) {
       const listName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -830,9 +797,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (
-      commandSignatureString === UNTYPED_BUILTINS.listAdd.signature.join(" ")
-    ) {
+    if (commandSignatureString === BUILTIN_COMMANDS.listAdd.signature) {
       const listName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -841,10 +806,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (
-      commandSignatureString ===
-      UNTYPED_BUILTINS.resizeCanvas.signature.join(" ")
-    ) {
+    if (commandSignatureString === BUILTIN_COMMANDS.resizeCanvas.signature) {
       const width = Math.floor(this.evalExpr(args[0]) as any);
       const height = Math.floor(this.evalExpr(args[1]) as any);
 
@@ -856,9 +818,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (
-      commandSignatureString === UNTYPED_BUILTINS.drawImage.signature.join(" ")
-    ) {
+    if (commandSignatureString === BUILTIN_COMMANDS.drawImage.signature) {
       const imageName = getStringValueIfExprIsString(args[0]);
       if (imageName === null) {
         throw new Error("Invalid image name: " + stringifyExpression(args[0]));
@@ -885,9 +845,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (
-      commandSignatureString === UNTYPED_BUILTINS.clearRect.signature.join(" ")
-    ) {
+    if (commandSignatureString === BUILTIN_COMMANDS.clearRect.signature) {
       const imageName = getStringValueIfExprIsString(args[0]);
       if (imageName === null) {
         throw new Error("Invalid image name: " + stringifyExpression(args[0]));

@@ -3,7 +3,7 @@ import {
   UNTYPED_BLOCK_SENTINEL,
   UNTYPED_REF_SENTINEL,
   UNTYPED_VAL_SENTINEL,
-} from "./untypedBuiltins";
+} from "./builtins";
 
 export function stringifyIdentifierSequence(
   seq: readonly ast.Identifier[]
