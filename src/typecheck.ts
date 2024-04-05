@@ -540,9 +540,34 @@ class Typechecker {
     command: ast.Command,
     expectedReturnType: ast.NingType | typeof VOID_RETURN_TYPE
   ): void {
+    const signature = getCommandSignature(command);
+    if (signature === BUILTIN_COMMANDS.let_.signature) {
+      this.checkLetCommand(command);
+      return;
+    }
+
+    if (signature === BUILTIN_COMMANDS.var_.signature) {
+      this.checkVarCommand(command);
+      return;
+    }
+
+    if (signature === BUILTIN_COMMANDS.booleanListCreate.signature) {
+      this.checkListCreateCommand(command, "boolean");
+      return;
+    }
+
+    if (signature === BUILTIN_COMMANDS.numberListCreate.signature) {
+      this.checkListCreateCommand(command, "number");
+      return;
+    }
+
+    if (signature === BUILTIN_COMMANDS.stringListCreate.signature) {
+      this.checkListCreateCommand(command, "string");
+      return;
+    }
+
     this.checkThatCommandSignatureIsRecognized(command);
 
-    const signature = getCommandSignature(command);
     const [args, squares, blockCommands] = getCommandInputs(command);
 
     const argTypes: (ast.NingType | typeof MALTYPED)[] = args.map((arg) =>
@@ -586,14 +611,32 @@ class Typechecker {
       [args, squares],
       [argTypes, squareTypes]
     );
+  }
 
-    if (signature === BUILTIN_COMMANDS.let_.signature) {
-      const name = stringifyIdentifierSequence(squares[0].identifiers);
-      this.checkVarDefAndRegisterIfNotTaken(name, argTypes[0], false, command);
-    } else if (signature === BUILTIN_COMMANDS.var_.signature) {
-      const name = stringifyIdentifierSequence(squares[0].identifiers);
-      this.checkVarDefAndRegisterIfNotTaken(name, argTypes[0], true, command);
-    }
+  checkLetCommand(command: ast.Command): void {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [[arg], [square], _blockCommands] = getCommandInputs(command);
+    const name = stringifyIdentifierSequence(square.identifiers);
+    const argType = this.checkExpressionAndGetType(arg);
+    this.checkVarDefAndRegisterIfNotTaken(name, argType, false, command);
+  }
+
+  checkVarCommand(command: ast.Command): void {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [[arg], [square], _blockCommands] = getCommandInputs(command);
+    const name = stringifyIdentifierSequence(square.identifiers);
+    const argType = this.checkExpressionAndGetType(arg);
+    this.checkVarDefAndRegisterIfNotTaken(name, argType, true, command);
+  }
+
+  checkListCreateCommand(
+    command: ast.Command,
+    elementType: ast.NingType
+  ): void {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_args, [square], _blockCommands] = getCommandInputs(command);
+    const name = stringifyIdentifierSequence(square.identifiers);
+    this.checkListDefAndRegisterIfNotTaken(name, elementType, command);
   }
 
   checkBlockCommand(
@@ -764,6 +807,35 @@ class Typechecker {
 
     const entry = this.stack[this.stack.length - 1];
     entry.variables.set(name, { valType: type_, mutable, def: command });
+  }
+
+  checkListDefAndRegisterIfNotTaken(
+    name: string,
+    elementType: ast.NingType,
+    command: ast.Command
+  ): void {
+    const conflictingVar = this.lookupVar(name);
+    if (conflictingVar !== null) {
+      this.errors.push({
+        kind: TypeErrorKind.NameClash,
+        existingDef: conflictingVar.def,
+        newDef: command,
+      });
+      return;
+    }
+
+    const conflictingList = this.lookupList(name);
+    if (conflictingList !== null) {
+      this.errors.push({
+        kind: TypeErrorKind.NameClash,
+        existingDef: conflictingList.def,
+        newDef: command,
+      });
+      return;
+    }
+
+    const entry = this.stack[this.stack.length - 1];
+    entry.lists.set(name, { elementType, def: command });
   }
 
   checkExpressionAndGetType(
