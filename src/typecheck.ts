@@ -1,9 +1,9 @@
 import { getCommandApplicationArgsAndSquaresAndBlockCommands } from "./funcApplicationInputs";
 import {
-  getUntypedCommandApplicationSignatureString,
-  getUntypedFunctionSignatureString,
+  getCommandSignature,
+  getFunctionDefSignature,
   stringifyIdentifierSequence,
-} from "./funcSignatureString";
+} from "./funcSignature";
 import { TysonTypeDict } from "./types/tysonTypeDict";
 import type * as ast from "./types/tysonTypeDict";
 import { BUILTIN_COMMANDS } from "./builtins";
@@ -166,8 +166,8 @@ class Typechecker {
   }
 
   checkCommandIsLegalGlobalDefBodyCommand(command: ast.Command): void {
-    const sigString = getUntypedCommandApplicationSignatureString(command);
-    if (!LEGAL_GLOBAL_DEF_BODY_COMMAND_SIGNATURE_STRINGS.has(sigString)) {
+    const signature = getCommandSignature(command);
+    if (!LEGAL_GLOBAL_DEF_BODY_COMMAND_SIGNATURE_STRINGS.has(signature)) {
       this.errors.push({
         kind: TypeErrorKind.IllegalCommandInGlobalDef,
         command,
@@ -197,18 +197,15 @@ class Typechecker {
 
     this.stack.pop();
 
-    this.userQueryDefs.set(
-      getUntypedFunctionSignatureString(def.signature),
-      def
-    );
+    this.userQueryDefs.set(getFunctionDefSignature(def.signature), def);
   }
 
   checkFuncDefSignatureIsAvailable(
     funcDef: ast.QueryDef | ast.CommandDef
   ): void {
-    const sigString = getUntypedFunctionSignatureString(funcDef.signature);
+    const signature = getFunctionDefSignature(funcDef.signature);
 
-    const conflictingVar = this.lookupVar(sigString);
+    const conflictingVar = this.lookupVar(signature);
     if (conflictingVar !== null) {
       this.errors.push({
         kind: TypeErrorKind.NameClash,
@@ -218,7 +215,7 @@ class Typechecker {
       return;
     }
 
-    const conflictingList = this.lookupList(sigString);
+    const conflictingList = this.lookupList(signature);
     if (conflictingList !== null) {
       this.errors.push({
         kind: TypeErrorKind.NameClash,
@@ -228,7 +225,7 @@ class Typechecker {
       return;
     }
 
-    const conflictingUserQueryDef = this.userQueryDefs.get(sigString);
+    const conflictingUserQueryDef = this.userQueryDefs.get(signature);
     if (conflictingUserQueryDef !== undefined) {
       this.errors.push({
         kind: TypeErrorKind.NameClash,
@@ -238,7 +235,7 @@ class Typechecker {
       return;
     }
 
-    const conflictingUserCommandDef = this.userCommandDefs.get(sigString);
+    const conflictingUserCommandDef = this.userCommandDefs.get(signature);
     if (conflictingUserCommandDef !== undefined) {
       this.errors.push({
         kind: TypeErrorKind.NameClash,
@@ -333,8 +330,8 @@ class Typechecker {
   checkCommandUntypedSignatureIsLegalQueryBodyCommandSignature(
     command: ast.Command
   ): void {
-    const sigString = getUntypedCommandApplicationSignatureString(command);
-    if (!LEGAL_QUERY_DEF_BODY_COMMAND_SIGNATURE_STRINGS.has(sigString)) {
+    const signature = getCommandSignature(command);
+    if (!LEGAL_QUERY_DEF_BODY_COMMAND_SIGNATURE_STRINGS.has(signature)) {
       this.errors.push({
         kind: TypeErrorKind.IllegalCommandInQueryDef,
         command,
@@ -343,30 +340,30 @@ class Typechecker {
   }
 
   checkCommandDoesNotMutateGlobaVariables(command: ast.Command): void {
-    const sigString = getUntypedCommandApplicationSignatureString(command);
+    const signature = getCommandSignature(command);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_args, squares, blockCommands] =
       getCommandApplicationArgsAndSquaresAndBlockCommands(command);
 
-    if (sigString === BUILTIN_COMMANDS.if_.signature) {
+    if (signature === BUILTIN_COMMANDS.if_.signature) {
       this.checkBlockCommandDoesNotMutateGlobalVariables(blockCommands[0]);
       return;
     }
 
-    if (sigString === BUILTIN_COMMANDS.ifElse.signature) {
+    if (signature === BUILTIN_COMMANDS.ifElse.signature) {
       this.checkBlockCommandDoesNotMutateGlobalVariables(blockCommands[0]);
       this.checkBlockCommandDoesNotMutateGlobalVariables(blockCommands[1]);
       return;
     }
 
-    if (sigString === BUILTIN_COMMANDS.repeat.signature) {
+    if (signature === BUILTIN_COMMANDS.repeat.signature) {
       this.checkBlockCommandDoesNotMutateGlobalVariables(blockCommands[0]);
       return;
     }
 
     if (
       !LEGAL_QUERY_DEF_BODY_MUTATING_LEAF_COMMAND_SIGNATURE_STRINGS.has(
-        sigString
+        signature
       )
     ) {
       return;
@@ -425,16 +422,16 @@ class Typechecker {
   }
 
   doesCommandHaveInevitableReturn(command: ast.Command): boolean {
-    const sigString = getUntypedCommandApplicationSignatureString(command);
+    const signature = getCommandSignature(command);
 
     if (
-      sigString === BUILTIN_COMMANDS.valReturn.signature ||
-      sigString === BUILTIN_COMMANDS.voidReturn.signature
+      signature === BUILTIN_COMMANDS.valReturn.signature ||
+      signature === BUILTIN_COMMANDS.voidReturn.signature
     ) {
       return true;
     }
 
-    if (sigString === BUILTIN_COMMANDS.ifElse.signature) {
+    if (signature === BUILTIN_COMMANDS.ifElse.signature) {
       const blockCommands =
         getCommandApplicationArgsAndSquaresAndBlockCommands(command)[2];
       return (
@@ -466,10 +463,7 @@ class Typechecker {
   checkAndRegisterCommandDefSignature(def: ast.CommandDef): void {
     this.checkFuncDefSignatureIsAvailable(def);
     this.checkFuncDefSignatureParamNamesAreValid(def.signature);
-    this.userCommandDefs.set(
-      getUntypedFunctionSignatureString(def.signature),
-      def
-    );
+    this.userCommandDefs.set(getFunctionDefSignature(def.signature), def);
   }
 
   checkCommandDefBodies(): void {
@@ -494,9 +488,9 @@ class Typechecker {
     command: ast.Command,
     expectedReturnType: null | ast.NingType
   ): void {
-    this.checkThatCommandSignatureStringIsRecognized(command);
+    this.checkThatCommandSignatureIsRecognized(command);
 
-    const sigString = getUntypedCommandApplicationSignatureString(command);
+    const signature = getCommandSignature(command);
     const [args, squares, blockCommands] =
       getCommandApplicationArgsAndSquaresAndBlockCommands(command);
 
@@ -512,13 +506,13 @@ class Typechecker {
       this.checkBlockCommand(blockCommand, expectedReturnType);
     }
 
-    if (sigString === BUILTIN_COMMANDS.valReturn.signature) {
+    if (signature === BUILTIN_COMMANDS.valReturn.signature) {
       // TODO: Check return type.
-    } else if (sigString === BUILTIN_COMMANDS.voidReturn.signature) {
+    } else if (signature === BUILTIN_COMMANDS.voidReturn.signature) {
       // TODO: Check return type.
     }
 
-    if (sigString === BUILTIN_COMMANDS.assign.signature) {
+    if (signature === BUILTIN_COMMANDS.assign.signature) {
       // TODO: Check that the target is mutable.
     }
 
@@ -566,7 +560,7 @@ class Typechecker {
     return null;
   }
 
-  checkThatCommandSignatureStringIsRecognized(command: ast.Command): void {
+  checkThatCommandSignatureIsRecognized(command: ast.Command): void {
     // TODO: Check builtins and userCommands.
   }
 

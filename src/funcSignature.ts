@@ -11,7 +11,7 @@ export function stringifyIdentifierSequence(
   return seq.map((id) => id.name).join(" ");
 }
 
-export function getUntypedFunctionSignatureString(
+export function getFunctionDefSignature(
   signature: readonly ast.FuncSignaturePart[]
 ): string {
   return (
@@ -29,9 +29,7 @@ export function getUntypedFunctionSignatureString(
   );
 }
 
-export function getUntypedQueryApplicationSignatureString(
-  expr: ast.CompoundExpression
-): string {
+export function getQuerySignature(expr: ast.CompoundExpression): string {
   return (
     expr.parts
       // eslint-disable-next-line array-callback-return
@@ -49,9 +47,7 @@ export function getUntypedQueryApplicationSignatureString(
   );
 }
 
-export function getUntypedCommandApplicationSignatureString(
-  expr: ast.Command
-): string {
+export function getCommandSignature(expr: ast.Command): string {
   return (
     expr.parts
       // eslint-disable-next-line array-callback-return

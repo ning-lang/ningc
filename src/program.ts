@@ -3,10 +3,10 @@ import {
   getQueryApplicationArgsAndSquares,
 } from "./funcApplicationInputs";
 import {
-  getUntypedCommandApplicationSignatureString,
-  getUntypedFunctionSignatureString,
-  getUntypedQueryApplicationSignatureString,
-} from "./funcSignatureString";
+  getCommandSignature,
+  getFunctionDefSignature,
+  getQuerySignature,
+} from "./funcSignature";
 import * as ast from "./types/tysonTypeDict";
 import { BUILTIN_COMMANDS, BUILTIN_QUERIES } from "./builtins";
 
@@ -246,16 +246,16 @@ class ProgramImpl implements Program {
   }
 
   evalQueryApplication(expr: ast.CompoundExpression): NingVal {
-    const sigString = getUntypedQueryApplicationSignatureString(expr);
+    const signature = getQuerySignature(expr);
     const [args, squares] = getQueryApplicationArgsAndSquares(expr);
 
-    if (sigString === BUILTIN_QUERIES.listLength.signature) {
+    if (signature === BUILTIN_QUERIES.listLength.signature) {
       const listName = squares[0].identifiers.map((i) => i.name).join(" ");
       const list = this.getMutableList(listName);
       return list.items.length;
     }
 
-    if (sigString === BUILTIN_QUERIES.listItemOf.signature) {
+    if (signature === BUILTIN_QUERIES.listItemOf.signature) {
       const index = this.evalExpr(args[0]);
       const listName = squares[0].identifiers.map((i) => i.name).join(" ");
       const list = this.getMutableList(listName);
@@ -270,180 +270,180 @@ class ProgramImpl implements Program {
       return getDefaultValueOfKind(list.kind);
     }
 
-    if (sigString === BUILTIN_QUERIES.listOrIndexOf.signature) {
+    if (signature === BUILTIN_QUERIES.listOrIndexOf.signature) {
       const item = this.evalExpr(args[0]);
       const listName = squares[0].identifiers.map((i) => i.name).join(" ");
       const list = this.getMutableList(listName);
       return list.items.indexOf(item);
     }
 
-    if (sigString === BUILTIN_QUERIES.listContains.signature) {
+    if (signature === BUILTIN_QUERIES.listContains.signature) {
       const item = this.evalExpr(args[0]);
       const listName = squares[0].identifiers.map((i) => i.name).join(" ");
       const list = this.getMutableList(listName);
       return list.items.includes(item);
     }
 
-    if (sigString === BUILTIN_QUERIES.opAdd.signature) {
+    if (signature === BUILTIN_QUERIES.opAdd.signature) {
       return (this.evalExpr(args[0]) as any) + (this.evalExpr(args[1]) as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.opSub.signature) {
+    if (signature === BUILTIN_QUERIES.opSub.signature) {
       return (this.evalExpr(args[0]) as any) - (this.evalExpr(args[1]) as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.opMul.signature) {
+    if (signature === BUILTIN_QUERIES.opMul.signature) {
       return (this.evalExpr(args[0]) as any) * (this.evalExpr(args[1]) as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.opDiv.signature) {
+    if (signature === BUILTIN_QUERIES.opDiv.signature) {
       return (this.evalExpr(args[0]) as any) / (this.evalExpr(args[1]) as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.opMod.signature) {
+    if (signature === BUILTIN_QUERIES.opMod.signature) {
       return (this.evalExpr(args[0]) as any) % (this.evalExpr(args[1]) as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.opPow.signature) {
+    if (signature === BUILTIN_QUERIES.opPow.signature) {
       return (this.evalExpr(args[0]) as any) ** (this.evalExpr(args[1]) as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.opEq.signature) {
+    if (signature === BUILTIN_QUERIES.opEq.signature) {
       return ningEq(this.evalExpr(args[0]), this.evalExpr(args[1]));
     }
 
-    if (sigString === BUILTIN_QUERIES.opNe.signature) {
+    if (signature === BUILTIN_QUERIES.opNe.signature) {
       return !ningEq(this.evalExpr(args[0]), this.evalExpr(args[1]));
     }
 
-    if (sigString === BUILTIN_QUERIES.opLt.signature) {
+    if (signature === BUILTIN_QUERIES.opLt.signature) {
       return this.evalExpr(args[0]) < this.evalExpr(args[1]);
     }
 
-    if (sigString === BUILTIN_QUERIES.opLe.signature) {
+    if (signature === BUILTIN_QUERIES.opLe.signature) {
       return this.evalExpr(args[0]) <= this.evalExpr(args[1]);
     }
 
-    if (sigString === BUILTIN_QUERIES.opGt.signature) {
+    if (signature === BUILTIN_QUERIES.opGt.signature) {
       return this.evalExpr(args[0]) > this.evalExpr(args[1]);
     }
 
-    if (sigString === BUILTIN_QUERIES.opGe.signature) {
+    if (signature === BUILTIN_QUERIES.opGe.signature) {
       return this.evalExpr(args[0]) >= this.evalExpr(args[1]);
     }
 
-    if (sigString === BUILTIN_QUERIES.opExp.signature) {
+    if (signature === BUILTIN_QUERIES.opExp.signature) {
       return Math.exp(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.opLn.signature) {
+    if (signature === BUILTIN_QUERIES.opLn.signature) {
       return Math.log(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.opSinRad.signature) {
+    if (signature === BUILTIN_QUERIES.opSinRad.signature) {
       const rad = this.evalExpr(args[0]) as any;
       return Math.sin(rad);
     }
 
-    if (sigString === BUILTIN_QUERIES.opCosRad.signature) {
+    if (signature === BUILTIN_QUERIES.opCosRad.signature) {
       const rad = this.evalExpr(args[0]) as any;
       return Math.cos(rad);
     }
 
-    if (sigString === BUILTIN_QUERIES.opTanRad.signature) {
+    if (signature === BUILTIN_QUERIES.opTanRad.signature) {
       const rad = this.evalExpr(args[0]) as any;
       return Math.tan(rad);
     }
 
-    if (sigString === BUILTIN_QUERIES.opAsinRad.signature) {
+    if (signature === BUILTIN_QUERIES.opAsinRad.signature) {
       return Math.asin(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.opAcosRad.signature) {
+    if (signature === BUILTIN_QUERIES.opAcosRad.signature) {
       return Math.acos(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.opAtanRad.signature) {
+    if (signature === BUILTIN_QUERIES.opAtanRad.signature) {
       return Math.atan(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.opAtan2Rad.signature) {
+    if (signature === BUILTIN_QUERIES.opAtan2Rad.signature) {
       const y = this.evalExpr(args[0]) as any;
       const x = this.evalExpr(args[1]) as any;
       return Math.atan2(y, x);
     }
 
-    if (sigString === BUILTIN_QUERIES.opPi.signature) {
+    if (signature === BUILTIN_QUERIES.opPi.signature) {
       return Math.PI;
     }
 
-    if (sigString === BUILTIN_QUERIES.opNaN.signature) {
+    if (signature === BUILTIN_QUERIES.opNaN.signature) {
       return NaN;
     }
 
-    if (sigString === BUILTIN_QUERIES.opInfinity.signature) {
+    if (signature === BUILTIN_QUERIES.opInfinity.signature) {
       return Infinity;
     }
 
-    if (sigString === BUILTIN_QUERIES.opNegInfinity.signature) {
+    if (signature === BUILTIN_QUERIES.opNegInfinity.signature) {
       return -Infinity;
     }
 
-    if (sigString === BUILTIN_QUERIES.opFloor.signature) {
+    if (signature === BUILTIN_QUERIES.opFloor.signature) {
       return Math.floor(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.opCeil.signature) {
+    if (signature === BUILTIN_QUERIES.opCeil.signature) {
       return Math.ceil(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.opRound.signature) {
+    if (signature === BUILTIN_QUERIES.opRound.signature) {
       return Math.round(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.opAbs.signature) {
+    if (signature === BUILTIN_QUERIES.opAbs.signature) {
       return Math.abs(this.evalExpr(args[0]) as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.opMin.signature) {
+    if (signature === BUILTIN_QUERIES.opMin.signature) {
       return Math.min(
         this.evalExpr(args[0]) as any,
         this.evalExpr(args[1]) as any
       );
     }
 
-    if (sigString === BUILTIN_QUERIES.opMax.signature) {
+    if (signature === BUILTIN_QUERIES.opMax.signature) {
       return Math.max(
         this.evalExpr(args[0]) as any,
         this.evalExpr(args[1]) as any
       );
     }
 
-    if (sigString === BUILTIN_QUERIES.opAnd.signature) {
+    if (signature === BUILTIN_QUERIES.opAnd.signature) {
       const a = this.evalExpr(args[0]);
       const b = this.evalExpr(args[1]);
       return Boolean(a && b);
     }
 
-    if (sigString === BUILTIN_QUERIES.opOr.signature) {
+    if (signature === BUILTIN_QUERIES.opOr.signature) {
       const a = this.evalExpr(args[0]);
       const b = this.evalExpr(args[1]);
       return Boolean(a || b);
     }
 
-    if (sigString === BUILTIN_QUERIES.opNot.signature) {
+    if (signature === BUILTIN_QUERIES.opNot.signature) {
       return !this.evalExpr(args[0]);
     }
 
-    if (sigString === BUILTIN_QUERIES.opConcat.signature) {
+    if (signature === BUILTIN_QUERIES.opConcat.signature) {
       return (this.evalExpr(args[0]) as any) + (this.evalExpr(args[1]) as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.stringLength.signature) {
+    if (signature === BUILTIN_QUERIES.stringLength.signature) {
       return (this.evalExpr(args[0]) as string).length;
     }
 
-    if (sigString === BUILTIN_QUERIES.stringLetter.signature) {
+    if (signature === BUILTIN_QUERIES.stringLetter.signature) {
       const s = this.evalExpr(args[0]) as string;
       const index = this.evalExpr(args[1]);
       if (
@@ -458,7 +458,7 @@ class ProgramImpl implements Program {
       return getDefaultValueOfKind("string");
     }
 
-    if (sigString === BUILTIN_QUERIES.stringSubstring.signature) {
+    if (signature === BUILTIN_QUERIES.stringSubstring.signature) {
       const s = this.evalExpr(args[0]) as string;
       const start = this.evalExpr(args[1]);
       const end = this.evalExpr(args[2]);
@@ -474,26 +474,26 @@ class ProgramImpl implements Program {
       return getDefaultValueOfKind("string");
     }
 
-    if (sigString === BUILTIN_QUERIES.stringContains.signature) {
+    if (signature === BUILTIN_QUERIES.stringContains.signature) {
       const haystack = this.evalExpr(args[0]) as string;
       const needle = this.evalExpr(args[1]);
       return haystack.includes(needle as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.stringIndexOf.signature) {
+    if (signature === BUILTIN_QUERIES.stringIndexOf.signature) {
       const haystack = this.evalExpr(args[0]) as string;
       const needle = this.evalExpr(args[1]);
       return haystack.indexOf(needle as any);
     }
 
-    if (sigString === BUILTIN_QUERIES.ternary.signature) {
+    if (signature === BUILTIN_QUERIES.ternary.signature) {
       const question = this.evalExpr(args[0]);
       const answer = this.evalExpr(args[1]);
       const else_ = this.evalExpr(args[2]);
       return question ? answer : else_;
     }
 
-    if (sigString === BUILTIN_QUERIES.parseNumber.signature) {
+    if (signature === BUILTIN_QUERIES.parseNumber.signature) {
       const s = this.evalExpr(args[0]) as string;
       if (getNingNumberLiteralRegex().test(s)) {
         return parseFloat(s);
@@ -502,85 +502,85 @@ class ProgramImpl implements Program {
       return NaN;
     }
 
-    if (sigString === BUILTIN_QUERIES.numberOrBooleanToString.signature) {
+    if (signature === BUILTIN_QUERIES.numberOrBooleanToString.signature) {
       return String(this.evalExpr(args[0]));
     }
 
-    if (sigString === BUILTIN_QUERIES.randomInt.signature) {
+    if (signature === BUILTIN_QUERIES.randomInt.signature) {
       const min = Math.floor(this.evalExpr(args[0]) as number);
       const max = Math.floor(this.evalExpr(args[1]) as number);
       return min + Math.floor(Math.random() * (max - min));
     }
 
-    if (sigString === BUILTIN_QUERIES.windowMouseX.signature) {
+    if (signature === BUILTIN_QUERIES.windowMouseX.signature) {
       return this.env.getWindowMouseX();
     }
 
-    if (sigString === BUILTIN_QUERIES.windowMouseY.signature) {
+    if (signature === BUILTIN_QUERIES.windowMouseY.signature) {
       return this.env.getWindowMouseY();
     }
 
-    if (sigString === BUILTIN_QUERIES.canvasMouseX.signature) {
+    if (signature === BUILTIN_QUERIES.canvasMouseX.signature) {
       return this.env.getCanvasMouseX();
     }
 
-    if (sigString === BUILTIN_QUERIES.canvasMouseY.signature) {
+    if (signature === BUILTIN_QUERIES.canvasMouseY.signature) {
       return this.env.getCanvasMouseY();
     }
 
-    if (sigString === BUILTIN_QUERIES.mouseDown.signature) {
+    if (signature === BUILTIN_QUERIES.mouseDown.signature) {
       return this.env.isMouseDown();
     }
 
-    if (sigString === BUILTIN_QUERIES.windowHeight.signature) {
+    if (signature === BUILTIN_QUERIES.windowHeight.signature) {
       return this.env.getWindowWidth();
     }
 
-    if (sigString === BUILTIN_QUERIES.windowHeight.signature) {
+    if (signature === BUILTIN_QUERIES.windowHeight.signature) {
       return this.env.getWindowHeight();
     }
 
-    if (sigString === BUILTIN_QUERIES.canvasWidth.signature) {
+    if (signature === BUILTIN_QUERIES.canvasWidth.signature) {
       return this.env.ctx.canvas.width;
     }
 
-    if (sigString === BUILTIN_QUERIES.canvasHeight.signature) {
+    if (signature === BUILTIN_QUERIES.canvasHeight.signature) {
       return this.env.ctx.canvas.height;
     }
 
-    if (sigString === BUILTIN_QUERIES.millisecondsSinceUnixEpoch.signature) {
+    if (signature === BUILTIN_QUERIES.millisecondsSinceUnixEpoch.signature) {
       return Date.now();
     }
 
-    if (sigString === BUILTIN_QUERIES.currentYear.signature) {
+    if (signature === BUILTIN_QUERIES.currentYear.signature) {
       return new Date().getFullYear();
     }
 
-    if (sigString === BUILTIN_QUERIES.currentMonth.signature) {
+    if (signature === BUILTIN_QUERIES.currentMonth.signature) {
       return new Date().getMonth();
     }
 
-    if (sigString === BUILTIN_QUERIES.currentDate.signature) {
+    if (signature === BUILTIN_QUERIES.currentDate.signature) {
       return new Date().getDate();
     }
 
-    if (sigString === BUILTIN_QUERIES.currentDayOfWeek.signature) {
+    if (signature === BUILTIN_QUERIES.currentDayOfWeek.signature) {
       return new Date().getDay();
     }
 
-    if (sigString === BUILTIN_QUERIES.currentHour.signature) {
+    if (signature === BUILTIN_QUERIES.currentHour.signature) {
       return new Date().getHours();
     }
 
-    if (sigString === BUILTIN_QUERIES.currentMinute.signature) {
+    if (signature === BUILTIN_QUERIES.currentMinute.signature) {
       return new Date().getMinutes();
     }
 
-    if (sigString === BUILTIN_QUERIES.currentSecond.signature) {
+    if (signature === BUILTIN_QUERIES.currentSecond.signature) {
       return new Date().getSeconds();
     }
 
-    if (sigString === BUILTIN_QUERIES.keyPressed.signature) {
+    if (signature === BUILTIN_QUERIES.keyPressed.signature) {
       const key = this.evalExpr(args[0]);
       if (typeof key !== "string") {
         throw new Error(
@@ -592,13 +592,13 @@ class ProgramImpl implements Program {
       return this.env.isKeyPressed(key);
     }
 
-    const userQueryDef = this.userQueryDefs.get(sigString);
+    const userQueryDef = this.userQueryDefs.get(signature);
     if (userQueryDef === undefined) {
       throw new Error(
         "Attempted to evaluate " +
           stringifyExpression(expr) +
           " but could not find a query with signature `" +
-          sigString +
+          signature +
           "`"
       );
     }
@@ -620,7 +620,7 @@ class ProgramImpl implements Program {
         if (returnVal === VOID_RETURN_SENTINEL) {
           throw new Error(
             "Attempted to evaluate the query `" +
-              getUntypedFunctionSignatureString(def.signature) +
+              getFunctionDefSignature(def.signature) +
               "` with args (" +
               argVals.map((v) => JSON.stringify(v)).join(", ") +
               ") but a void `return` statement (i.e., one with no return value) was reached."
@@ -631,7 +631,7 @@ class ProgramImpl implements Program {
     }
     throw new Error(
       "Attempted to evaluate the query `" +
-        getUntypedFunctionSignatureString(def.signature) +
+        getFunctionDefSignature(def.signature) +
         "` with args (" +
         argVals.map((v) => JSON.stringify(v)).join(", ") +
         ") but no `return` command was executed."
@@ -643,26 +643,25 @@ class ProgramImpl implements Program {
   executeCommandAndGetReturnValue(
     command: ast.Command
   ): null | typeof VOID_RETURN_SENTINEL | NingVal {
-    const commandSignatureString =
-      getUntypedCommandApplicationSignatureString(command);
+    const signature = getCommandSignature(command);
     const [args, squares, blockCommands] =
       getCommandApplicationArgsAndSquaresAndBlockCommands(command);
 
-    if (commandSignatureString === BUILTIN_COMMANDS.if_.signature) {
+    if (signature === BUILTIN_COMMANDS.if_.signature) {
       if (this.evalExpr(args[0])) {
         return this.executeBlockCommandAndGetReturnValue(blockCommands[0]);
       }
       return null;
     }
 
-    if (commandSignatureString === BUILTIN_COMMANDS.ifElse.signature) {
+    if (signature === BUILTIN_COMMANDS.ifElse.signature) {
       if (this.evalExpr(args[0])) {
         return this.executeBlockCommandAndGetReturnValue(blockCommands[0]);
       }
       return this.executeBlockCommandAndGetReturnValue(blockCommands[1]);
     }
 
-    if (commandSignatureString === BUILTIN_COMMANDS.while_.signature) {
+    if (signature === BUILTIN_COMMANDS.while_.signature) {
       while (this.evalExpr(args[0])) {
         const returnVal = this.executeBlockCommandAndGetReturnValue(
           blockCommands[0]
@@ -674,7 +673,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (commandSignatureString === BUILTIN_COMMANDS.repeat.signature) {
+    if (signature === BUILTIN_COMMANDS.repeat.signature) {
       const rawTimes = this.evalExpr(args[0]);
       if (!Number.isFinite(rawTimes)) {
         throw new Error("Repeat iteration count was not a finite number.");
@@ -692,17 +691,17 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (commandSignatureString === BUILTIN_COMMANDS.valReturn.signature) {
+    if (signature === BUILTIN_COMMANDS.valReturn.signature) {
       return this.evalExpr(args[0]);
     }
 
-    if (commandSignatureString === BUILTIN_COMMANDS.voidReturn.signature) {
+    if (signature === BUILTIN_COMMANDS.voidReturn.signature) {
       return VOID_RETURN_SENTINEL;
     }
 
     if (
-      commandSignatureString === BUILTIN_COMMANDS.let_.signature ||
-      commandSignatureString === BUILTIN_COMMANDS.var_.signature
+      signature === BUILTIN_COMMANDS.let_.signature ||
+      signature === BUILTIN_COMMANDS.var_.signature
     ) {
       const varName = squares[0].identifiers
         .map((ident) => ident.name)
@@ -712,7 +711,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (commandSignatureString === BUILTIN_COMMANDS.assign.signature) {
+    if (signature === BUILTIN_COMMANDS.assign.signature) {
       const varName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -721,7 +720,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (commandSignatureString === BUILTIN_COMMANDS.increase.signature) {
+    if (signature === BUILTIN_COMMANDS.increase.signature) {
       const varName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -730,9 +729,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (
-      commandSignatureString === BUILTIN_COMMANDS.numberListCreate.signature
-    ) {
+    if (signature === BUILTIN_COMMANDS.numberListCreate.signature) {
       const listName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -740,9 +737,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (
-      commandSignatureString === BUILTIN_COMMANDS.stringListCreate.signature
-    ) {
+    if (signature === BUILTIN_COMMANDS.stringListCreate.signature) {
       const listName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -750,9 +745,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (
-      commandSignatureString === BUILTIN_COMMANDS.booleanListCreate.signature
-    ) {
+    if (signature === BUILTIN_COMMANDS.booleanListCreate.signature) {
       const listName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -760,7 +753,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (commandSignatureString === BUILTIN_COMMANDS.listReplaceItem.signature) {
+    if (signature === BUILTIN_COMMANDS.listReplaceItem.signature) {
       const listName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -770,7 +763,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (commandSignatureString === BUILTIN_COMMANDS.listInsert.signature) {
+    if (signature === BUILTIN_COMMANDS.listInsert.signature) {
       const listName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -780,7 +773,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (commandSignatureString === BUILTIN_COMMANDS.listDeleteItem.signature) {
+    if (signature === BUILTIN_COMMANDS.listDeleteItem.signature) {
       const listName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -789,7 +782,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (commandSignatureString === BUILTIN_COMMANDS.listDeleteAll.signature) {
+    if (signature === BUILTIN_COMMANDS.listDeleteAll.signature) {
       const listName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -797,7 +790,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (commandSignatureString === BUILTIN_COMMANDS.listAdd.signature) {
+    if (signature === BUILTIN_COMMANDS.listAdd.signature) {
       const listName = squares[0].identifiers
         .map((ident) => ident.name)
         .join(" ");
@@ -806,7 +799,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (commandSignatureString === BUILTIN_COMMANDS.resizeCanvas.signature) {
+    if (signature === BUILTIN_COMMANDS.resizeCanvas.signature) {
       const width = Math.floor(this.evalExpr(args[0]) as any);
       const height = Math.floor(this.evalExpr(args[1]) as any);
 
@@ -818,7 +811,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (commandSignatureString === BUILTIN_COMMANDS.drawImage.signature) {
+    if (signature === BUILTIN_COMMANDS.drawImage.signature) {
       const imageName = getStringValueIfExprIsString(args[0]);
       if (imageName === null) {
         throw new Error("Invalid image name: " + stringifyExpression(args[0]));
@@ -845,7 +838,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    if (commandSignatureString === BUILTIN_COMMANDS.clearRect.signature) {
+    if (signature === BUILTIN_COMMANDS.clearRect.signature) {
       const imageName = getStringValueIfExprIsString(args[0]);
       if (imageName === null) {
         throw new Error("Invalid image name: " + stringifyExpression(args[0]));
@@ -872,8 +865,7 @@ class ProgramImpl implements Program {
       return null;
     }
 
-    const sigString = getUntypedCommandApplicationSignatureString(command);
-    const userCommandDef = this.userCommandDefs.get(sigString);
+    const userCommandDef = this.userCommandDefs.get(signature);
     if (userCommandDef !== undefined) {
       const argVals = args.map((arg) => this.evalExpr(arg));
       this.evalUserCommandApplicationUsingArgVals(userCommandDef, argVals);
@@ -884,7 +876,7 @@ class ProgramImpl implements Program {
       "Attempted to evaluate " +
         stringifyCommand(command) +
         " but could not find a command with signature `" +
-        sigString +
+        signature +
         "`"
     );
   }
@@ -1163,8 +1155,8 @@ function getUserQueryDefs(defs: ast.Def[]): Map<string, ast.QueryDef> {
 
   for (const def of defs) {
     if (def.kind === "query_def") {
-      const sigString = getUntypedFunctionSignatureString(def.signature);
-      out.set(sigString, def);
+      const signature = getFunctionDefSignature(def.signature);
+      out.set(signature, def);
     }
   }
 
@@ -1176,8 +1168,8 @@ function getUserCommandDefs(defs: ast.Def[]): Map<string, ast.CommandDef> {
 
   for (const def of defs) {
     if (def.kind === "command_def") {
-      const sigString = getUntypedFunctionSignatureString(def.signature);
-      out.set(sigString, def);
+      const signature = getFunctionDefSignature(def.signature);
+      out.set(signature, def);
     }
   }
 
