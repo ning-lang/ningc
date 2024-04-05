@@ -537,7 +537,6 @@ class Typechecker {
   checkSquareAndGetType(
     square: ast.SquareBracketedIdentifierSequence
   ): SquareType | null {
-    // TODO
     const name = stringifyIdentifierSequence(square.identifiers);
 
     for (let i = this.stack.length - 1; i >= 0; --i) {
