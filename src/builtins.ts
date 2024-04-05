@@ -7,8 +7,8 @@ export const UNTYPED_BLOCK_SENTINEL = "{}";
 
 export const SPECIAL_TYPE_SETS = Symbol("SPECIAL_TYPE_SETS");
 
-export type TypeSet = ast.NingType[];
-export type SquareTypeSet = SquareType[];
+export type TypeSet = readonly ast.NingType[];
+export type SquareTypeSet = readonly SquareType[];
 
 const ANY_LIST = [
   { isList: true, typeOrElementType: "boolean" },

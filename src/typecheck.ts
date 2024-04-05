@@ -6,7 +6,12 @@ import {
 } from "./funcSignature";
 import { TysonTypeDict } from "./types/tysonTypeDict";
 import type * as ast from "./types/tysonTypeDict";
-import { BUILTIN_COMMANDS, SquareTypeSet, TypeSet } from "./builtins";
+import {
+  BUILTIN_COMMANDS,
+  SPECIAL_TYPE_SETS,
+  SquareTypeSet,
+  TypeSet,
+} from "./builtins";
 
 const MALTYPED = Symbol("UNKNOWN_TYPE");
 const VOID_RETURN_TYPE: unique symbol = Symbol("VOID_RETURN_TYPE");
@@ -727,6 +732,12 @@ class Typechecker {
       return;
     }
 
+    if (expectedInputTypeSets === SPECIAL_TYPE_SETS) {
+      throw new Error(
+        "Unreachable: We should have handled special cases and returned early before reaching this point. If you see this error, it probably means one or more special (type set) cases was not properly handled."
+      );
+    }
+
     const [expectedArgTypeSets, expectedSquareTypeSets] = expectedInputTypeSets;
 
     for (let i = 0; i < argTypes.length; ++i) {
@@ -774,8 +785,31 @@ class Typechecker {
 
   getExpectedCommandInputTypeSets(
     signature: string
-  ): null | [TypeSet[], SquareTypeSet[]] {
-    // TODO
+  ):
+    | null
+    | readonly [readonly TypeSet[], readonly SquareTypeSet[]]
+    | typeof SPECIAL_TYPE_SETS {
+    for (const builtinDef of Object.values(BUILTIN_COMMANDS)) {
+      if (builtinDef.signature === signature) {
+        const typeSets =
+          "argTypeSets" in builtinDef ? builtinDef.argTypeSets : [];
+        const squareTypeSets =
+          "squareTypeSets" in builtinDef ? builtinDef.squareTypeSets : [];
+        if (
+          typeSets === SPECIAL_TYPE_SETS ||
+          squareTypeSets === SPECIAL_TYPE_SETS
+        ) {
+          return SPECIAL_TYPE_SETS;
+        }
+        return [typeSets, squareTypeSets];
+      }
+    }
+
+    const userCommandDef = this.userCommandDefs.get(signature);
+    if (userCommandDef !== undefined) {
+      return [getFunctionDefArgTypeSet(userCommandDef.signature), []];
+    }
+
     return null;
   }
 
@@ -973,6 +1007,18 @@ function getStackEntryWithUncheckedSignatureParams(
 
 function areSquareTypesEqual(a: SquareType, b: SquareType): boolean {
   return a.isList === b.isList && a.typeOrElementType === b.typeOrElementType;
+}
+
+function getFunctionDefArgTypeSet(
+  labelAndParams: ast.FuncSignaturePart[]
+): TypeSet[] {
+  const argTypeSets: TypeSet[] = [];
+  for (const part of labelAndParams) {
+    if (part.kind === "func_param_def") {
+      argTypeSets.push([part.paramType.value]);
+    }
+  }
+  return argTypeSets;
 }
 
 // Difference between commands and queries:
