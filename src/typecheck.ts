@@ -953,13 +953,47 @@ class Typechecker {
 
   checkListAddCommandInputTypes(
     command: ast.Command,
-    inputs: [ast.Expression[], ast.SquareBracketedIdentifierSequence[]],
-    inputTypes: [
+    [args, squares]: [
+      ast.Expression[],
+      ast.SquareBracketedIdentifierSequence[]
+    ],
+    [argTypes, squareTypes]: [
       (ast.NingType | typeof MALTYPED)[],
       (SquareType | typeof MALTYPED)[]
     ]
   ): void {
-    // TODO
+    const insertionTargetType = squareTypes[0];
+    if (insertionTargetType === MALTYPED) {
+      return;
+    }
+
+    if (!insertionTargetType.isList) {
+      this.errors.push({
+        kind: TypeErrorKind.SquareTypeMismatch,
+        command,
+        squareIndex: 0,
+        square: squares[0],
+        expectedTypes: ANY_LIST,
+        actualType: insertionTargetType,
+      });
+      return;
+    }
+
+    const insertionValueType = argTypes[0];
+    if (insertionValueType === MALTYPED) {
+      return;
+    }
+
+    if (insertionTargetType.typeOrElementType !== insertionValueType) {
+      this.errors.push({
+        kind: TypeErrorKind.ArgTypeMismatch,
+        command,
+        argIndex: 0,
+        arg: args[0],
+        expectedTypes: [insertionTargetType.typeOrElementType],
+        actualType: insertionValueType,
+      });
+    }
   }
 
   getExpectedCommandInputTypeSets(
