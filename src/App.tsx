@@ -314,6 +314,16 @@ function highlight(code: string): React.ReactElement[] {
   const parseResult = parse(code);
   const noErrors =
     parseResult.succeeded && typecheck(parseResult.value).length === 0;
+
+  if (!parseResult.succeeded) {
+    console.log({ parseError: parseResult.error });
+  } else {
+    const typeErrors = typecheck(parseResult.value);
+    if (typeErrors.length > 0) {
+      console.log({ typeErrors });
+    }
+  }
+
   return [
     <span
       className="CodeInput__HighlightSpan"
