@@ -267,7 +267,7 @@ class ProgramImpl implements Program {
       return getDefaultValueOfKind(list.kind);
     }
 
-    if (signature === BUILTIN_QUERIES.listOrIndexOf.signature) {
+    if (signature === BUILTIN_QUERIES.listIndexOf.signature) {
       const item = this.evalExpr(args[0]);
       const listName = squares[0].identifiers.map((i) => i.name).join(" ");
       const list = this.getMutableList(listName);

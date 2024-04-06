@@ -139,7 +139,7 @@ export const BUILTIN_QUERIES = {
     argTypeSets: [["number"]],
     squareTypeSets: [ANY_LIST],
   },
-  listOrIndexOf: {
+  listIndexOf: {
     signature: "index of () in []",
     argTypeSets: SPECIAL_TYPE_SETS,
     squareTypeSets: SPECIAL_TYPE_SETS,

@@ -1,7 +1,8 @@
-import { getCommandInputs } from "./funcInputs";
+import { getCommandInputs, getQueryInputs } from "./funcInputs";
 import {
   getCommandSignature,
   getFunctionDefSignature,
+  getQuerySignature,
   stringifyIdentifierSequence,
 } from "./funcSignature";
 import { TysonTypeDict } from "./types/tysonTypeDict";
@@ -1088,6 +1089,44 @@ class Typechecker {
   checkExpressionAndGetType(
     expr: ast.Expression
   ): ast.NingType | typeof MALTYPED {
+    if (expr.kind === "string_literal") {
+      return "string";
+    }
+
+    const signature = getQuerySignature(expr);
+
+    const [args, squares] = getQueryInputs(expr);
+
+    const argTypes: (ast.NingType | typeof MALTYPED)[] = args.map((arg) =>
+      this.checkExpressionAndGetType(arg)
+    );
+
+    const squareTypes: (SquareType | typeof MALTYPED)[] = squares.map(
+      (square) => this.checkSquareAndGetType(square)
+    );
+
+    return this.checkQuerySignatureAndInputTypesAndGetReturnType(
+      expr,
+      signature,
+      [args, squares],
+      [argTypes, squareTypes]
+    );
+  }
+
+  checkQuerySignatureAndInputTypesAndGetReturnType(
+    expr: ast.CompoundExpression,
+    signature: string,
+    inputs: [ast.Expression[], ast.SquareBracketedIdentifierSequence[]],
+    inputTypes: [
+      (ast.NingType | typeof MALTYPED)[],
+      (SquareType | typeof MALTYPED)[]
+    ]
+  ): ast.NingType | typeof MALTYPED {
+    // TODO: Match signature against argument-type-dependent return type cases.
+    // Cases:
+    // - listItemOf
+    // - ternary
+    //
     // TODO
     return MALTYPED;
   }
