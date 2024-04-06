@@ -1251,8 +1251,36 @@ class Typechecker {
       (SquareType | typeof MALTYPED)[]
     ]
   ): ast.NingType | typeof MALTYPED {
-    // TODO
-    return MALTYPED;
+    const indexType = argTypes[0];
+    if (indexType !== MALTYPED && indexType !== "number") {
+      this.errors.push({
+        kind: TypeErrorKind.ArgTypeMismatch,
+        funcApplication: expr,
+        argIndex: 0,
+        arg: args[0],
+        expectedTypes: ["number"],
+        actualType: indexType,
+      });
+    }
+
+    const indexTargetType = squareTypes[0];
+    if (indexTargetType === MALTYPED) {
+      return MALTYPED;
+    }
+
+    if (!indexTargetType.isList) {
+      this.errors.push({
+        kind: TypeErrorKind.SquareTypeMismatch,
+        funcApplication: expr,
+        squareIndex: 0,
+        square: squares[0],
+        expectedTypes: ANY_LIST,
+        actualType: indexTargetType,
+      });
+      return MALTYPED;
+    }
+
+    return indexTargetType.typeOrElementType;
   }
 
   checkListIndexOfQueryReturnType(
