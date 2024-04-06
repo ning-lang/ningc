@@ -7,6 +7,7 @@ import {
 import { TysonTypeDict } from "./types/tysonTypeDict";
 import type * as ast from "./types/tysonTypeDict";
 import {
+  ANY_ATOM,
   BUILTIN_COMMANDS,
   SPECIAL_TYPE_SETS,
   SquareTypeSet,
@@ -792,13 +793,47 @@ class Typechecker {
 
   checkAssignCommandInputTypes(
     command: ast.Command,
-    inputs: [ast.Expression[], ast.SquareBracketedIdentifierSequence[]],
-    inputTypes: [
+    [args, squares]: [
+      ast.Expression[],
+      ast.SquareBracketedIdentifierSequence[]
+    ],
+    [argTypes, squareTypes]: [
       (ast.NingType | typeof MALTYPED)[],
       (SquareType | typeof MALTYPED)[]
     ]
   ): void {
-    // TODO
+    const squareType = squareTypes[0];
+    if (squareType === MALTYPED) {
+      return;
+    }
+
+    if (squareType.isList) {
+      this.errors.push({
+        kind: TypeErrorKind.SquareTypeMismatch,
+        command,
+        squareIndex: 0,
+        square: squares[0],
+        expectedTypes: ANY_ATOM,
+        actualType: squareType,
+      });
+      return;
+    }
+
+    const argType = argTypes[0];
+    if (argType === MALTYPED) {
+      return;
+    }
+
+    if (squareType.typeOrElementType !== argType) {
+      this.errors.push({
+        kind: TypeErrorKind.ArgTypeMismatch,
+        command,
+        argIndex: 0,
+        arg: args[0],
+        expectedTypes: [squareType.typeOrElementType],
+        actualType: argType,
+      });
+    }
   }
 
   checkListReplaceCommandInputTypes(

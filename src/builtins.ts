@@ -10,10 +10,16 @@ export const SPECIAL_TYPE_SETS = Symbol("SPECIAL_TYPE_SETS");
 export type TypeSet = readonly ast.NingType[];
 export type SquareTypeSet = readonly SquareType[];
 
-const ANY_LIST = [
+export const ANY_LIST = [
   { isList: true, typeOrElementType: "boolean" },
   { isList: true, typeOrElementType: "number" },
   { isList: true, typeOrElementType: "string" },
+] as const;
+
+export const ANY_ATOM = [
+  { isList: false, typeOrElementType: "boolean" },
+  { isList: false, typeOrElementType: "number" },
+  { isList: false, typeOrElementType: "string" },
 ] as const;
 
 export const BUILTIN_COMMANDS = {
