@@ -16,6 +16,7 @@ import {
   SquareTypeSet,
   TypeSet,
 } from "./builtins";
+import { getNingNumberLiteralRegex } from "./literals";
 
 const MALTYPED = Symbol("UNKNOWN_TYPE");
 const VOID_RETURN_TYPE: unique symbol = Symbol("VOID_RETURN_TYPE");
@@ -1163,6 +1164,15 @@ class Typechecker {
         inputs,
         inputTypes
       );
+    }
+
+    const varInfo = this.lookupVar(signature);
+    if (varInfo !== null) {
+      return varInfo.valType;
+    }
+
+    if (getNingNumberLiteralRegex().test(signature)) {
+      return "number";
     }
 
     const [args, squares] = inputs;

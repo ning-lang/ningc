@@ -263,6 +263,8 @@ export const BUILTIN_QUERIES = {
   opNaN: { signature: "NaN", outputType: "number" },
   opInfinity: { signature: "Infinity", outputType: "number" },
   opNegInfinity: { signature: "-Infinity", outputType: "number" },
+  opTrue: { signature: "true", outputType: "boolean" },
+  opFalse: { signature: "false", outputType: "boolean" },
 
   opFloor: {
     signature: "floor ()",
