@@ -1054,6 +1054,8 @@ class Typechecker {
       return;
     }
 
+    // TODO: Check for clashes with builtins and user defined functions.
+
     const entry = this.stack[this.stack.length - 1];
     entry.variables.set(name, { valType: type_, mutable, def: command });
   }
@@ -1082,6 +1084,8 @@ class Typechecker {
       });
       return;
     }
+
+    // TODO: Check for clashes with builtins and user defined functions.
 
     const entry = this.stack[this.stack.length - 1];
     entry.lists.set(name, { elementType, def: command });
