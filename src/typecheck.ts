@@ -803,36 +803,36 @@ class Typechecker {
       (SquareType | typeof MALTYPED)[]
     ]
   ): void {
-    const leftType = squareTypes[0];
-    if (leftType === MALTYPED) {
+    const assignmentTargetType = squareTypes[0];
+    if (assignmentTargetType === MALTYPED) {
       return;
     }
 
-    if (leftType.isList) {
+    if (assignmentTargetType.isList) {
       this.errors.push({
         kind: TypeErrorKind.SquareTypeMismatch,
         command,
         squareIndex: 0,
         square: squares[0],
         expectedTypes: ANY_ATOM,
-        actualType: leftType,
+        actualType: assignmentTargetType,
       });
       return;
     }
 
-    const rightType = argTypes[0];
-    if (rightType === MALTYPED) {
+    const assignmentValueType = argTypes[0];
+    if (assignmentValueType === MALTYPED) {
       return;
     }
 
-    if (leftType.typeOrElementType !== rightType) {
+    if (assignmentTargetType.typeOrElementType !== assignmentValueType) {
       this.errors.push({
         kind: TypeErrorKind.ArgTypeMismatch,
         command,
         argIndex: 0,
         arg: args[0],
-        expectedTypes: [leftType.typeOrElementType],
-        actualType: rightType,
+        expectedTypes: [assignmentTargetType.typeOrElementType],
+        actualType: assignmentValueType,
       });
     }
   }
@@ -860,36 +860,36 @@ class Typechecker {
       });
     }
 
-    const leftType = squareTypes[0];
-    if (leftType === MALTYPED) {
+    const replaceeListType = squareTypes[0];
+    if (replaceeListType === MALTYPED) {
       return;
     }
 
-    if (!leftType.isList) {
+    if (!replaceeListType.isList) {
       this.errors.push({
         kind: TypeErrorKind.SquareTypeMismatch,
         command,
         squareIndex: 0,
         square: squares[0],
         expectedTypes: ANY_LIST,
-        actualType: leftType,
+        actualType: replaceeListType,
       });
       return;
     }
 
-    const rightType = argTypes[1];
-    if (rightType === MALTYPED) {
+    const replacementValueType = argTypes[1];
+    if (replacementValueType === MALTYPED) {
       return;
     }
 
-    if (leftType.typeOrElementType !== rightType) {
+    if (replaceeListType.typeOrElementType !== replacementValueType) {
       this.errors.push({
         kind: TypeErrorKind.ArgTypeMismatch,
         command,
         argIndex: 1,
         arg: args[1],
-        expectedTypes: [leftType.typeOrElementType],
-        actualType: rightType,
+        expectedTypes: [replaceeListType.typeOrElementType],
+        actualType: replacementValueType,
       });
     }
   }
