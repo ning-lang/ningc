@@ -1146,19 +1146,12 @@ class Typechecker {
       );
       return "boolean";
     }
-    if (signature === BUILTIN_QUERIES.opEq.signature) {
-      return this.checkOpEqQueryInputTypesAndGetOutputType(
-        expr,
-        inputs,
-        inputTypes
-      );
-    }
-    if (signature === BUILTIN_QUERIES.opNe.signature) {
-      return this.checkOpNeQueryInputTypesAndGetOutputType(
-        expr,
-        inputs,
-        inputTypes
-      );
+    if (
+      signature === BUILTIN_QUERIES.opEq.signature ||
+      signature === BUILTIN_QUERIES.opNe.signature
+    ) {
+      this.checkOpEqQueryOrOpNeQueryInputTypes(expr, inputs, inputTypes);
+      return "boolean";
     }
     if (signature === BUILTIN_QUERIES.ternary.signature) {
       return this.checkTernaryQueryInputTypesAndGetOutputType(
@@ -1354,34 +1347,37 @@ class Typechecker {
     }
   }
 
-  checkOpEqQueryInputTypesAndGetOutputType(
+  checkOpEqQueryOrOpNeQueryInputTypes(
     expr: ast.CompoundExpression,
-    [args, squares]: [
+    [args, _squares]: [
       ast.Expression[],
       ast.SquareBracketedIdentifierSequence[]
     ],
-    [argTypes, squareTypes]: [
+    [argTypes, _squareTypes]: [
       (ast.NingType | typeof MALTYPED)[],
       (SquareType | typeof MALTYPED)[]
     ]
-  ): ast.NingType | typeof MALTYPED {
-    // TODO
-    return MALTYPED;
-  }
+  ): void {
+    const leftType = argTypes[0];
+    if (leftType === MALTYPED) {
+      return;
+    }
 
-  checkOpNeQueryInputTypesAndGetOutputType(
-    expr: ast.CompoundExpression,
-    [args, squares]: [
-      ast.Expression[],
-      ast.SquareBracketedIdentifierSequence[]
-    ],
-    [argTypes, squareTypes]: [
-      (ast.NingType | typeof MALTYPED)[],
-      (SquareType | typeof MALTYPED)[]
-    ]
-  ): ast.NingType | typeof MALTYPED {
-    // TODO
-    return MALTYPED;
+    const rightType = argTypes[1];
+    if (rightType === MALTYPED) {
+      return;
+    }
+
+    if (leftType !== rightType) {
+      this.errors.push({
+        kind: TypeErrorKind.ArgTypeMismatch,
+        funcApplication: expr,
+        argIndex: 1,
+        arg: args[1],
+        expectedTypes: [leftType],
+        actualType: rightType,
+      });
+    }
   }
 
   checkTernaryQueryInputTypesAndGetOutputType(
