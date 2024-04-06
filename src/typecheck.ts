@@ -1106,7 +1106,7 @@ class Typechecker {
       (square) => this.checkSquareAndGetType(square)
     );
 
-    return this.checkQuerySignatureAndInputTypesAndGetReturnType(
+    return this.checkQuerySignatureAndInputTypesAndGetOutputType(
       expr,
       signature,
       [args, squares],
@@ -1114,7 +1114,7 @@ class Typechecker {
     );
   }
 
-  checkQuerySignatureAndInputTypesAndGetReturnType(
+  checkQuerySignatureAndInputTypesAndGetOutputType(
     expr: ast.CompoundExpression,
     signature: string,
     inputs: [ast.Expression[], ast.SquareBracketedIdentifierSequence[]],
@@ -1124,22 +1124,46 @@ class Typechecker {
     ]
   ): ast.NingType | typeof MALTYPED {
     if (signature === BUILTIN_QUERIES.listItemOf.signature) {
-      return this.checkListItemOfQueryReturnType(expr, inputs, inputTypes);
+      return this.checkListItemOfQueryInputTypesAndGetOutputType(
+        expr,
+        inputs,
+        inputTypes
+      );
     }
     if (signature === BUILTIN_QUERIES.listIndexOf.signature) {
-      return this.checkListIndexOfQueryReturnType(expr, inputs, inputTypes);
+      return this.checkListIndexOfQueryInputTypesAndGetOutputType(
+        expr,
+        inputs,
+        inputTypes
+      );
     }
     if (signature === BUILTIN_QUERIES.listContains.signature) {
-      return this.checkListContainsQueryReturnType(expr, inputs, inputTypes);
+      return this.checkListContainsQueryInputTypesAndGetOutputType(
+        expr,
+        inputs,
+        inputTypes
+      );
     }
     if (signature === BUILTIN_QUERIES.opEq.signature) {
-      return this.checkOpEqQueryReturnType(expr, inputs, inputTypes);
+      return this.checkOpEqQueryInputTypesAndGetOutputType(
+        expr,
+        inputs,
+        inputTypes
+      );
     }
     if (signature === BUILTIN_QUERIES.opNe.signature) {
-      return this.checkOpNeQueryReturnType(expr, inputs, inputTypes);
+      return this.checkOpNeQueryInputTypesAndGetOutputType(
+        expr,
+        inputs,
+        inputTypes
+      );
     }
     if (signature === BUILTIN_QUERIES.ternary.signature) {
-      return this.checkTernaryQueryReturnType(expr, inputs, inputTypes);
+      return this.checkTernaryQueryInputTypesAndGetOutputType(
+        expr,
+        inputs,
+        inputTypes
+      );
     }
 
     const [args, squares] = inputs;
@@ -1240,7 +1264,7 @@ class Typechecker {
     return null;
   }
 
-  checkListItemOfQueryReturnType(
+  checkListItemOfQueryInputTypesAndGetOutputType(
     expr: ast.CompoundExpression,
     [args, squares]: [
       ast.Expression[],
@@ -1283,7 +1307,54 @@ class Typechecker {
     return indexTargetType.typeOrElementType;
   }
 
-  checkListIndexOfQueryReturnType(
+  checkListIndexOfQueryInputTypesAndGetOutputType(
+    expr: ast.CompoundExpression,
+    [args, squares]: [
+      ast.Expression[],
+      ast.SquareBracketedIdentifierSequence[]
+    ],
+    [argTypes, squareTypes]: [
+      (ast.NingType | typeof MALTYPED)[],
+      (SquareType | typeof MALTYPED)[]
+    ]
+  ): "number" {
+    const haystackType = squareTypes[0];
+    if (haystackType === MALTYPED) {
+      return "number";
+    }
+
+    if (!haystackType.isList) {
+      this.errors.push({
+        kind: TypeErrorKind.SquareTypeMismatch,
+        funcApplication: expr,
+        squareIndex: 0,
+        square: squares[0],
+        expectedTypes: ANY_LIST,
+        actualType: haystackType,
+      });
+      return "number";
+    }
+
+    const needleType = argTypes[0];
+    if (needleType === MALTYPED) {
+      return "number";
+    }
+
+    if (haystackType.typeOrElementType !== needleType) {
+      this.errors.push({
+        kind: TypeErrorKind.ArgTypeMismatch,
+        funcApplication: expr,
+        argIndex: 0,
+        arg: args[0],
+        expectedTypes: [haystackType.typeOrElementType],
+        actualType: needleType,
+      });
+    }
+
+    return "number";
+  }
+
+  checkListContainsQueryInputTypesAndGetOutputType(
     expr: ast.CompoundExpression,
     [args, squares]: [
       ast.Expression[],
@@ -1298,7 +1369,7 @@ class Typechecker {
     return MALTYPED;
   }
 
-  checkListContainsQueryReturnType(
+  checkOpEqQueryInputTypesAndGetOutputType(
     expr: ast.CompoundExpression,
     [args, squares]: [
       ast.Expression[],
@@ -1313,7 +1384,7 @@ class Typechecker {
     return MALTYPED;
   }
 
-  checkOpEqQueryReturnType(
+  checkOpNeQueryInputTypesAndGetOutputType(
     expr: ast.CompoundExpression,
     [args, squares]: [
       ast.Expression[],
@@ -1328,22 +1399,7 @@ class Typechecker {
     return MALTYPED;
   }
 
-  checkOpNeQueryReturnType(
-    expr: ast.CompoundExpression,
-    [args, squares]: [
-      ast.Expression[],
-      ast.SquareBracketedIdentifierSequence[]
-    ],
-    [argTypes, squareTypes]: [
-      (ast.NingType | typeof MALTYPED)[],
-      (SquareType | typeof MALTYPED)[]
-    ]
-  ): ast.NingType | typeof MALTYPED {
-    // TODO
-    return MALTYPED;
-  }
-
-  checkTernaryQueryReturnType(
+  checkTernaryQueryInputTypesAndGetOutputType(
     expr: ast.CompoundExpression,
     [args, squares]: [
       ast.Expression[],
