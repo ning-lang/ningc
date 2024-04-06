@@ -8,6 +8,7 @@ import { TysonTypeDict } from "./types/tysonTypeDict";
 import type * as ast from "./types/tysonTypeDict";
 import {
   ANY_ATOM,
+  ANY_LIST,
   BUILTIN_COMMANDS,
   SPECIAL_TYPE_SETS,
   SquareTypeSet,
@@ -802,49 +803,95 @@ class Typechecker {
       (SquareType | typeof MALTYPED)[]
     ]
   ): void {
-    const squareType = squareTypes[0];
-    if (squareType === MALTYPED) {
+    const leftType = squareTypes[0];
+    if (leftType === MALTYPED) {
       return;
     }
 
-    if (squareType.isList) {
+    if (leftType.isList) {
       this.errors.push({
         kind: TypeErrorKind.SquareTypeMismatch,
         command,
         squareIndex: 0,
         square: squares[0],
         expectedTypes: ANY_ATOM,
-        actualType: squareType,
+        actualType: leftType,
       });
       return;
     }
 
-    const argType = argTypes[0];
-    if (argType === MALTYPED) {
+    const rightType = argTypes[0];
+    if (rightType === MALTYPED) {
       return;
     }
 
-    if (squareType.typeOrElementType !== argType) {
+    if (leftType.typeOrElementType !== rightType) {
       this.errors.push({
         kind: TypeErrorKind.ArgTypeMismatch,
         command,
         argIndex: 0,
         arg: args[0],
-        expectedTypes: [squareType.typeOrElementType],
-        actualType: argType,
+        expectedTypes: [leftType.typeOrElementType],
+        actualType: rightType,
       });
     }
   }
 
   checkListReplaceCommandInputTypes(
     command: ast.Command,
-    inputs: [ast.Expression[], ast.SquareBracketedIdentifierSequence[]],
-    inputTypes: [
+    [args, squares]: [
+      ast.Expression[],
+      ast.SquareBracketedIdentifierSequence[]
+    ],
+    [argTypes, squareTypes]: [
       (ast.NingType | typeof MALTYPED)[],
       (SquareType | typeof MALTYPED)[]
     ]
   ): void {
-    // TODO
+    const indexType = argTypes[0];
+    if (indexType !== MALTYPED && indexType !== "number") {
+      this.errors.push({
+        kind: TypeErrorKind.ArgTypeMismatch,
+        command,
+        argIndex: 0,
+        arg: args[0],
+        expectedTypes: ["number"],
+        actualType: indexType,
+      });
+    }
+
+    const leftType = squareTypes[0];
+    if (leftType === MALTYPED) {
+      return;
+    }
+
+    if (!leftType.isList) {
+      this.errors.push({
+        kind: TypeErrorKind.SquareTypeMismatch,
+        command,
+        squareIndex: 0,
+        square: squares[0],
+        expectedTypes: ANY_LIST,
+        actualType: leftType,
+      });
+      return;
+    }
+
+    const rightType = argTypes[1];
+    if (rightType === MALTYPED) {
+      return;
+    }
+
+    if (leftType.typeOrElementType !== rightType) {
+      this.errors.push({
+        kind: TypeErrorKind.ArgTypeMismatch,
+        command,
+        argIndex: 1,
+        arg: args[1],
+        expectedTypes: [leftType.typeOrElementType],
+        actualType: rightType,
+      });
+    }
   }
 
   checkListInsertCommandInputTypes(
