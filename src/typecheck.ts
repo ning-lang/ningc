@@ -11,7 +11,8 @@ import {
   ANY_ATOM,
   ANY_LIST,
   BUILTIN_COMMANDS,
-  SPECIAL_TYPE_SETS,
+  BUILTIN_QUERIES,
+  SPECIAL_TYPE_RULES,
   SquareTypeSet,
   TypeSet,
 } from "./builtins";
@@ -33,7 +34,7 @@ export type NingTypeError =
   | ReturnTypeMismatchError
   | ArgTypeMismatchError
   | SquareTypeMismatchError
-  | CommandNotFoundError;
+  | NameNotFoundError;
 
 export enum TypeErrorKind {
   GlobalDefNotFirst = "global_def_not_first",
@@ -49,7 +50,7 @@ export enum TypeErrorKind {
   ReturnTypeMismatch = "return_type_mismatch",
   ArgTypeMismatch = "arg_type_mismatch",
   SquareTypeMismatch = "square_type_mismatch",
-  CommandNotFound = "command_not_found",
+  NameNotFound = "name_not_found",
 }
 
 export interface GlobalDefNotFirstError {
@@ -112,7 +113,7 @@ export interface ReturnTypeMismatchError {
 
 export interface ArgTypeMismatchError {
   kind: TypeErrorKind.ArgTypeMismatch;
-  command: ast.Command;
+  funcApplication: ast.Command | ast.CompoundExpression;
   argIndex: number;
   arg: ast.Expression;
   expectedTypes: TypeSet;
@@ -121,16 +122,16 @@ export interface ArgTypeMismatchError {
 
 export interface SquareTypeMismatchError {
   kind: TypeErrorKind.SquareTypeMismatch;
-  command: ast.Command;
+  funcApplication: ast.Command | ast.CompoundExpression;
   squareIndex: number;
   square: ast.SquareBracketedIdentifierSequence;
   expectedTypes: SquareTypeSet;
   actualType: SquareType;
 }
 
-export interface CommandNotFoundError {
-  kind: TypeErrorKind.CommandNotFound;
-  command: ast.Command;
+export interface NameNotFoundError {
+  kind: TypeErrorKind.NameNotFound;
+  funcApplication: ast.Command | ast.CompoundExpression;
 }
 
 export type NameDef =
@@ -742,7 +743,7 @@ class Typechecker {
       return;
     }
 
-    if (expectedInputTypeSets === SPECIAL_TYPE_SETS) {
+    if (expectedInputTypeSets === SPECIAL_TYPE_RULES) {
       throw new Error(
         "Unreachable: We should have handled special cases and returned early before reaching this point. If you see this error, it probably means one or more special (type set) cases was not properly handled."
       );
@@ -760,7 +761,7 @@ class Typechecker {
       if (!expectedSet.includes(argType)) {
         this.errors.push({
           kind: TypeErrorKind.ArgTypeMismatch,
-          command,
+          funcApplication: command,
           argIndex: i,
           arg: args[i],
           expectedTypes: expectedSet,
@@ -783,7 +784,7 @@ class Typechecker {
       ) {
         this.errors.push({
           kind: TypeErrorKind.SquareTypeMismatch,
-          command,
+          funcApplication: command,
           squareIndex: i,
           square: squares[i],
           expectedTypes: expectedSet,
@@ -812,7 +813,7 @@ class Typechecker {
     if (assignmentTargetType.isList) {
       this.errors.push({
         kind: TypeErrorKind.SquareTypeMismatch,
-        command,
+        funcApplication: command,
         squareIndex: 0,
         square: squares[0],
         expectedTypes: ANY_ATOM,
@@ -829,7 +830,7 @@ class Typechecker {
     if (assignmentTargetType.typeOrElementType !== assignmentValueType) {
       this.errors.push({
         kind: TypeErrorKind.ArgTypeMismatch,
-        command,
+        funcApplication: command,
         argIndex: 0,
         arg: args[0],
         expectedTypes: [assignmentTargetType.typeOrElementType],
@@ -853,7 +854,7 @@ class Typechecker {
     if (indexType !== MALTYPED && indexType !== "number") {
       this.errors.push({
         kind: TypeErrorKind.ArgTypeMismatch,
-        command,
+        funcApplication: command,
         argIndex: 0,
         arg: args[0],
         expectedTypes: ["number"],
@@ -869,7 +870,7 @@ class Typechecker {
     if (!replacementTargetType.isList) {
       this.errors.push({
         kind: TypeErrorKind.SquareTypeMismatch,
-        command,
+        funcApplication: command,
         squareIndex: 0,
         square: squares[0],
         expectedTypes: ANY_LIST,
@@ -886,7 +887,7 @@ class Typechecker {
     if (replacementTargetType.typeOrElementType !== replacementValueType) {
       this.errors.push({
         kind: TypeErrorKind.ArgTypeMismatch,
-        command,
+        funcApplication: command,
         argIndex: 1,
         arg: args[1],
         expectedTypes: [replacementTargetType.typeOrElementType],
@@ -910,7 +911,7 @@ class Typechecker {
     if (indexType !== MALTYPED && indexType !== "number") {
       this.errors.push({
         kind: TypeErrorKind.ArgTypeMismatch,
-        command,
+        funcApplication: command,
         argIndex: 1,
         arg: args[1],
         expectedTypes: ["number"],
@@ -926,7 +927,7 @@ class Typechecker {
     if (!insertionTargetType.isList) {
       this.errors.push({
         kind: TypeErrorKind.SquareTypeMismatch,
-        command,
+        funcApplication: command,
         squareIndex: 0,
         square: squares[0],
         expectedTypes: ANY_LIST,
@@ -943,7 +944,7 @@ class Typechecker {
     if (insertionTargetType.typeOrElementType !== insertionValueType) {
       this.errors.push({
         kind: TypeErrorKind.ArgTypeMismatch,
-        command,
+        funcApplication: command,
         argIndex: 0,
         arg: args[0],
         expectedTypes: [insertionTargetType.typeOrElementType],
@@ -971,7 +972,7 @@ class Typechecker {
     if (!insertionTargetType.isList) {
       this.errors.push({
         kind: TypeErrorKind.SquareTypeMismatch,
-        command,
+        funcApplication: command,
         squareIndex: 0,
         square: squares[0],
         expectedTypes: ANY_LIST,
@@ -988,7 +989,7 @@ class Typechecker {
     if (insertionTargetType.typeOrElementType !== insertionValueType) {
       this.errors.push({
         kind: TypeErrorKind.ArgTypeMismatch,
-        command,
+        funcApplication: command,
         argIndex: 0,
         arg: args[0],
         expectedTypes: [insertionTargetType.typeOrElementType],
@@ -1002,7 +1003,7 @@ class Typechecker {
   ):
     | null
     | readonly [readonly TypeSet[], readonly SquareTypeSet[]]
-    | typeof SPECIAL_TYPE_SETS {
+    | typeof SPECIAL_TYPE_RULES {
     for (const builtinDef of Object.values(BUILTIN_COMMANDS)) {
       if (builtinDef.signature === signature) {
         const typeSets =
@@ -1010,10 +1011,10 @@ class Typechecker {
         const squareTypeSets =
           "squareTypeSets" in builtinDef ? builtinDef.squareTypeSets : [];
         if (
-          typeSets === SPECIAL_TYPE_SETS ||
-          squareTypeSets === SPECIAL_TYPE_SETS
+          typeSets === SPECIAL_TYPE_RULES ||
+          squareTypeSets === SPECIAL_TYPE_RULES
         ) {
-          return SPECIAL_TYPE_SETS;
+          return SPECIAL_TYPE_RULES;
         }
         return [typeSets, squareTypeSets];
       }
@@ -1122,11 +1123,209 @@ class Typechecker {
       (SquareType | typeof MALTYPED)[]
     ]
   ): ast.NingType | typeof MALTYPED {
-    // TODO: Match signature against argument-type-dependent return type cases.
-    // Cases:
-    // - listItemOf
-    // - ternary
-    //
+    if (signature === BUILTIN_QUERIES.listItemOf.signature) {
+      return this.checkListItemOfQueryReturnType(expr, inputs, inputTypes);
+    }
+    if (signature === BUILTIN_QUERIES.listIndexOf.signature) {
+      return this.checkListIndexOfQueryReturnType(expr, inputs, inputTypes);
+    }
+    if (signature === BUILTIN_QUERIES.listContains.signature) {
+      return this.checkListContainsQueryReturnType(expr, inputs, inputTypes);
+    }
+    if (signature === BUILTIN_QUERIES.opEq.signature) {
+      return this.checkOpEqQueryReturnType(expr, inputs, inputTypes);
+    }
+    if (signature === BUILTIN_QUERIES.opNe.signature) {
+      return this.checkOpNeQueryReturnType(expr, inputs, inputTypes);
+    }
+    if (signature === BUILTIN_QUERIES.ternary.signature) {
+      return this.checkTernaryQueryReturnType(expr, inputs, inputTypes);
+    }
+
+    const [args, squares] = inputs;
+    const [argTypes, squareTypes] = inputTypes;
+
+    const typeInfo = this.getExpectedQueryInputTypeSetsAndOutputType(signature);
+    if (typeInfo === null) {
+      this.errors.push({
+        kind: TypeErrorKind.NameNotFound,
+        funcApplication: expr,
+      });
+      return MALTYPED;
+    }
+
+    if (typeInfo === SPECIAL_TYPE_RULES) {
+      throw new Error(
+        "Unreachable: We should have handled special cases and returned early before reaching this point. If you see this error, it probably means one or more special (type set) cases was not properly handled."
+      );
+    }
+
+    const [expectedArgTypeSets, expectedSquareTypeSets, outputType] = typeInfo;
+
+    for (let i = 0; i < argTypes.length; ++i) {
+      const argType = argTypes[i];
+      if (argType === MALTYPED) {
+        continue;
+      }
+
+      const expectedSet = expectedArgTypeSets[i];
+      if (!expectedSet.includes(argType)) {
+        this.errors.push({
+          kind: TypeErrorKind.ArgTypeMismatch,
+          funcApplication: expr,
+          argIndex: i,
+          arg: args[i],
+          expectedTypes: expectedSet,
+          actualType: argType,
+        });
+      }
+    }
+
+    for (let i = 0; i < squareTypes.length; ++i) {
+      const squareType = squareTypes[i];
+      if (squareType === MALTYPED) {
+        continue;
+      }
+
+      const expectedSet = expectedSquareTypeSets[i];
+      if (
+        !expectedSet.some((expectedType) =>
+          areSquareTypesEqual(expectedType, squareType)
+        )
+      ) {
+        this.errors.push({
+          kind: TypeErrorKind.SquareTypeMismatch,
+          funcApplication: expr,
+          squareIndex: i,
+          square: squares[i],
+          expectedTypes: expectedSet,
+          actualType: squareType,
+        });
+      }
+    }
+
+    return outputType;
+  }
+
+  getExpectedQueryInputTypeSetsAndOutputType(
+    signature: string
+  ):
+    | null
+    | readonly [readonly TypeSet[], readonly SquareTypeSet[], ast.NingType]
+    | typeof SPECIAL_TYPE_RULES {
+    for (const builtinDef of Object.values(BUILTIN_QUERIES)) {
+      if (builtinDef.signature === signature) {
+        const typeSets =
+          "argTypeSets" in builtinDef ? builtinDef.argTypeSets : [];
+        const squareTypeSets =
+          "squareTypeSets" in builtinDef ? builtinDef.squareTypeSets : [];
+        const { outputType } = builtinDef;
+        if (
+          typeSets === SPECIAL_TYPE_RULES ||
+          squareTypeSets === SPECIAL_TYPE_RULES ||
+          outputType === SPECIAL_TYPE_RULES
+        ) {
+          return SPECIAL_TYPE_RULES;
+        }
+        return [typeSets, squareTypeSets, outputType];
+      }
+    }
+
+    const userQueryDef = this.userQueryDefs.get(signature);
+    if (userQueryDef !== undefined) {
+      const outputType = userQueryDef.returnType.value;
+      return [getFunctionDefArgTypeSet(userQueryDef.header), [], outputType];
+    }
+
+    return null;
+  }
+
+  checkListItemOfQueryReturnType(
+    expr: ast.CompoundExpression,
+    [args, squares]: [
+      ast.Expression[],
+      ast.SquareBracketedIdentifierSequence[]
+    ],
+    [argTypes, squareTypes]: [
+      (ast.NingType | typeof MALTYPED)[],
+      (SquareType | typeof MALTYPED)[]
+    ]
+  ): ast.NingType | typeof MALTYPED {
+    // TODO
+    return MALTYPED;
+  }
+
+  checkListIndexOfQueryReturnType(
+    expr: ast.CompoundExpression,
+    [args, squares]: [
+      ast.Expression[],
+      ast.SquareBracketedIdentifierSequence[]
+    ],
+    [argTypes, squareTypes]: [
+      (ast.NingType | typeof MALTYPED)[],
+      (SquareType | typeof MALTYPED)[]
+    ]
+  ): ast.NingType | typeof MALTYPED {
+    // TODO
+    return MALTYPED;
+  }
+
+  checkListContainsQueryReturnType(
+    expr: ast.CompoundExpression,
+    [args, squares]: [
+      ast.Expression[],
+      ast.SquareBracketedIdentifierSequence[]
+    ],
+    [argTypes, squareTypes]: [
+      (ast.NingType | typeof MALTYPED)[],
+      (SquareType | typeof MALTYPED)[]
+    ]
+  ): ast.NingType | typeof MALTYPED {
+    // TODO
+    return MALTYPED;
+  }
+
+  checkOpEqQueryReturnType(
+    expr: ast.CompoundExpression,
+    [args, squares]: [
+      ast.Expression[],
+      ast.SquareBracketedIdentifierSequence[]
+    ],
+    [argTypes, squareTypes]: [
+      (ast.NingType | typeof MALTYPED)[],
+      (SquareType | typeof MALTYPED)[]
+    ]
+  ): ast.NingType | typeof MALTYPED {
+    // TODO
+    return MALTYPED;
+  }
+
+  checkOpNeQueryReturnType(
+    expr: ast.CompoundExpression,
+    [args, squares]: [
+      ast.Expression[],
+      ast.SquareBracketedIdentifierSequence[]
+    ],
+    [argTypes, squareTypes]: [
+      (ast.NingType | typeof MALTYPED)[],
+      (SquareType | typeof MALTYPED)[]
+    ]
+  ): ast.NingType | typeof MALTYPED {
+    // TODO
+    return MALTYPED;
+  }
+
+  checkTernaryQueryReturnType(
+    expr: ast.CompoundExpression,
+    [args, squares]: [
+      ast.Expression[],
+      ast.SquareBracketedIdentifierSequence[]
+    ],
+    [argTypes, squareTypes]: [
+      (ast.NingType | typeof MALTYPED)[],
+      (SquareType | typeof MALTYPED)[]
+    ]
+  ): ast.NingType | typeof MALTYPED {
     // TODO
     return MALTYPED;
   }
@@ -1188,8 +1387,8 @@ class Typechecker {
     }
 
     this.errors.push({
-      kind: TypeErrorKind.CommandNotFound,
-      command,
+      kind: TypeErrorKind.NameNotFound,
+      funcApplication: command,
     });
   }
 
