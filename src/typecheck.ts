@@ -1382,16 +1382,50 @@ class Typechecker {
 
   checkTernaryQueryInputTypesAndGetOutputType(
     expr: ast.CompoundExpression,
-    [args, squares]: [
+    [args, _squares]: [
       ast.Expression[],
       ast.SquareBracketedIdentifierSequence[]
     ],
-    [argTypes, squareTypes]: [
+    [argTypes, _squareTypes]: [
       (ast.NingType | typeof MALTYPED)[],
       (SquareType | typeof MALTYPED)[]
     ]
   ): ast.NingType | typeof MALTYPED {
-    // TODO
+    const conditionType = argTypes[0];
+    if (conditionType !== MALTYPED && conditionType !== "boolean") {
+      this.errors.push({
+        kind: TypeErrorKind.ArgTypeMismatch,
+        funcApplication: expr,
+        argIndex: 0,
+        arg: args[0],
+        expectedTypes: ["boolean"],
+        actualType: conditionType,
+      });
+    }
+
+    const trueBranchType = argTypes[1];
+    const falseBranchType = argTypes[2];
+
+    if (trueBranchType === MALTYPED) {
+      return falseBranchType;
+    }
+
+    if (falseBranchType === MALTYPED) {
+      return trueBranchType;
+    }
+
+    if (trueBranchType === falseBranchType) {
+      return trueBranchType;
+    }
+
+    this.errors.push({
+      kind: TypeErrorKind.ArgTypeMismatch,
+      funcApplication: expr,
+      argIndex: 2,
+      arg: args[2],
+      expectedTypes: [trueBranchType],
+      actualType: falseBranchType,
+    });
     return MALTYPED;
   }
 
