@@ -1131,18 +1131,20 @@ class Typechecker {
       );
     }
     if (signature === BUILTIN_QUERIES.listIndexOf.signature) {
-      return this.checkListIndexOfQueryInputTypesAndGetOutputType(
+      this.checkListIndexOfQueryOrListContainsQueryInputTypes(
         expr,
         inputs,
         inputTypes
       );
+      return "number";
     }
     if (signature === BUILTIN_QUERIES.listContains.signature) {
-      return this.checkListContainsQueryInputTypesAndGetOutputType(
+      this.checkListIndexOfQueryOrListContainsQueryInputTypes(
         expr,
         inputs,
         inputTypes
       );
+      return "boolean";
     }
     if (signature === BUILTIN_QUERIES.opEq.signature) {
       return this.checkOpEqQueryInputTypesAndGetOutputType(
@@ -1307,7 +1309,7 @@ class Typechecker {
     return indexTargetType.typeOrElementType;
   }
 
-  checkListIndexOfQueryInputTypesAndGetOutputType(
+  checkListIndexOfQueryOrListContainsQueryInputTypes(
     expr: ast.CompoundExpression,
     [args, squares]: [
       ast.Expression[],
@@ -1317,10 +1319,10 @@ class Typechecker {
       (ast.NingType | typeof MALTYPED)[],
       (SquareType | typeof MALTYPED)[]
     ]
-  ): "number" {
+  ): void {
     const haystackType = squareTypes[0];
     if (haystackType === MALTYPED) {
-      return "number";
+      return;
     }
 
     if (!haystackType.isList) {
@@ -1332,12 +1334,12 @@ class Typechecker {
         expectedTypes: ANY_LIST,
         actualType: haystackType,
       });
-      return "number";
+      return;
     }
 
     const needleType = argTypes[0];
     if (needleType === MALTYPED) {
-      return "number";
+      return;
     }
 
     if (haystackType.typeOrElementType !== needleType) {
@@ -1350,23 +1352,6 @@ class Typechecker {
         actualType: needleType,
       });
     }
-
-    return "number";
-  }
-
-  checkListContainsQueryInputTypesAndGetOutputType(
-    expr: ast.CompoundExpression,
-    [args, squares]: [
-      ast.Expression[],
-      ast.SquareBracketedIdentifierSequence[]
-    ],
-    [argTypes, squareTypes]: [
-      (ast.NingType | typeof MALTYPED)[],
-      (SquareType | typeof MALTYPED)[]
-    ]
-  ): ast.NingType | typeof MALTYPED {
-    // TODO
-    return MALTYPED;
   }
 
   checkOpEqQueryInputTypesAndGetOutputType(
