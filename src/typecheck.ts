@@ -704,34 +704,34 @@ class Typechecker {
   checkCommandInputTypes(
     command: ast.Command,
     signature: string,
-    [args, squares]: [
-      ast.Expression[],
-      ast.SquareBracketedIdentifierSequence[]
-    ],
-    [argTypes, squareTypes]: [
+    inputs: [ast.Expression[], ast.SquareBracketedIdentifierSequence[]],
+    inputTypes: [
       (ast.NingType | typeof MALTYPED)[],
       (SquareType | typeof MALTYPED)[]
     ]
   ): void {
     if (signature === BUILTIN_COMMANDS.assign.signature) {
-      // TODO: Handle specially
+      this.checkAssignCommandInputTypes(command, inputs, inputTypes);
       return;
     }
 
     if (signature === BUILTIN_COMMANDS.listReplaceItem.signature) {
-      // TODO: Handle specially
+      this.checkListReplaceCommandInputTypes(command, inputs, inputTypes);
       return;
     }
 
     if (signature === BUILTIN_COMMANDS.listInsert.signature) {
-      // TODO: Handle specially
+      this.checkListInsertCommandInputTypes(command, inputs, inputTypes);
       return;
     }
 
     if (signature === BUILTIN_COMMANDS.listAdd.signature) {
-      // TODO: Handle specially
+      this.checkListAddCommandInputTypes(command, inputs, inputTypes);
       return;
     }
+
+    const [args, squares] = inputs;
+    const [argTypes, squareTypes] = inputTypes;
 
     const expectedInputTypeSets =
       this.getExpectedCommandInputTypeSets(signature);
@@ -788,6 +788,50 @@ class Typechecker {
         });
       }
     }
+  }
+
+  checkAssignCommandInputTypes(
+    command: ast.Command,
+    inputs: [ast.Expression[], ast.SquareBracketedIdentifierSequence[]],
+    inputTypes: [
+      (ast.NingType | typeof MALTYPED)[],
+      (SquareType | typeof MALTYPED)[]
+    ]
+  ): void {
+    // TODO
+  }
+
+  checkListReplaceCommandInputTypes(
+    command: ast.Command,
+    inputs: [ast.Expression[], ast.SquareBracketedIdentifierSequence[]],
+    inputTypes: [
+      (ast.NingType | typeof MALTYPED)[],
+      (SquareType | typeof MALTYPED)[]
+    ]
+  ): void {
+    // TODO
+  }
+
+  checkListInsertCommandInputTypes(
+    command: ast.Command,
+    inputs: [ast.Expression[], ast.SquareBracketedIdentifierSequence[]],
+    inputTypes: [
+      (ast.NingType | typeof MALTYPED)[],
+      (SquareType | typeof MALTYPED)[]
+    ]
+  ): void {
+    // TODO
+  }
+
+  checkListAddCommandInputTypes(
+    command: ast.Command,
+    inputs: [ast.Expression[], ast.SquareBracketedIdentifierSequence[]],
+    inputTypes: [
+      (ast.NingType | typeof MALTYPED)[],
+      (SquareType | typeof MALTYPED)[]
+    ]
+  ): void {
+    // TODO
   }
 
   getExpectedCommandInputTypeSets(
