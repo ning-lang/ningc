@@ -118,6 +118,20 @@ export class App extends React.Component<{}, State> {
             >
               <div className="CodeInput__Highlight">
                 {highlight(this.state.code)}
+                {
+                  /**
+                   * I don't why a (single) trailing newline in
+                   * the textarea requires a _two_ trailing newlines
+                   * in the highlighted overlay to maintain alignment.
+                   * However, while I don't understand the underlying cause,
+                   * the simplest solution is just to work around the issue.
+                   * That is, if the code ends with a newline, we simply
+                   * add an extra newline to the highlighted overlay.
+                   *
+                   * I first learned of this bug from https://codersblock.com/blog/highlight-text-inside-a-textarea/
+                   */
+                  this.state.code.endsWith("\n") ? "\n" : ""
+                }
               </div>
             </div>
 
@@ -330,20 +344,7 @@ function highlight(code: string): React.ReactElement[] {
       key={0}
       style={{ color: noErrors ? "#4c97ff" : "#ff6619" }}
     >
-      {
-        /**
-         * I don't why a (single) trailing newline in
-         * the textarea requires a _two_ trailing newlines
-         * in the highlighted overlay to maintain alignment.
-         * However, while I don't understand the underlying cause,
-         * the simplest solution is just to work around the issue.
-         * That is, if the code ends with a newline, we simply
-         * add an extra newline to the highlighted overlay.
-         *
-         * This is inspired by https://codersblock.com/blog/highlight-text-inside-a-textarea/
-         */
-        code.replace(/\n$/g, "\n\n")
-      }
+      {code}
     </span>,
   ];
 }
