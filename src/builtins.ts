@@ -402,3 +402,9 @@ export const BUILTIN_QUERIES = {
     outputType: "boolean",
   },
 } as const;
+
+export const BUILTIN_SIGNATURES: ReadonlySet<string> = new Set(
+  Object.values(BUILTIN_COMMANDS)
+    .map((def): string => def.signature)
+    .concat(Object.values(BUILTIN_QUERIES).map((def): string => def.signature))
+);

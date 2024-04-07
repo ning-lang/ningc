@@ -12,6 +12,7 @@ import {
   ANY_LIST,
   BUILTIN_COMMANDS,
   BUILTIN_QUERIES,
+  BUILTIN_SIGNATURES,
   SPECIAL_TYPE_RULES,
   SquareTypeSet,
   TypeSet,
@@ -19,7 +20,8 @@ import {
 import { getNingNumberLiteralRegex } from "./literals";
 
 const MALTYPED = Symbol("UNKNOWN_TYPE");
-const VOID_RETURN_TYPE: unique symbol = Symbol("VOID_RETURN_TYPE");
+const VOID_RETURN_TYPE = Symbol("VOID_RETURN_TYPE");
+export const BUILTIN_DEF = Symbol("BUILTIN_DEF");
 
 export type NingTypeError =
   | GlobalDefNotFirstError
@@ -64,7 +66,7 @@ export interface MultipleGlobalDefsError {
 
 export interface NameClashError {
   kind: TypeErrorKind.NameClash;
-  existingDef: NameDef;
+  existingDef: NameDef | typeof BUILTIN_DEF;
   newDef: NameDef;
 }
 
@@ -1055,7 +1057,34 @@ class Typechecker {
       return;
     }
 
-    // TODO: Check for clashes with builtins and user defined functions.
+    const conflictingUserCommandDef = this.userCommandDefs.get(name);
+    if (conflictingUserCommandDef !== undefined) {
+      this.errors.push({
+        kind: TypeErrorKind.NameClash,
+        existingDef: conflictingUserCommandDef,
+        newDef: command,
+      });
+      return;
+    }
+
+    const conflictingUserQueryDef = this.userQueryDefs.get(name);
+    if (conflictingUserQueryDef !== undefined) {
+      this.errors.push({
+        kind: TypeErrorKind.NameClash,
+        existingDef: conflictingUserQueryDef,
+        newDef: command,
+      });
+      return;
+    }
+
+    if (BUILTIN_SIGNATURES.has(name)) {
+      this.errors.push({
+        kind: TypeErrorKind.NameClash,
+        existingDef: BUILTIN_DEF,
+        newDef: command,
+      });
+      return;
+    }
 
     const entry = this.stack[this.stack.length - 1];
     entry.variables.set(name, { valType: type_, mutable, def: command });
@@ -1086,7 +1115,34 @@ class Typechecker {
       return;
     }
 
-    // TODO: Check for clashes with builtins and user defined functions.
+    const conflictingUserCommandDef = this.userCommandDefs.get(name);
+    if (conflictingUserCommandDef !== undefined) {
+      this.errors.push({
+        kind: TypeErrorKind.NameClash,
+        existingDef: conflictingUserCommandDef,
+        newDef: command,
+      });
+      return;
+    }
+
+    const conflictingUserQueryDef = this.userQueryDefs.get(name);
+    if (conflictingUserQueryDef !== undefined) {
+      this.errors.push({
+        kind: TypeErrorKind.NameClash,
+        existingDef: conflictingUserQueryDef,
+        newDef: command,
+      });
+      return;
+    }
+
+    if (BUILTIN_SIGNATURES.has(name)) {
+      this.errors.push({
+        kind: TypeErrorKind.NameClash,
+        existingDef: BUILTIN_DEF,
+        newDef: command,
+      });
+      return;
+    }
 
     const entry = this.stack[this.stack.length - 1];
     entry.lists.set(name, { elementType, def: command });
