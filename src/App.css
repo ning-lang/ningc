@@ -153,3 +153,18 @@ body {
   margin-right: var(--right-panel-padding);
   border-radius: var(--main-border-radius);
 }
+
+.CodeInput__Textarea,
+.CodeInput__Backdrop,
+.CodeInput__Container {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.CodeInput__Textarea::-webkit-scrollbar,
+.CodeInput__Backdrop::-webkit-scrollbar,
+.CodeInput__Container::-webkit-scrollbar {
+  /* WebKit */
+  width: 0;
+  height: 0;
+}
