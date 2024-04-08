@@ -378,73 +378,21 @@ function highlight(code: string): React.ReactElement[] {
       continue;
     }
 
-    const stringLiteralMatch = remainingCode.match(
-      /^"(?:[^"{}]|\{0x[0-9a-fA-F]+\})*"/
+    const parenthesizedLiteralMatch = remainingCode.match(
+      /^\(\s*(?:true|false|NaN|Infinity|-Infinity|(?:-?[0-9]+(?:\.[0-9]+)?(?:e-?[0-9]+)?(?![a-zA-Z]))|(?:"(?:[^"{}]|\{0x[0-9a-fA-F]+\})*"))\s*\)/
     );
-    if (stringLiteralMatch !== null) {
-      const i = duplicateCount.get(stringLiteralMatch[0]) ?? 0;
-      duplicateCount.set(stringLiteralMatch[0], i + 1);
+    if (parenthesizedLiteralMatch !== null) {
+      const i = duplicateCount.get(parenthesizedLiteralMatch[0]) ?? 0;
+      duplicateCount.set(parenthesizedLiteralMatch[0], i + 1);
       out.push(
         <span
-          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--stringLiteral"
-          key={i + ":" + stringLiteralMatch[0]}
+          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--parenthesizedLiteral"
+          key={i + ":" + parenthesizedLiteralMatch[0]}
         >
-          {stringLiteralMatch[0]}
+          {parenthesizedLiteralMatch[0]}
         </span>
       );
-      remainingCode = remainingCode.slice(stringLiteralMatch[0].length);
-      continue;
-    }
-
-    const realNumberLiteralMatch = remainingCode.match(
-      /^-?[0-9]+(?:\.[0-9]+)?(?:e-?[0-9]+)?(?![a-zA-Z])/
-    );
-    if (realNumberLiteralMatch !== null) {
-      const i = duplicateCount.get(realNumberLiteralMatch[0]) ?? 0;
-      duplicateCount.set(realNumberLiteralMatch[0], i + 1);
-      out.push(
-        <span
-          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--numberLiteral"
-          key={i + ":" + realNumberLiteralMatch[0]}
-        >
-          {realNumberLiteralMatch[0]}
-        </span>
-      );
-      remainingCode = remainingCode.slice(realNumberLiteralMatch[0].length);
-      continue;
-    }
-
-    const unrealNumberLiteralMatch = remainingCode.match(
-      /^(?:NaN|Infinity|-Infinity)/
-    );
-    if (unrealNumberLiteralMatch !== null) {
-      const i = duplicateCount.get(unrealNumberLiteralMatch[0]) ?? 0;
-      duplicateCount.set(unrealNumberLiteralMatch[0], i + 1);
-      out.push(
-        <span
-          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--numberLiteral"
-          key={i + ":" + unrealNumberLiteralMatch[0]}
-        >
-          {unrealNumberLiteralMatch[0]}
-        </span>
-      );
-      remainingCode = remainingCode.slice(unrealNumberLiteralMatch[0].length);
-      continue;
-    }
-
-    const booleanLiteralMatch = remainingCode.match(/^(?:true|false)\b/);
-    if (booleanLiteralMatch !== null) {
-      const i = duplicateCount.get(booleanLiteralMatch[0]) ?? 0;
-      duplicateCount.set(booleanLiteralMatch[0], i + 1);
-      out.push(
-        <span
-          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--booleanLiteral"
-          key={i + ":" + booleanLiteralMatch[0]}
-        >
-          {booleanLiteralMatch[0]}
-        </span>
-      );
-      remainingCode = remainingCode.slice(booleanLiteralMatch[0].length);
+      remainingCode = remainingCode.slice(parenthesizedLiteralMatch[0].length);
       continue;
     }
 

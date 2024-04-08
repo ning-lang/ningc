@@ -176,8 +176,6 @@ body {
   text-decoration: wavy underline var(--code-color-red);
 }
 
-.CodeInput__HighlightSpan--booleanLiteral,
-.CodeInput__HighlightSpan--numberLiteral,
-.CodeInput__HighlightSpan--stringLiteral {
+.CodeInput__HighlightSpan--parenthesizedLiteral {
   color: var(--code-color-cyan);
 }
