@@ -18,7 +18,8 @@ export interface State {
 export class App extends React.Component<{}, State> {
   program: Program | null;
   canvasRef: React.RefObject<HTMLCanvasElement>;
-  codeInputBackdropRef: React.RefObject<HTMLDivElement>;
+  codeInputHighlightBackdropRef: React.RefObject<HTMLDivElement>;
+  codeInputUnderlineBackdropRef: React.RefObject<HTMLDivElement>;
   codeInputTextareaRef: React.RefObject<HTMLTextAreaElement>;
 
   mouseClientX: number;
@@ -35,7 +36,8 @@ export class App extends React.Component<{}, State> {
 
     this.program = null;
     this.canvasRef = React.createRef();
-    this.codeInputBackdropRef = React.createRef();
+    this.codeInputHighlightBackdropRef = React.createRef();
+    this.codeInputUnderlineBackdropRef = React.createRef();
     this.codeInputTextareaRef = React.createRef();
 
     this.mouseClientX = 0;
@@ -113,11 +115,38 @@ export class App extends React.Component<{}, State> {
           {/* The design for the CodeInput is inspired by https://codersblock.com/blog/highlight-text-inside-a-textarea/ */}
           <div className="CodeInput__Container">
             <div
-              className="CodeInput__Backdrop"
-              ref={this.codeInputBackdropRef}
+              className="CodeInput__Backdrop CodeInput__Backdrop--highlight"
+              ref={this.codeInputHighlightBackdropRef}
             >
-              <div className="CodeInput__Highlight">
+              <div className="CodeInput__BackdropContent">
                 {highlight(this.state.code)}
+                {
+                  /**
+                   * I don't why a (single) trailing newline in
+                   * the textarea requires a _two_ trailing newlines
+                   * in the highlighted overlay to maintain alignment.
+                   * However, while I don't understand the underlying cause,
+                   * the simplest solution is just to work around the issue.
+                   * That is, if the code ends with a newline, we simply
+                   * add an extra newline to the highlighted overlay.
+                   *
+                   * I first learned of this bug from https://codersblock.com/blog/highlight-text-inside-a-textarea/
+                   */
+                  this.state.code.endsWith("\n") ? "\n" : ""
+                }
+              </div>
+            </div>
+
+            <div
+              className="CodeInput__Backdrop CodeInput__Backdrop--underline"
+              ref={this.codeInputUnderlineBackdropRef}
+            >
+              <div className="CodeInput__BackdropContent CodeInput__BackdropContent--underline">
+                {underlineErrors(
+                  this.state.code,
+                  this.state.parseResultCache,
+                  this.state.typeErrorsCache
+                )}
                 {
                   /**
                    * I don't why a (single) trailing newline in
@@ -184,14 +213,24 @@ export class App extends React.Component<{}, State> {
   }
 
   onCodeInputTextareaScrolled(): void {
-    const backdrop = this.codeInputBackdropRef.current;
+    const highlightBackdrop = this.codeInputHighlightBackdropRef.current;
+    const underlineBackdrop = this.codeInputUnderlineBackdropRef.current;
     const textarea = this.codeInputTextareaRef.current;
-    if (!(backdrop !== null && textarea !== null)) {
+    if (
+      !(
+        highlightBackdrop !== null &&
+        underlineBackdrop !== null &&
+        textarea !== null
+      )
+    ) {
       return;
     }
 
-    backdrop.scrollTop = textarea.scrollTop;
-    backdrop.scrollLeft = textarea.scrollLeft;
+    highlightBackdrop.scrollTop = textarea.scrollTop;
+    highlightBackdrop.scrollLeft = textarea.scrollLeft;
+
+    underlineBackdrop.scrollTop = textarea.scrollTop;
+    underlineBackdrop.scrollLeft = textarea.scrollLeft;
   }
 
   onRunButtonClicked(): void {
@@ -546,4 +585,12 @@ function arrayFindLast<T>(
     }
   }
   return undefined;
+}
+
+function underlineErrors(
+  code: string,
+  parseResult: ParseResult,
+  typeErrors: readonly NingTypeError[]
+): React.ReactElement[] {
+  return [<span key={0}>{code}</span>];
 }
