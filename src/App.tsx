@@ -141,6 +141,10 @@ export class App extends React.Component<{}, State> {
               value={this.state.code}
               onInput={this.onCodeChanged}
               onScroll={this.onCodeInputTextareaScrolled}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
             ></textarea>
           </div>
         </div>
