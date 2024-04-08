@@ -414,6 +414,27 @@ function highlight(code: string): React.ReactElement[] {
       continue;
     }
 
+    const parenthesizedIdentifierSequenceMatch = remainingCode.match(
+      /^\(\s*(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+)(?:\s*(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+))*\s*\)/
+    );
+    if (parenthesizedIdentifierSequenceMatch !== null) {
+      const i =
+        duplicateCount.get(parenthesizedIdentifierSequenceMatch[0]) ?? 0;
+      duplicateCount.set(parenthesizedIdentifierSequenceMatch[0], i + 1);
+      out.push(
+        <span
+          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--parenthesizedIdentifierSequence"
+          key={i + ":" + parenthesizedIdentifierSequenceMatch[0]}
+        >
+          {parenthesizedIdentifierSequenceMatch[0]}
+        </span>
+      );
+      remainingCode = remainingCode.slice(
+        parenthesizedIdentifierSequenceMatch[0].length
+      );
+      continue;
+    }
+
     const punctuationMatch = remainingCode.match(/^[()[\]{};]/);
     if (punctuationMatch !== null) {
       const i = duplicateCount.get(punctuationMatch[0]) ?? 0;

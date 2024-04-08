@@ -179,3 +179,7 @@ body {
 .CodeInput__HighlightSpan--parenthesizedLiteral {
   color: var(--code-color-cyan);
 }
+
+.CodeInput__HighlightSpan--parenthesizedIdentifierSequence {
+  color: var(--code-color-blue);
+}
