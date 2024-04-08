@@ -342,7 +342,13 @@ function highlight(code: string): React.ReactElement[] {
     }
   }
 
-  const out = [];
+  interface SpanBuilder {
+    className: string;
+    key: string;
+    code: string;
+  }
+
+  const out: SpanBuilder[] = [];
   const duplicateCount: Map<string, number> = new Map();
   let remainingCode = code;
   while (remainingCode.length > 0) {
@@ -350,14 +356,11 @@ function highlight(code: string): React.ReactElement[] {
     if (commentMatch !== null) {
       const i = duplicateCount.get(commentMatch[0]) ?? 0;
       duplicateCount.set(commentMatch[0], i + 1);
-      out.push(
-        <span
-          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--comment"
-          key={i + ":" + commentMatch[0]}
-        >
-          {commentMatch[0]}
-        </span>
-      );
+      out.push({
+        className: "CodeInput__HighlightSpan CodeInput__HighlightSpan--comment",
+        key: i + ":" + commentMatch[0],
+        code: commentMatch[0],
+      });
       remainingCode = remainingCode.slice(commentMatch[0].length);
       continue;
     }
@@ -366,14 +369,12 @@ function highlight(code: string): React.ReactElement[] {
     if (whitespaceMatch !== null) {
       const i = duplicateCount.get(whitespaceMatch[0]) ?? 0;
       duplicateCount.set(whitespaceMatch[0], i + 1);
-      out.push(
-        <span
-          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--whitespace"
-          key={i + ":" + whitespaceMatch[0]}
-        >
-          {whitespaceMatch[0]}
-        </span>
-      );
+      out.push({
+        className:
+          "CodeInput__HighlightSpan CodeInput__HighlightSpan--whitespace",
+        key: i + ":" + whitespaceMatch[0],
+        code: whitespaceMatch[0],
+      });
       remainingCode = remainingCode.slice(whitespaceMatch[0].length);
       continue;
     }
@@ -384,14 +385,12 @@ function highlight(code: string): React.ReactElement[] {
     if (parenthesizedLiteralMatch !== null) {
       const i = duplicateCount.get(parenthesizedLiteralMatch[0]) ?? 0;
       duplicateCount.set(parenthesizedLiteralMatch[0], i + 1);
-      out.push(
-        <span
-          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--parenthesizedLiteral"
-          key={i + ":" + parenthesizedLiteralMatch[0]}
-        >
-          {parenthesizedLiteralMatch[0]}
-        </span>
-      );
+      out.push({
+        className:
+          "CodeInput__HighlightSpan CodeInput__HighlightSpan--parenthesizedLiteral",
+        key: i + ":" + parenthesizedLiteralMatch[0],
+        code: parenthesizedLiteralMatch[0],
+      });
       remainingCode = remainingCode.slice(parenthesizedLiteralMatch[0].length);
       continue;
     }
@@ -402,14 +401,12 @@ function highlight(code: string): React.ReactElement[] {
     if (structuralKeywordMatch !== null) {
       const i = duplicateCount.get(structuralKeywordMatch[0]) ?? 0;
       duplicateCount.set(structuralKeywordMatch[0], i + 1);
-      out.push(
-        <span
-          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--structuralKeyword"
-          key={i + ":" + structuralKeywordMatch[0]}
-        >
-          {structuralKeywordMatch[0]}
-        </span>
-      );
+      out.push({
+        className:
+          "CodeInput__HighlightSpan CodeInput__HighlightSpan--structuralKeyword",
+        key: i + ":" + structuralKeywordMatch[0],
+        code: structuralKeywordMatch[0],
+      });
       remainingCode = remainingCode.slice(structuralKeywordMatch[0].length);
       continue;
     }
@@ -421,14 +418,12 @@ function highlight(code: string): React.ReactElement[] {
       const i =
         duplicateCount.get(parenthesizedIdentifierSequenceMatch[0]) ?? 0;
       duplicateCount.set(parenthesizedIdentifierSequenceMatch[0], i + 1);
-      out.push(
-        <span
-          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--parenthesizedIdentifierSequence"
-          key={i + ":" + parenthesizedIdentifierSequenceMatch[0]}
-        >
-          {parenthesizedIdentifierSequenceMatch[0]}
-        </span>
-      );
+      out.push({
+        className:
+          "CodeInput__HighlightSpan CodeInput__HighlightSpan--parenthesizedIdentifierSequence",
+        key: i + ":" + parenthesizedIdentifierSequenceMatch[0],
+        code: parenthesizedIdentifierSequenceMatch[0],
+      });
       remainingCode = remainingCode.slice(
         parenthesizedIdentifierSequenceMatch[0].length
       );
@@ -441,14 +436,11 @@ function highlight(code: string): React.ReactElement[] {
     if (squareMatch !== null) {
       const i = duplicateCount.get(squareMatch[0]) ?? 0;
       duplicateCount.set(squareMatch[0], i + 1);
-      out.push(
-        <span
-          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--square"
-          key={i + ":" + squareMatch[0]}
-        >
-          {squareMatch[0]}
-        </span>
-      );
+      out.push({
+        className: "CodeInput__HighlightSpan CodeInput__HighlightSpan--square",
+        key: i + ":" + squareMatch[0],
+        code: squareMatch[0],
+      });
       remainingCode = remainingCode.slice(squareMatch[0].length);
       continue;
     }
@@ -457,14 +449,12 @@ function highlight(code: string): React.ReactElement[] {
     if (punctuationMatch !== null) {
       const i = duplicateCount.get(punctuationMatch[0]) ?? 0;
       duplicateCount.set(punctuationMatch[0], i + 1);
-      out.push(
-        <span
-          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--punctuation"
-          key={i + ":" + punctuationMatch[0]}
-        >
-          {punctuationMatch[0]}
-        </span>
-      );
+      out.push({
+        className:
+          "CodeInput__HighlightSpan CodeInput__HighlightSpan--punctuation",
+        key: i + ":" + punctuationMatch[0],
+        code: punctuationMatch[0],
+      });
       remainingCode = remainingCode.slice(punctuationMatch[0].length);
       continue;
     }
@@ -473,14 +463,12 @@ function highlight(code: string): React.ReactElement[] {
     if (identifierMatch !== null) {
       const i = duplicateCount.get(identifierMatch[0]) ?? 0;
       duplicateCount.set(identifierMatch[0], i + 1);
-      out.push(
-        <span
-          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--identifier"
-          key={i + ":" + identifierMatch[0]}
-        >
-          {identifierMatch[0]}
-        </span>
-      );
+      out.push({
+        className:
+          "CodeInput__HighlightSpan CodeInput__HighlightSpan--identifier",
+        key: i + ":" + identifierMatch[0],
+        code: identifierMatch[0],
+      });
       remainingCode = remainingCode.slice(identifierMatch[0].length);
       continue;
     }
@@ -489,30 +477,29 @@ function highlight(code: string): React.ReactElement[] {
     if (badIdentifierMatch !== null) {
       const i = duplicateCount.get(badIdentifierMatch[0]) ?? 0;
       duplicateCount.set(badIdentifierMatch[0], i + 1);
-      out.push(
-        <span
-          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--badIdentifier"
-          key={i + ":" + badIdentifierMatch[0]}
-        >
-          {badIdentifierMatch[0]}
-        </span>
-      );
+      out.push({
+        className:
+          "CodeInput__HighlightSpan CodeInput__HighlightSpan--badIdentifier",
+        key: i + ":" + badIdentifierMatch[0],
+        code: badIdentifierMatch[0],
+      });
       remainingCode = remainingCode.slice(badIdentifierMatch[0].length);
       continue;
     }
 
-    out.push(
-      <span
-        className="CodeInput__HighlightSpan CodeInput__HighlightSpan--lexError"
-        key={duplicateCount.size + ":" + remainingCode}
-      >
-        {remainingCode}
-      </span>
-    );
+    out.push({
+      className: "CodeInput__HighlightSpan CodeInput__HighlightSpan--lexError",
+      key: duplicateCount.size + ":" + remainingCode,
+      code: remainingCode,
+    });
     break;
   }
 
-  return out;
+  return out.map((builder) => (
+    <span className={builder.className} key={builder.key}>
+      {builder.code}
+    </span>
+  ));
 }
 
 function getInitialCodeFromLocalStorage(): string {
