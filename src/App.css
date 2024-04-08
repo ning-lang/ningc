@@ -153,3 +153,25 @@ body {
   margin-right: var(--right-panel-padding);
   border-radius: var(--main-border-radius);
 }
+
+.CodeInput__HighlightSpan--identifier {
+  color: var(--code-color-main);
+}
+
+.CodeInput__HighlightSpan--structuralKeyword {
+  color: var(--code-color-magenta);
+}
+
+.CodeInput__HighlightSpan--comment {
+  color: var(--code-color-green);
+}
+
+.CodeInput__HighlightSpan--badIdentifier {
+  text-decoration: wavy underline var(--code-color-red);
+}
+
+.CodeInput__HighlightSpan--booleanLiteral,
+.CodeInput__HighlightSpan--numberLiteral,
+.CodeInput__HighlightSpan--stringLiteral {
+  color: var(--code-color-purple);
+}

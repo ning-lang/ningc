@@ -342,15 +342,171 @@ function highlight(code: string): React.ReactElement[] {
     }
   }
 
-  return [
-    <span
-      className="CodeInput__HighlightSpan"
-      key={0}
-      style={{ color: noErrors ? "#4c97ff" : "#ff6619" }}
-    >
-      {code}
-    </span>,
-  ];
+  const out = [];
+  let i = 0;
+  let remainingCode = code;
+  while (remainingCode.length > 0) {
+    const commentMatch = remainingCode.match(/^\/\/[^\n]*/);
+    if (commentMatch !== null) {
+      out.push(
+        <span
+          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--comment"
+          key={i + ":" + code}
+        >
+          {commentMatch[0]}
+        </span>
+      );
+      remainingCode = remainingCode.slice(commentMatch[0].length);
+      ++i;
+      continue;
+    }
+
+    const whitespaceMatch = remainingCode.match(/^\s+/);
+    if (whitespaceMatch !== null) {
+      out.push(
+        <span
+          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--whitespace"
+          key={i + ":" + code}
+        >
+          {whitespaceMatch[0]}
+        </span>
+      );
+      remainingCode = remainingCode.slice(whitespaceMatch[0].length);
+      ++i;
+      continue;
+    }
+
+    const stringLiteralMatch = remainingCode.match(
+      /^"(?:[^"{}]|\{0x[0-9a-fA-F]+\})*"/
+    );
+    if (stringLiteralMatch !== null) {
+      out.push(
+        <span
+          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--stringLiteral"
+          key={i + ":" + code}
+        >
+          {stringLiteralMatch[0]}
+        </span>
+      );
+      remainingCode = remainingCode.slice(stringLiteralMatch[0].length);
+      ++i;
+      continue;
+    }
+
+    const numberLiteralMatch = remainingCode.match(
+      /^-?[0-9]+(?:\.[0-9]+)?(?:e-?[0-9]+)?(?![a-zA-Z])/
+    );
+    if (numberLiteralMatch !== null) {
+      out.push(
+        <span
+          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--numberLiteral"
+          key={i + ":" + code}
+        >
+          {numberLiteralMatch[0]}
+        </span>
+      );
+      remainingCode = remainingCode.slice(numberLiteralMatch[0].length);
+      ++i;
+      continue;
+    }
+
+    const booleanLiteralMatch = remainingCode.match(/^(?:true|false)\b/);
+    if (booleanLiteralMatch !== null) {
+      out.push(
+        <span
+          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--booleanLiteral"
+          key={i + ":" + code}
+        >
+          {booleanLiteralMatch[0]}
+        </span>
+      );
+      remainingCode = remainingCode.slice(booleanLiteralMatch[0].length);
+      ++i;
+      continue;
+    }
+
+    const structuralKeywordMatch = remainingCode.match(
+      /^(?:Boolean|Number|String|Global|Query|Command|if|else|while|repeat|return)\b/
+    );
+    if (structuralKeywordMatch !== null) {
+      out.push(
+        <span
+          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--structuralKeyword"
+          key={i + ":" + code}
+        >
+          {structuralKeywordMatch[0]}
+        </span>
+      );
+      remainingCode = remainingCode.slice(structuralKeywordMatch[0].length);
+      ++i;
+      continue;
+    }
+
+    const punctuationMatch = remainingCode.match(/^[()[\]{};]/);
+    if (punctuationMatch !== null) {
+      out.push(
+        <span
+          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--punctuation"
+          key={i + ":" + code}
+        >
+          {punctuationMatch[0]}
+        </span>
+      );
+      remainingCode = remainingCode.slice(punctuationMatch[0].length);
+      ++i;
+      continue;
+    }
+
+    const identifierMatch = remainingCode.match(/^[^\s()[\]{};A-Z"]+/);
+    if (identifierMatch !== null) {
+      out.push(
+        <span
+          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--identifier"
+          key={i + ":" + code}
+        >
+          {identifierMatch[0]}
+        </span>
+      );
+      remainingCode = remainingCode.slice(identifierMatch[0].length);
+      ++i;
+      continue;
+    }
+
+    const badIdentifierMatch = remainingCode.match(/^[^\s()[\]{};"]+/);
+    if (badIdentifierMatch !== null) {
+      out.push(
+        <span
+          className="CodeInput__HighlightSpan CodeInput__HighlightSpan--badIdentifier"
+          key={i + ":" + code}
+        >
+          {badIdentifierMatch[0]}
+        </span>
+      );
+      remainingCode = remainingCode.slice(badIdentifierMatch[0].length);
+      ++i;
+      continue;
+    }
+
+    out.push(
+      <span
+        className="CodeInput__HighlightSpan CodeInput__HighlightSpan--lexError"
+        key={i + ":" + code}
+      >
+        {remainingCode}
+      </span>
+    );
+    ++i;
+    break;
+  }
+
+  console.log({ out });
+
+  // return [
+  //   <span className="CodeInput__HighlightSpan" key={0}>
+  //     {code}
+  //   </span>,
+  // ];
+  return out;
 }
 
 function getInitialCodeFromLocalStorage(): string {
