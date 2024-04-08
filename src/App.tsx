@@ -350,6 +350,14 @@ function highlight(code: string): React.ReactElement[] {
   const out: SpanBuilder[] = [];
   let remainingCode = code;
   while (remainingCode.length > 0) {
+    const lastNonWhitespaceTokenSpanBuilder = arrayFindLast(
+      out,
+      (builder) => !/^\s+$/.test(builder.code)
+    );
+    const wasLastNonWhitespaceTokenCommandOrQuery =
+      lastNonWhitespaceTokenSpanBuilder !== undefined &&
+      /^(?:Command|Query)$/.test(lastNonWhitespaceTokenSpanBuilder.code);
+
     const commentMatch = remainingCode.match(/^\/\/[^\n]*/);
     if (commentMatch !== null) {
       out.push({
@@ -397,19 +405,21 @@ function highlight(code: string): React.ReactElement[] {
       continue;
     }
 
-    const parenthesizedIdentifierSequenceMatch = remainingCode.match(
-      /^\(\s*(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+)(?:\s*(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+))*\s*\)/
-    );
-    if (parenthesizedIdentifierSequenceMatch !== null) {
-      out.push({
-        className:
-          "CodeInput__HighlightSpan CodeInput__HighlightSpan--parenthesizedIdentifierSequence",
-        code: parenthesizedIdentifierSequenceMatch[0],
-      });
-      remainingCode = remainingCode.slice(
-        parenthesizedIdentifierSequenceMatch[0].length
+    if (!wasLastNonWhitespaceTokenCommandOrQuery) {
+      const parenthesizedIdentifierSequenceMatch = remainingCode.match(
+        /^\(\s*(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+)(?:\s*(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+))*\s*\)/
       );
-      continue;
+      if (parenthesizedIdentifierSequenceMatch !== null) {
+        out.push({
+          className:
+            "CodeInput__HighlightSpan CodeInput__HighlightSpan--parenthesizedIdentifierSequence",
+          code: parenthesizedIdentifierSequenceMatch[0],
+        });
+        remainingCode = remainingCode.slice(
+          parenthesizedIdentifierSequenceMatch[0].length
+        );
+        continue;
+      }
     }
 
     const squareMatch = remainingCode.match(
@@ -486,4 +496,21 @@ function getInitialCodeFromLocalStorage(): string {
 
 function saveCodeToLocalStorage(code: string): void {
   localStorage.setItem(LOCAL_STORAGE_CODE_KEY, code);
+}
+
+/**
+ * For some reason, TypeScript doesn't seem to support `Array.prototype.findLast`,
+ * even though tsconfig.json has `esnext` as part of `lib`.
+ * So, we use this homemade version instead.
+ */
+function arrayFindLast<T>(
+  arr: readonly T[],
+  predicate: (t: T) => boolean
+): T | undefined {
+  for (let i = arr.length - 1; i >= 0; --i) {
+    if (predicate(arr[i])) {
+      return arr[i];
+    }
+  }
+  return undefined;
 }
