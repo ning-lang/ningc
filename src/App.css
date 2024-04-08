@@ -173,5 +173,5 @@ body {
 .CodeInput__HighlightSpan--booleanLiteral,
 .CodeInput__HighlightSpan--numberLiteral,
 .CodeInput__HighlightSpan--stringLiteral {
-  color: var(--code-color-purple);
+  color: var(--code-color-cyan);
 }
