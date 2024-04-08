@@ -343,36 +343,38 @@ function highlight(code: string): React.ReactElement[] {
   }
 
   const out = [];
-  let i = 0;
+  const duplicateCount: Map<string, number> = new Map();
   let remainingCode = code;
   while (remainingCode.length > 0) {
     const commentMatch = remainingCode.match(/^\/\/[^\n]*/);
     if (commentMatch !== null) {
+      const i = duplicateCount.get(commentMatch[0]) ?? 0;
+      duplicateCount.set(commentMatch[0], i + 1);
       out.push(
         <span
           className="CodeInput__HighlightSpan CodeInput__HighlightSpan--comment"
-          key={i + ":" + code}
+          key={i + ":" + commentMatch[0]}
         >
           {commentMatch[0]}
         </span>
       );
       remainingCode = remainingCode.slice(commentMatch[0].length);
-      ++i;
       continue;
     }
 
     const whitespaceMatch = remainingCode.match(/^\s+/);
     if (whitespaceMatch !== null) {
+      const i = duplicateCount.get(whitespaceMatch[0]) ?? 0;
+      duplicateCount.set(whitespaceMatch[0], i + 1);
       out.push(
         <span
           className="CodeInput__HighlightSpan CodeInput__HighlightSpan--whitespace"
-          key={i + ":" + code}
+          key={i + ":" + whitespaceMatch[0]}
         >
           {whitespaceMatch[0]}
         </span>
       );
       remainingCode = remainingCode.slice(whitespaceMatch[0].length);
-      ++i;
       continue;
     }
 
@@ -380,16 +382,17 @@ function highlight(code: string): React.ReactElement[] {
       /^"(?:[^"{}]|\{0x[0-9a-fA-F]+\})*"/
     );
     if (stringLiteralMatch !== null) {
+      const i = duplicateCount.get(stringLiteralMatch[0]) ?? 0;
+      duplicateCount.set(stringLiteralMatch[0], i + 1);
       out.push(
         <span
           className="CodeInput__HighlightSpan CodeInput__HighlightSpan--stringLiteral"
-          key={i + ":" + code}
+          key={i + ":" + stringLiteralMatch[0]}
         >
           {stringLiteralMatch[0]}
         </span>
       );
       remainingCode = remainingCode.slice(stringLiteralMatch[0].length);
-      ++i;
       continue;
     }
 
@@ -397,31 +400,33 @@ function highlight(code: string): React.ReactElement[] {
       /^-?[0-9]+(?:\.[0-9]+)?(?:e-?[0-9]+)?(?![a-zA-Z])/
     );
     if (numberLiteralMatch !== null) {
+      const i = duplicateCount.get(numberLiteralMatch[0]) ?? 0;
+      duplicateCount.set(numberLiteralMatch[0], i + 1);
       out.push(
         <span
           className="CodeInput__HighlightSpan CodeInput__HighlightSpan--numberLiteral"
-          key={i + ":" + code}
+          key={i + ":" + numberLiteralMatch[0]}
         >
           {numberLiteralMatch[0]}
         </span>
       );
       remainingCode = remainingCode.slice(numberLiteralMatch[0].length);
-      ++i;
       continue;
     }
 
     const booleanLiteralMatch = remainingCode.match(/^(?:true|false)\b/);
     if (booleanLiteralMatch !== null) {
+      const i = duplicateCount.get(booleanLiteralMatch[0]) ?? 0;
+      duplicateCount.set(booleanLiteralMatch[0], i + 1);
       out.push(
         <span
           className="CodeInput__HighlightSpan CodeInput__HighlightSpan--booleanLiteral"
-          key={i + ":" + code}
+          key={i + ":" + booleanLiteralMatch[0]}
         >
           {booleanLiteralMatch[0]}
         </span>
       );
       remainingCode = remainingCode.slice(booleanLiteralMatch[0].length);
-      ++i;
       continue;
     }
 
@@ -429,73 +434,76 @@ function highlight(code: string): React.ReactElement[] {
       /^(?:Boolean|Number|String|Global|Query|Command|if|else|while|repeat|return)\b/
     );
     if (structuralKeywordMatch !== null) {
+      const i = duplicateCount.get(structuralKeywordMatch[0]) ?? 0;
+      duplicateCount.set(structuralKeywordMatch[0], i + 1);
       out.push(
         <span
           className="CodeInput__HighlightSpan CodeInput__HighlightSpan--structuralKeyword"
-          key={i + ":" + code}
+          key={i + ":" + structuralKeywordMatch[0]}
         >
           {structuralKeywordMatch[0]}
         </span>
       );
       remainingCode = remainingCode.slice(structuralKeywordMatch[0].length);
-      ++i;
       continue;
     }
 
     const punctuationMatch = remainingCode.match(/^[()[\]{};]/);
     if (punctuationMatch !== null) {
+      const i = duplicateCount.get(punctuationMatch[0]) ?? 0;
+      duplicateCount.set(punctuationMatch[0], i + 1);
       out.push(
         <span
           className="CodeInput__HighlightSpan CodeInput__HighlightSpan--punctuation"
-          key={i + ":" + code}
+          key={i + ":" + punctuationMatch[0]}
         >
           {punctuationMatch[0]}
         </span>
       );
       remainingCode = remainingCode.slice(punctuationMatch[0].length);
-      ++i;
       continue;
     }
 
     const identifierMatch = remainingCode.match(/^[^\s()[\]{};A-Z"]+/);
     if (identifierMatch !== null) {
+      const i = duplicateCount.get(identifierMatch[0]) ?? 0;
+      duplicateCount.set(identifierMatch[0], i + 1);
       out.push(
         <span
           className="CodeInput__HighlightSpan CodeInput__HighlightSpan--identifier"
-          key={i + ":" + code}
+          key={i + ":" + identifierMatch[0]}
         >
           {identifierMatch[0]}
         </span>
       );
       remainingCode = remainingCode.slice(identifierMatch[0].length);
-      ++i;
       continue;
     }
 
     const badIdentifierMatch = remainingCode.match(/^[^\s()[\]{};"]+/);
     if (badIdentifierMatch !== null) {
+      const i = duplicateCount.get(badIdentifierMatch[0]) ?? 0;
+      duplicateCount.set(badIdentifierMatch[0], i + 1);
       out.push(
         <span
           className="CodeInput__HighlightSpan CodeInput__HighlightSpan--badIdentifier"
-          key={i + ":" + code}
+          key={i + ":" + badIdentifierMatch[0]}
         >
           {badIdentifierMatch[0]}
         </span>
       );
       remainingCode = remainingCode.slice(badIdentifierMatch[0].length);
-      ++i;
       continue;
     }
 
     out.push(
       <span
         className="CodeInput__HighlightSpan CodeInput__HighlightSpan--lexError"
-        key={i + ":" + code}
+        key={duplicateCount.size + ":" + remainingCode}
       >
         {remainingCode}
       </span>
     );
-    ++i;
     break;
   }
 
