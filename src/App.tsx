@@ -440,7 +440,7 @@ function highlight(code: string): React.ReactElement[] {
     }
 
     const paramDefLeftParenMatch = remainingCode.match(
-      /^\((?=(?:Boolean|Number|String)\b)/
+      /^\((?=\s*(?:Boolean|Number|String)\b)/
     );
     if (paramDefLeftParenMatch !== null) {
       out.push({
@@ -453,17 +453,17 @@ function highlight(code: string): React.ReactElement[] {
     }
 
     if (wasLastNonWhitespaceTokenATypeKeyword) {
-      const identifierSequenceAndRightParamMatch = remainingCode.match(
-        /^(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+)(?:\s*(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+))*\s*\)/
+      const zeroOrMoreIdentifiersAndRightParamMatch = remainingCode.match(
+        /^(?:(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+)\s*)*\)/
       );
-      if (identifierSequenceAndRightParamMatch !== null) {
+      if (zeroOrMoreIdentifiersAndRightParamMatch !== null) {
         out.push({
           className:
             "CodeInput__HighlightSpan CodeInput__HighlightSpan--paramDefParamNameAndRightParam",
-          code: identifierSequenceAndRightParamMatch[0],
+          code: zeroOrMoreIdentifiersAndRightParamMatch[0],
         });
         remainingCode = remainingCode.slice(
-          identifierSequenceAndRightParamMatch[0].length
+          zeroOrMoreIdentifiersAndRightParamMatch[0].length
         );
         continue;
       }
