@@ -330,8 +330,6 @@ export class App extends React.Component<{}, State> {
 
 function highlight(code: string): React.ReactElement[] {
   const parseResult = parse(code);
-  const noErrors =
-    parseResult.succeeded && typecheck(parseResult.value).length === 0;
 
   if (!parseResult.succeeded) {
     console.log({ parseError: parseResult.error });
