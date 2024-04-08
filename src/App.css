@@ -180,6 +180,7 @@ body {
   color: var(--code-color-cyan);
 }
 
-.CodeInput__HighlightSpan--parenthesizedIdentifierSequence {
+.CodeInput__HighlightSpan--parenthesizedIdentifierSequence,
+.CodeInput__HighlightSpan--square {
   color: var(--code-color-blue);
 }
