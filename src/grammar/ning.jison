@@ -17,7 +17,7 @@
 "Number" return "NUMBER_KW";
 "String" return "STRING_KW";
 "Boolean" return "BOOLEAN_KW";
-[^\s()[\]{};A-Z"]+ return "IDENTIFIER"
+NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+ return "IDENTIFIER"
 <<EOF>> return 'EOF';
 
 /lex

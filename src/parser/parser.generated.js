@@ -1176,7 +1176,7 @@ var parser = (function () {
         /^(?:Number\b)/,
         /^(?:String\b)/,
         /^(?:Boolean\b)/,
-        /^(?:[^\s()[\]{};A-Z"]+)/,
+        /^(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+)/,
         /^(?:$)/,
       ],
       conditions: {
