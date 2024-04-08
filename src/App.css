@@ -181,6 +181,8 @@ body {
 }
 
 .CodeInput__HighlightSpan--parenthesizedIdentifierSequence,
-.CodeInput__HighlightSpan--square {
+.CodeInput__HighlightSpan--square,
+.CodeInput__HighlightSpan--paramDefLeftParen,
+.CodeInput__HighlightSpan--paramDefParamNameAndRightParam {
   color: var(--code-color-blue);
 }

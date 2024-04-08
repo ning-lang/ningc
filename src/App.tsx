@@ -354,9 +354,14 @@ function highlight(code: string): React.ReactElement[] {
       out,
       (builder) => !/^\s+$/.test(builder.code)
     );
-    const wasLastNonWhitespaceTokenCommandOrQuery =
+    const wasLastNonWhitespaceTokenCommandOrQueryKeyword =
       lastNonWhitespaceTokenSpanBuilder !== undefined &&
       /^(?:Command|Query)$/.test(lastNonWhitespaceTokenSpanBuilder.code);
+    const wasLastNonWhitespaceTokenATypeKeyword =
+      lastNonWhitespaceTokenSpanBuilder !== undefined &&
+      /^(?:Boolean|Number|String)$/.test(
+        lastNonWhitespaceTokenSpanBuilder.code
+      );
 
     const commentMatch = remainingCode.match(/^\/\/[^\n]*/);
     if (commentMatch !== null) {
@@ -405,7 +410,7 @@ function highlight(code: string): React.ReactElement[] {
       continue;
     }
 
-    if (!wasLastNonWhitespaceTokenCommandOrQuery) {
+    if (!wasLastNonWhitespaceTokenCommandOrQueryKeyword) {
       const parenthesizedIdentifierSequenceMatch = remainingCode.match(
         /^\(\s*(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+)(?:\s*(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+))*\s*\)/
       );
@@ -432,6 +437,36 @@ function highlight(code: string): React.ReactElement[] {
       });
       remainingCode = remainingCode.slice(squareMatch[0].length);
       continue;
+    }
+
+    const paramDefLeftParenMatch = remainingCode.match(
+      /^\((?=(?:Boolean|Number|String)\b)/
+    );
+    if (paramDefLeftParenMatch !== null) {
+      out.push({
+        className:
+          "CodeInput__HighlightSpan CodeInput__HighlightSpan--paramDefLeftParen",
+        code: paramDefLeftParenMatch[0],
+      });
+      remainingCode = remainingCode.slice(paramDefLeftParenMatch[0].length);
+      continue;
+    }
+
+    if (wasLastNonWhitespaceTokenATypeKeyword) {
+      const identifierSequenceAndRightParamMatch = remainingCode.match(
+        /^(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+)(?:\s*(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+))*\s*\)/
+      );
+      if (identifierSequenceAndRightParamMatch !== null) {
+        out.push({
+          className:
+            "CodeInput__HighlightSpan CodeInput__HighlightSpan--paramDefParamNameAndRightParam",
+          code: identifierSequenceAndRightParamMatch[0],
+        });
+        remainingCode = remainingCode.slice(
+          identifierSequenceAndRightParamMatch[0].length
+        );
+        continue;
+      }
     }
 
     const punctuationMatch = remainingCode.match(/^[()[\]{};]/);
