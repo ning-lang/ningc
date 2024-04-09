@@ -198,3 +198,7 @@ body {
 .CodeInput__BackdropContent--underline {
   color: transparent;
 }
+
+.CodeInput__UnderlineSpan {
+  text-decoration: wavy underline var(--code-color-red);
+}

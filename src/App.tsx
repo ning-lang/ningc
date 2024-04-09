@@ -587,11 +587,68 @@ function arrayFindLast<T>(
   return undefined;
 }
 
+interface ErrorBoundary {
+  kind: "start" | "end";
+  codeIndex: number;
+}
+
 function underlineErrors(
   code: string,
   parseResult: ParseResult,
   typeErrors: readonly NingTypeError[]
 ): React.ReactElement[] {
+  const boundaries = getErrorBoundaries(parseResult, typeErrors);
+  boundaries.sort((a, b) => a.codeIndex - b.codeIndex);
+
+  interface SpanBuilder {
+    isUnderlined: boolean;
+    code: string;
+  }
+
+  const out: SpanBuilder[] = [];
+  let errorNestLevel = 0;
+  let currentBoundaryIndex = 0;
+  let lastCodeSliceEnd = 0;
+  while (lastCodeSliceEnd < code.length) {
+    if (currentBoundaryIndex >= boundaries.length) {
+      out.push({
+        isUnderlined: errorNestLevel > 0,
+        code: code.slice(lastCodeSliceEnd),
+      });
+      break;
+    }
+
+    const boundary = boundaries[currentBoundaryIndex];
+    out.push({
+      isUnderlined: errorNestLevel > 0,
+      code: code.slice(lastCodeSliceEnd, boundary.codeIndex),
+    });
+
+    errorNestLevel += boundary.kind === "start" ? 1 : -1;
+    ++currentBoundaryIndex;
+    lastCodeSliceEnd = boundary.codeIndex;
+  }
+
+  const duplicateCount: Map<string, number> = new Map();
+  return out.map((builder) => {
+    const i = duplicateCount.get(builder.code) ?? 0;
+    duplicateCount.set(builder.code, i + 1);
+    const className = builder.isUnderlined ? "CodeInput__UnderlineSpan" : "";
+    return (
+      <span className={className} key={i + ":" + builder.code}>
+        {builder.code}
+      </span>
+    );
+  });
+}
+
+function getErrorBoundaries(
+  parseResult: ParseResult,
+  typeErrors: readonly NingTypeError[]
+): ErrorBoundary[] {
   // TODO
-  return [<span key={0}>{code}</span>];
+  return [
+    { kind: "start", codeIndex: 0 },
+    { kind: "end", codeIndex: 5 },
+  ];
 }
