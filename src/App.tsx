@@ -1,12 +1,7 @@
 import React from "react";
 import "./App.css";
 import { ParseResult, parse } from "./parser";
-import {
-  typecheck,
-  NingTypeError,
-  TypeErrorKind,
-  NameClashError,
-} from "./typecheck";
+import { typecheck, NingTypeError } from "./typecheck";
 import { ExecutionEnvironment, Program, getUncheckedProgram } from "./program";
 import { NingKey, codeToKey } from "./key";
 import { HELLO_WORLD_CODE } from "./helloWorldCode";
