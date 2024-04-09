@@ -1,4 +1,8 @@
+import { BUILTIN_COMMANDS } from "./builtins";
+import { getCommandInputs } from "./funcInputs";
+import { getCommandSignature } from "./funcSignature";
 import { ParseResult } from "./parser";
+import { stringifyCommand } from "./stringifyNingNode";
 import {
   ArgTypeMismatchError,
   ExpectedValReturnButGotVoidReturnError,
@@ -17,6 +21,14 @@ import {
   SquareTypeMismatchError,
   TypeErrorKind,
 } from "./typecheck";
+
+const POSSIBLE_NAME_DEF_COMMAND_SIGNATURES: ReadonlySet<string> = new Set([
+  BUILTIN_COMMANDS.let_.signature,
+  BUILTIN_COMMANDS.var_.signature,
+  BUILTIN_COMMANDS.booleanListCreate.signature,
+  BUILTIN_COMMANDS.numberListCreate.signature,
+  BUILTIN_COMMANDS.stringListCreate.signature,
+]);
 
 export interface ErrorLocationBoundary {
   kind: "start" | "end";
@@ -88,8 +100,48 @@ function getBoundariesOfMultipleGlobalDefsError(
 function getBoundariesOfNameClashError(
   error: NameClashError
 ): ErrorLocationBoundary[] {
-  // TODO
-  return [];
+  const { newDef } = error;
+  switch (newDef.kind) {
+    case "command": {
+      // Sanity check
+      const signature = getCommandSignature(newDef);
+      if (!POSSIBLE_NAME_DEF_COMMAND_SIGNATURES.has(signature)) {
+        throw new Error(
+          "Impossible: Got NameClashError with non-name-def command: " +
+            stringifyCommand(newDef)
+        );
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const [_args, squares] = getCommandInputs(newDef);
+      const squareIdents = squares[0].identifiers;
+      const firstIdent = squareIdents[0];
+      const lastIdent = squareIdents[squareIdents.length - 1];
+      return [
+        { kind: "start", codeIndex: firstIdent.location.range[0] },
+        { kind: "end", codeIndex: lastIdent.location.range[1] },
+      ];
+    }
+
+    case "command_def":
+    case "query_def": {
+      const firstHeaderPart = newDef.header[0];
+      const lastHeaderPart = newDef.header[newDef.header.length - 1];
+      return [
+        { kind: "start", codeIndex: firstHeaderPart.location.range[0] },
+        { kind: "end", codeIndex: lastHeaderPart.location.range[1] },
+      ];
+    }
+
+    case "func_param_def": {
+      const firstIdent = newDef.name[0];
+      const lastIdent = newDef.name[newDef.name.length - 1];
+      return [
+        { kind: "start", codeIndex: firstIdent.location.range[0] },
+        { kind: "end", codeIndex: lastIdent.location.range[1] },
+      ];
+    }
+  }
 }
 
 function getBoundariesOfIllegalCommandInGlobalDefError(

@@ -7,6 +7,7 @@ import {
 import * as ast from "./types/tysonTypeDict";
 import { BUILTIN_COMMANDS, BUILTIN_QUERIES } from "./builtins";
 import { getNingNumberLiteralRegex, parseNingString } from "./literals";
+import { stringifyCommand, stringifyExpression } from "./stringifyNingNode";
 
 const RENDER_COMMAND_SIGNATURE = "render";
 const UPDATE_COMMAND_SIGNATURE = "update";
@@ -992,14 +993,6 @@ class ProgramImpl implements Program {
     }
     throw new Error("Attempted to access non-existent list: " + name);
   }
-}
-
-function stringifyCommand(command: ast.Command): string {
-  return "TODO IMPLEMENT stringifyCommand;";
-}
-
-function stringifyExpression(expr: ast.Expression): string {
-  return "TODO IMPLEMENT stringifyExpression";
 }
 
 function getVariableMapWithArgs(
