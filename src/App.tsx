@@ -1,10 +1,16 @@
 import React from "react";
 import "./App.css";
 import { ParseResult, parse } from "./parser";
-import { typecheck, NingTypeError } from "./typecheck";
+import {
+  typecheck,
+  NingTypeError,
+  TypeErrorKind,
+  NameClashError,
+} from "./typecheck";
 import { ExecutionEnvironment, Program, getUncheckedProgram } from "./program";
 import { NingKey, codeToKey } from "./key";
 import { HELLO_WORLD_CODE } from "./helloWorldCode";
+import { getErrorBoundaries as getErrorLocationBoundaries } from "./errorLocation";
 
 const LOCAL_STORAGE_CODE_KEY = "NingPlayground.UserCode";
 const DEFAULT_CANVAS_DIMENSIONS = [480, 360];
@@ -587,17 +593,12 @@ function arrayFindLast<T>(
   return undefined;
 }
 
-interface ErrorBoundary {
-  kind: "start" | "end";
-  codeIndex: number;
-}
-
 function underlineErrors(
   code: string,
   parseResult: ParseResult,
   typeErrors: readonly NingTypeError[]
 ): React.ReactElement[] {
-  const boundaries = getErrorBoundaries(parseResult, typeErrors);
+  const boundaries = getErrorLocationBoundaries(parseResult, typeErrors);
   boundaries.sort((a, b) => a.codeIndex - b.codeIndex);
 
   interface SpanBuilder {
@@ -640,15 +641,4 @@ function underlineErrors(
       </span>
     );
   });
-}
-
-function getErrorBoundaries(
-  parseResult: ParseResult,
-  typeErrors: readonly NingTypeError[]
-): ErrorBoundary[] {
-  // TODO
-  return [
-    { kind: "start", codeIndex: 0 },
-    { kind: "end", codeIndex: 5 },
-  ];
 }
