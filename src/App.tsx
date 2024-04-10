@@ -210,10 +210,15 @@ export class App extends React.Component<{}, State> {
       parseResultCache: parseResult,
       typeErrorsCache: typeErrors,
     });
+
     saveCodeToLocalStorage(code);
   }
 
   onCodeInputTextareaScrolled(): void {
+    this.syncCodeInputScroll();
+  }
+
+  syncCodeInputScroll(): void {
     const highlightBackdrop = this.codeInputHighlightBackdropRef.current;
     const underlineBackdrop = this.codeInputUnderlineBackdropRef.current;
     const textarea = this.codeInputTextareaRef.current;
@@ -344,6 +349,8 @@ export class App extends React.Component<{}, State> {
   }
 
   onKeyDown(event: KeyboardEvent): void {
+    this.syncCodeInputScroll();
+
     const keyName = this.getNingKeyName(event.code);
     if (keyName !== null) {
       this.keysPressed.add(keyName);
@@ -351,6 +358,8 @@ export class App extends React.Component<{}, State> {
   }
 
   onKeyUp(event: KeyboardEvent): void {
+    this.syncCodeInputScroll();
+
     const keyName = this.getNingKeyName(event.code);
     if (keyName !== null) {
       this.keysPressed.delete(keyName);
