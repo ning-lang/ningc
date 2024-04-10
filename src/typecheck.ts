@@ -586,7 +586,9 @@ class Typechecker {
 
     this.checkThatCommandSignatureIsRecognized(command);
 
-    const [args, squares, blockCommands] = getCommandInputs(command);
+    const [parenthesizedArgs, squares, blockCommands] =
+      getCommandInputs(command);
+    const args = parenthesizedArgs.map((p) => p.expression);
 
     const argTypes: (ast.NingType | typeof MALTYPED)[] = args.map((arg) =>
       this.checkExpressionAndGetType(arg)
@@ -633,17 +635,19 @@ class Typechecker {
 
   checkLetCommand(command: ast.Command): void {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [[arg], [square], _blockCommands] = getCommandInputs(command);
+    const [[parenthesizedArg], [square], _blockCommands] =
+      getCommandInputs(command);
     const name = stringifyIdentifierSequence(square.identifiers);
-    const argType = this.checkExpressionAndGetType(arg);
+    const argType = this.checkExpressionAndGetType(parenthesizedArg.expression);
     this.checkVarDefAndRegisterIfNotTaken(name, argType, false, command);
   }
 
   checkVarCommand(command: ast.Command): void {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [[arg], [square], _blockCommands] = getCommandInputs(command);
+    const [[parenthesizedArg], [square], _blockCommands] =
+      getCommandInputs(command);
     const name = stringifyIdentifierSequence(square.identifiers);
-    const argType = this.checkExpressionAndGetType(arg);
+    const argType = this.checkExpressionAndGetType(parenthesizedArg.expression);
     this.checkVarDefAndRegisterIfNotTaken(name, argType, true, command);
   }
 
@@ -1156,7 +1160,8 @@ class Typechecker {
 
     const signature = getQuerySignature(expr);
 
-    const [args, squares] = getQueryInputs(expr);
+    const [parenthesizedArgs, squares] = getQueryInputs(expr);
+    const args = parenthesizedArgs.map((p) => p.expression);
 
     const argTypes: (ast.NingType | typeof MALTYPED)[] = args.map((arg) =>
       this.checkExpressionAndGetType(arg)

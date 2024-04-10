@@ -239,7 +239,8 @@ class ProgramImpl implements Program {
 
   evalQuery(expr: ast.CompoundExpression): NingVal {
     const signature = getQuerySignature(expr);
-    const [args, squares] = getQueryInputs(expr);
+    const [parenthesizedArgs, squares] = getQueryInputs(expr);
+    const args = parenthesizedArgs.map((p) => p.expression);
 
     if (signature === BUILTIN_QUERIES.listLength.signature) {
       const listName = squares[0].identifiers.map((i) => i.name).join(" ");
@@ -641,7 +642,9 @@ class ProgramImpl implements Program {
     command: ast.Command
   ): null | typeof VOID_RETURN_VAL | NingVal {
     const signature = getCommandSignature(command);
-    const [args, squares, blockCommands] = getCommandInputs(command);
+    const [parenthesizedArgs, squares, blockCommands] =
+      getCommandInputs(command);
+    const args = parenthesizedArgs.map((p) => p.expression);
 
     if (signature === BUILTIN_COMMANDS.if_.signature) {
       if (this.evalExpr(args[0])) {

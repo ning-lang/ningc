@@ -2,8 +2,8 @@ import type * as ast from "./types/tysonTypeDict";
 
 export function getQueryInputs(
   expr: ast.CompoundExpression
-): [ast.Expression[], ast.SquareBracketedIdentifierSequence[]] {
-  const args: ast.Expression[] = [];
+): [ast.ParenthesizedExpression[], ast.SquareBracketedIdentifierSequence[]] {
+  const args: ast.ParenthesizedExpression[] = [];
   const squares: ast.SquareBracketedIdentifierSequence[] = [];
   for (const part of expr.parts) {
     if (part.kind === "identifier") {
@@ -11,7 +11,7 @@ export function getQueryInputs(
     }
 
     if (part.kind === "parenthesized_expression") {
-      args.push(part.expression);
+      args.push(part);
       continue;
     }
 
@@ -29,11 +29,11 @@ export function getQueryInputs(
 export function getCommandInputs(
   command: ast.Command
 ): [
-  ast.Expression[],
+  ast.ParenthesizedExpression[],
   ast.SquareBracketedIdentifierSequence[],
   ast.BlockCommand[]
 ] {
-  const args: ast.Expression[] = [];
+  const args: ast.ParenthesizedExpression[] = [];
   const squares: ast.SquareBracketedIdentifierSequence[] = [];
   const blockCommands: ast.BlockCommand[] = [];
   for (const part of command.parts) {
@@ -42,7 +42,7 @@ export function getCommandInputs(
     }
 
     if (part.kind === "parenthesized_expression") {
-      args.push(part.expression);
+      args.push(part);
       continue;
     }
 
