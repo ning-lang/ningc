@@ -30,76 +30,73 @@ const POSSIBLE_NAME_DEF_COMMAND_SIGNATURES: ReadonlySet<string> = new Set([
   BUILTIN_COMMANDS.stringListCreate.signature,
 ]);
 
-export interface ErrorLocationBoundary {
-  kind: "start" | "end";
-  codeIndex: number;
+export interface ErrorSpan {
+  error: NingTypeError;
+  startIndex: number;
+  endIndex: number;
 }
 
-export function getErrorBoundaries(
+export function getErrorSpans(
   parseResult: ParseResult,
   typeErrors: readonly NingTypeError[]
-): ErrorLocationBoundary[] {
+): ErrorSpan[] {
   if (!parseResult.succeeded) {
     // TODO: We need to modify the Jison lexer
     // to provide location info.
     return [];
   }
 
-  return typeErrors.flatMap(getBoundariesOfTypeError);
+  return typeErrors.flatMap(getSpansOfTypeError);
 }
 
-function getBoundariesOfTypeError(
-  error: NingTypeError
-): ErrorLocationBoundary[] {
+function getSpansOfTypeError(error: NingTypeError): ErrorSpan[] {
   switch (error.kind) {
     case TypeErrorKind.GlobalDefNotFirst:
-      return getBoundariesOfGlobalDefNotFirstError(error);
+      return getSpansOfGlobalDefNotFirstError(error);
     case TypeErrorKind.MultipleGlobalDefs:
-      return getBoundariesOfMultipleGlobalDefsError(error);
+      return getSpansOfMultipleGlobalDefsError(error);
     case TypeErrorKind.NameClash:
-      return getBoundariesOfNameClashError(error);
+      return getSpansOfNameClashError(error);
     case TypeErrorKind.IllegalCommandInGlobalDef:
-      return getBoundariesOfIllegalCommandInGlobalDefError(error);
+      return getSpansOfIllegalCommandInGlobalDefError(error);
     case TypeErrorKind.IllegalCommandInQueryDef:
-      return getBoundariesOfIllegalCommandInQueryDefError(error);
+      return getSpansOfIllegalCommandInQueryDefError(error);
     case TypeErrorKind.QueryCommandMutatesGlobalVariable:
-      return getBoundariesOfQueryCommandMutatesGlobalVariableError(error);
+      return getSpansOfQueryCommandMutatesGlobalVariableError(error);
     case TypeErrorKind.QueryDefBodyLacksInevitableReturn:
-      return getBoundariesOfQueryDefBodyLacksInevitableReturnError(error);
+      return getSpansOfQueryDefBodyLacksInevitableReturnError(error);
     case TypeErrorKind.ReassignedImmutableVariable:
-      return getBoundariesOfReassignedImmutableVariableError(error);
+      return getSpansOfReassignedImmutableVariableError(error);
     case TypeErrorKind.ExpectedVoidReturnButGotValueReturn:
-      return getBoundariesOfExpectedVoidReturnButGotValueReturnError(error);
+      return getSpansOfExpectedVoidReturnButGotValueReturnError(error);
     case TypeErrorKind.ExpectedValReturnButGotVoidReturn:
-      return getBoundariesOfExpectedValReturnButGotVoidReturnError(error);
+      return getSpansOfExpectedValReturnButGotVoidReturnError(error);
     case TypeErrorKind.ReturnTypeMismatch:
-      return getBoundariesOfReturnTypeMismatchError(error);
+      return getSpansOfReturnTypeMismatchError(error);
     case TypeErrorKind.ArgTypeMismatch:
-      return getBoundariesOfArgTypeMismatchError(error);
+      return getSpansOfArgTypeMismatchError(error);
     case TypeErrorKind.SquareTypeMismatch:
-      return getBoundariesOfSquareTypeMismatchError(error);
+      return getSpansOfSquareTypeMismatchError(error);
     case TypeErrorKind.NameNotFound:
-      return getBoundariesOfNameNotFoundError(error);
+      return getSpansOfNameNotFoundError(error);
   }
 }
 
-function getBoundariesOfGlobalDefNotFirstError(
+function getSpansOfGlobalDefNotFirstError(
   error: GlobalDefNotFirstError
-): ErrorLocationBoundary[] {
+): ErrorSpan[] {
   // TODO
   return [];
 }
 
-function getBoundariesOfMultipleGlobalDefsError(
+function getSpansOfMultipleGlobalDefsError(
   error: MultipleGlobalDefsError
-): ErrorLocationBoundary[] {
+): ErrorSpan[] {
   // TODO
   return [];
 }
 
-function getBoundariesOfNameClashError(
-  error: NameClashError
-): ErrorLocationBoundary[] {
+function getSpansOfNameClashError(error: NameClashError): ErrorSpan[] {
   const { newDef } = error;
   switch (newDef.kind) {
     case "command": {
@@ -118,8 +115,11 @@ function getBoundariesOfNameClashError(
       const firstIdent = squareIdents[0];
       const lastIdent = squareIdents[squareIdents.length - 1];
       return [
-        { kind: "start", codeIndex: firstIdent.location.range[0] },
-        { kind: "end", codeIndex: lastIdent.location.range[1] },
+        {
+          error,
+          startIndex: firstIdent.location.range[0],
+          endIndex: lastIdent.location.range[1],
+        },
       ];
     }
 
@@ -128,8 +128,11 @@ function getBoundariesOfNameClashError(
       const firstHeaderPart = newDef.header[0];
       const lastHeaderPart = newDef.header[newDef.header.length - 1];
       return [
-        { kind: "start", codeIndex: firstHeaderPart.location.range[0] },
-        { kind: "end", codeIndex: lastHeaderPart.location.range[1] },
+        {
+          error,
+          startIndex: firstHeaderPart.location.range[0],
+          endIndex: lastHeaderPart.location.range[1],
+        },
       ];
     }
 
@@ -137,86 +140,87 @@ function getBoundariesOfNameClashError(
       const firstIdent = newDef.name[0];
       const lastIdent = newDef.name[newDef.name.length - 1];
       return [
-        { kind: "start", codeIndex: firstIdent.location.range[0] },
-        { kind: "end", codeIndex: lastIdent.location.range[1] },
+        {
+          error,
+          startIndex: firstIdent.location.range[0],
+          endIndex: lastIdent.location.range[1],
+        },
       ];
     }
   }
 }
 
-function getBoundariesOfIllegalCommandInGlobalDefError(
+function getSpansOfIllegalCommandInGlobalDefError(
   error: IllegalCommandInGlobalDefError
-): ErrorLocationBoundary[] {
+): ErrorSpan[] {
   // TODO
   return [];
 }
 
-function getBoundariesOfIllegalCommandInQueryDefError(
+function getSpansOfIllegalCommandInQueryDefError(
   error: IllegalCommandInQueryDefError
-): ErrorLocationBoundary[] {
+): ErrorSpan[] {
   // TODO
   return [];
 }
 
-function getBoundariesOfQueryCommandMutatesGlobalVariableError(
+function getSpansOfQueryCommandMutatesGlobalVariableError(
   error: QueryCommandMutatesGlobalVariableError
-): ErrorLocationBoundary[] {
+): ErrorSpan[] {
   // TODO
   return [];
 }
 
-function getBoundariesOfQueryDefBodyLacksInevitableReturnError(
+function getSpansOfQueryDefBodyLacksInevitableReturnError(
   error: QueryDefBodyLacksInevitableReturnError
-): ErrorLocationBoundary[] {
+): ErrorSpan[] {
   // TODO
   return [];
 }
 
-function getBoundariesOfReassignedImmutableVariableError(
+function getSpansOfReassignedImmutableVariableError(
   error: ReassignedImmutableVariableError
-): ErrorLocationBoundary[] {
+): ErrorSpan[] {
   // TODO
   return [];
 }
 
-function getBoundariesOfExpectedVoidReturnButGotValueReturnError(
+function getSpansOfExpectedVoidReturnButGotValueReturnError(
   error: ExpectedVoidReturnButGotValueReturnError
-): ErrorLocationBoundary[] {
+): ErrorSpan[] {
   // TODO
   return [];
 }
 
-function getBoundariesOfExpectedValReturnButGotVoidReturnError(
+function getSpansOfExpectedValReturnButGotVoidReturnError(
   error: ExpectedValReturnButGotVoidReturnError
-): ErrorLocationBoundary[] {
+): ErrorSpan[] {
   // TODO
   return [];
 }
 
-function getBoundariesOfReturnTypeMismatchError(
+function getSpansOfReturnTypeMismatchError(
   error: ReturnTypeMismatchError
-): ErrorLocationBoundary[] {
+): ErrorSpan[] {
   // TODO
   return [];
 }
 
-function getBoundariesOfArgTypeMismatchError(
+function getSpansOfArgTypeMismatchError(
   error: ArgTypeMismatchError
-): ErrorLocationBoundary[] {
+): ErrorSpan[] {
   // TODO
   return [];
 }
 
-function getBoundariesOfSquareTypeMismatchError(
+function getSpansOfSquareTypeMismatchError(
   error: SquareTypeMismatchError
-): ErrorLocationBoundary[] {
+): ErrorSpan[] {
   // TODO
   return [];
 }
 
-function getBoundariesOfNameNotFoundError(
-  error: NameNotFoundError
-): ErrorLocationBoundary[] {
+function getSpansOfNameNotFoundError(error: NameNotFoundError): ErrorSpan[] {
   // TODO
   return [];
 }

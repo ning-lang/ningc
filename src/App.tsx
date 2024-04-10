@@ -5,7 +5,7 @@ import { typecheck, NingTypeError } from "./typecheck";
 import { ExecutionEnvironment, Program, getUncheckedProgram } from "./program";
 import { NingKey, codeToKey } from "./key";
 import { HELLO_WORLD_CODE } from "./helloWorldCode";
-import { getErrorBoundaries as getErrorLocationBoundaries } from "./errorLocation";
+import { getErrorSpans as getErrorLocationBoundaries } from "./errorSpan";
 
 const LOCAL_STORAGE_CODE_KEY = "NingPlayground.UserCode";
 const DEFAULT_CANVAS_DIMENSIONS = [480, 360];
@@ -593,7 +593,18 @@ function underlineErrors(
   parseResult: ParseResult,
   typeErrors: readonly NingTypeError[]
 ): React.ReactElement[] {
-  const boundaries = getErrorLocationBoundaries(parseResult, typeErrors);
+  interface ErrorLocationBoundary {
+    kind: "start" | "end";
+    codeIndex: number;
+  }
+
+  const boundaries: ErrorLocationBoundary[] = getErrorLocationBoundaries(
+    parseResult,
+    typeErrors
+  ).flatMap((errorSpan) => [
+    { kind: "start", codeIndex: errorSpan.startIndex },
+    { kind: "end", codeIndex: errorSpan.endIndex },
+  ]);
   boundaries.sort((a, b) => a.codeIndex - b.codeIndex);
 
   interface SpanBuilder {
