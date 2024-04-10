@@ -23,6 +23,8 @@ import {
   TypeErrorKind,
 } from "./typecheck";
 import {
+  Command,
+  CompoundExpression,
   ParenthesizedExpression,
   SquareBracketedIdentifierSequence,
 } from "./types/tysonTypeDict";
@@ -157,35 +159,26 @@ function getSpansOfNameClashError(error: NameClashError): ErrorSpan[] {
 function getSpansOfIllegalCommandInGlobalDefError(
   error: IllegalCommandInGlobalDefError
 ): ErrorSpan[] {
-  const { parts } = error.command;
+  return [getSpanOfCommand(error, error.command)];
+}
+
+function getSpanOfCommand(error: NingTypeError, command: Command): ErrorSpan {
+  const { parts } = command;
   const startIndex =
     parts.length > 0
       ? parts[0].location.range[0]
-      : error.command.semicolon.location.range[0];
-  return [
-    {
-      error,
-      startIndex,
-      endIndex: error.command.semicolon.location.range[1],
-    },
-  ];
+      : command.semicolon.location.range[0];
+  return {
+    error,
+    startIndex,
+    endIndex: command.semicolon.location.range[1],
+  };
 }
 
 function getSpansOfIllegalCommandInQueryDefError(
   error: IllegalCommandInQueryDefError
 ): ErrorSpan[] {
-  const { parts } = error.command;
-  const startIndex =
-    parts.length > 0
-      ? parts[0].location.range[0]
-      : error.command.semicolon.location.range[0];
-  return [
-    {
-      error,
-      startIndex,
-      endIndex: error.command.semicolon.location.range[1],
-    },
-  ];
+  return [getSpanOfCommand(error, error.command)];
 }
 
 function getSpansOfQueryCommandMutatesGlobalVariableError(
@@ -270,18 +263,7 @@ function getSpansOfExpectedVoidReturnButGotValueReturnError(
 function getSpansOfExpectedValReturnButGotVoidReturnError(
   error: ExpectedValReturnButGotVoidReturnError
 ): ErrorSpan[] {
-  const { parts } = error.command;
-  const startIndex =
-    parts.length > 0
-      ? parts[0].location.range[0]
-      : error.command.semicolon.location.range[0];
-  return [
-    {
-      error,
-      startIndex,
-      endIndex: error.command.semicolon.location.range[1],
-    },
-  ];
+  return [getSpanOfCommand(error, error.command)];
 }
 
 function getSpansOfReturnTypeMismatchError(
@@ -332,6 +314,34 @@ function getSpansOfSquareTypeMismatchError(
 }
 
 function getSpansOfNameNotFoundError(error: NameNotFoundError): ErrorSpan[] {
-  // TODO
-  return [];
+  const { funcApplication } = error;
+  switch (funcApplication.kind) {
+    case "command":
+      return getSpansOfNameNotFoundErrorForCommand(error, funcApplication);
+    case "compound_expression":
+      return getSpansOfNameNotFoundErrorForCompoundExpression(
+        error,
+        funcApplication
+      );
+  }
+}
+
+function getSpansOfNameNotFoundErrorForCommand(
+  error: NameNotFoundError,
+  command: Command
+): ErrorSpan[] {
+  return [getSpanOfCommand(error, command)];
+}
+
+function getSpansOfNameNotFoundErrorForCompoundExpression(
+  error: NameNotFoundError,
+  expr: CompoundExpression
+): ErrorSpan[] {
+  return [
+    {
+      error,
+      startIndex: expr.location.range[0],
+      endIndex: expr.location.range[1],
+    },
+  ];
 }
