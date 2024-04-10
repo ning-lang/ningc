@@ -25,7 +25,6 @@ export const BUILTIN_DEF = Symbol("BUILTIN_DEF");
 
 export type NingTypeError =
   | GlobalDefNotFirstDefError
-  | MultipleGlobalDefsError
   | NameClashError
   | IllegalCommandInGlobalDefError
   | IllegalCommandInQueryDefError
@@ -41,7 +40,6 @@ export type NingTypeError =
 
 export enum TypeErrorKind {
   GlobalDefNotFirstDef = "global_def_not_first_def",
-  MultipleGlobalDefs = "multiple_global_defs",
   NameClash = "name_clash",
   IllegalCommandInGlobalDef = "illegal_command_in_global_def",
   IllegalCommandInQueryDef = "illegal_command_in_query_def",
@@ -56,14 +54,16 @@ export enum TypeErrorKind {
   NameNotFound = "name_not_found",
 }
 
+/**
+ * If a file has a `Global` def, that def must be the first def of the file.
+ *
+ * As a corollary, there can only be one `Global` def per file
+ * (This follows from the fact that there can only be one first def).
+ */
 export interface GlobalDefNotFirstDefError {
   kind: TypeErrorKind.GlobalDefNotFirstDef;
-  globalDefs: ast.GlobalDef[];
-}
-
-export interface MultipleGlobalDefsError {
-  kind: TypeErrorKind.MultipleGlobalDefs;
-  globalDefs: ast.GlobalDef[];
+  /** This array must be non-empty. */
+  nonFirstGlobalDefs: ast.GlobalDef[];
 }
 
 export interface NameClashError {
@@ -226,14 +226,13 @@ class Typechecker {
   checkAndRegisterGlobalDefs(): void {
     const globalDefs: ast.GlobalDef[] = this.file.filter(isGlobalDef);
 
-    if (globalDefs.length >= 2) {
-      this.errors.push({ kind: TypeErrorKind.MultipleGlobalDefs, globalDefs });
-    }
-
-    if (globalDefs.length > 0 && this.file[0].kind !== "global_def") {
+    const nonFirstGlobalDefs: ast.GlobalDef[] = this.file
+      .slice(1)
+      .filter(isGlobalDef);
+    if (nonFirstGlobalDefs.length > 0) {
       this.errors.push({
         kind: TypeErrorKind.GlobalDefNotFirstDef,
-        globalDefs,
+        nonFirstGlobalDefs,
       });
     }
 
