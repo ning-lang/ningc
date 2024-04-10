@@ -214,8 +214,13 @@ function getSpansOfQueryCommandMutatesGlobalVariableError(
 function getSpansOfQueryDefBodyLacksInevitableReturnError(
   error: QueryDefBodyLacksInevitableReturnError
 ): ErrorSpan[] {
-  // TODO
-  return [];
+  return [
+    {
+      error,
+      startIndex: error.def.returnType.location.range[0],
+      endIndex: error.def.returnType.location.range[1],
+    },
+  ];
 }
 
 function getSpansOfReassignedImmutableVariableError(
