@@ -266,8 +266,18 @@ function getSpansOfExpectedVoidReturnButGotValueReturnError(
 function getSpansOfExpectedValReturnButGotVoidReturnError(
   error: ExpectedValReturnButGotVoidReturnError
 ): ErrorSpan[] {
-  // TODO
-  return [];
+  const { parts } = error.command;
+  const startIndex =
+    parts.length > 0
+      ? parts[0].location.range[0]
+      : error.command.semicolon.location.range[0];
+  return [
+    {
+      error,
+      startIndex,
+      endIndex: error.command.semicolon.location.range[1],
+    },
+  ];
 }
 
 function getSpansOfReturnTypeMismatchError(
