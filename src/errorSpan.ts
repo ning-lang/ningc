@@ -7,7 +7,7 @@ import {
   ArgTypeMismatchError,
   ExpectedValReturnButGotVoidReturnError,
   ExpectedVoidReturnButGotValueReturnError,
-  GlobalDefNotFirstError,
+  GlobalDefNotFirstDefError,
   IllegalCommandInGlobalDefError,
   IllegalCommandInQueryDefError,
   MUTATING_COMMAND_SIGNATURES,
@@ -53,7 +53,7 @@ export function getErrorSpans(
 
 function getSpansOfTypeError(error: NingTypeError): ErrorSpan[] {
   switch (error.kind) {
-    case TypeErrorKind.GlobalDefNotFirst:
+    case TypeErrorKind.GlobalDefNotFirstDef:
       return getSpansOfGlobalDefNotFirstError(error);
     case TypeErrorKind.MultipleGlobalDefs:
       return getSpansOfMultipleGlobalDefsError(error);
@@ -85,17 +85,29 @@ function getSpansOfTypeError(error: NingTypeError): ErrorSpan[] {
 }
 
 function getSpansOfGlobalDefNotFirstError(
-  error: GlobalDefNotFirstError
+  error: GlobalDefNotFirstDefError
 ): ErrorSpan[] {
-  // TODO
-  return [];
+  const defs = error.globalDefs.slice();
+  defs.sort((a, b) => a.location.range[0] - b.location.range[0]);
+
+  return defs.map((def) => ({
+    error,
+    startIndex: def.location.range[0],
+    endIndex: def.location.range[1],
+  }));
 }
 
 function getSpansOfMultipleGlobalDefsError(
   error: MultipleGlobalDefsError
 ): ErrorSpan[] {
-  // TODO
-  return [];
+  const defs = error.globalDefs.slice();
+  defs.sort((a, b) => a.location.range[0] - b.location.range[0]);
+
+  return defs.slice(1).map((def) => ({
+    error,
+    startIndex: def.location.range[0],
+    endIndex: def.location.range[1],
+  }));
 }
 
 function getSpansOfNameClashError(error: NameClashError): ErrorSpan[] {

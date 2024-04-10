@@ -24,7 +24,7 @@ const VOID_RETURN_TYPE = Symbol("VOID_RETURN_TYPE");
 export const BUILTIN_DEF = Symbol("BUILTIN_DEF");
 
 export type NingTypeError =
-  | GlobalDefNotFirstError
+  | GlobalDefNotFirstDefError
   | MultipleGlobalDefsError
   | NameClashError
   | IllegalCommandInGlobalDefError
@@ -40,7 +40,7 @@ export type NingTypeError =
   | NameNotFoundError;
 
 export enum TypeErrorKind {
-  GlobalDefNotFirst = "global_def_not_first",
+  GlobalDefNotFirstDef = "global_def_not_first_def",
   MultipleGlobalDefs = "multiple_global_defs",
   NameClash = "name_clash",
   IllegalCommandInGlobalDef = "illegal_command_in_global_def",
@@ -56,12 +56,14 @@ export enum TypeErrorKind {
   NameNotFound = "name_not_found",
 }
 
-export interface GlobalDefNotFirstError {
-  kind: TypeErrorKind.GlobalDefNotFirst;
+export interface GlobalDefNotFirstDefError {
+  kind: TypeErrorKind.GlobalDefNotFirstDef;
+  globalDefs: ast.GlobalDef[];
 }
 
 export interface MultipleGlobalDefsError {
   kind: TypeErrorKind.MultipleGlobalDefs;
+  globalDefs: ast.GlobalDef[];
 }
 
 export interface NameClashError {
@@ -225,11 +227,14 @@ class Typechecker {
     const globalDefs: ast.GlobalDef[] = this.file.filter(isGlobalDef);
 
     if (globalDefs.length >= 2) {
-      this.errors.push({ kind: TypeErrorKind.MultipleGlobalDefs });
+      this.errors.push({ kind: TypeErrorKind.MultipleGlobalDefs, globalDefs });
     }
 
     if (globalDefs.length > 0 && this.file[0].kind !== "global_def") {
-      this.errors.push({ kind: TypeErrorKind.GlobalDefNotFirst });
+      this.errors.push({
+        kind: TypeErrorKind.GlobalDefNotFirstDef,
+        globalDefs,
+      });
     }
 
     for (const def of globalDefs) {
