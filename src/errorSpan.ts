@@ -283,8 +283,14 @@ function getSpansOfExpectedValReturnButGotVoidReturnError(
 function getSpansOfReturnTypeMismatchError(
   error: ReturnTypeMismatchError
 ): ErrorSpan[] {
-  // TODO
-  return [];
+  const [parenthesizedArgs] = getCommandInputs(error.command);
+  return [
+    {
+      error,
+      startIndex: parenthesizedArgs[0].lparen.location.range[0],
+      endIndex: parenthesizedArgs[0].rparen.location.range[1],
+    },
+  ];
 }
 
 function getSpansOfArgTypeMismatchError(
