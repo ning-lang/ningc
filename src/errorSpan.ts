@@ -114,27 +114,22 @@ function getSpansOfNameClashError(error: NameClashError): ErrorSpan[] {
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_args, squares] = getCommandInputs(newDef);
-      const squareIdents = squares[0].identifiers;
-      const firstIdent = squareIdents[0];
-      const lastIdent = squareIdents[squareIdents.length - 1];
       return [
         {
           error,
-          startIndex: firstIdent.location.range[0],
-          endIndex: lastIdent.location.range[1],
+          startIndex: squares[0].lsquare.location.range[0],
+          endIndex: squares[0].rsquare.location.range[1],
         },
       ];
     }
 
     case "command_def":
     case "query_def": {
-      const firstHeaderPart = newDef.header[0];
-      const lastHeaderPart = newDef.header[newDef.header.length - 1];
       return [
         {
           error,
-          startIndex: firstHeaderPart.location.range[0],
-          endIndex: lastHeaderPart.location.range[1],
+          startIndex: newDef.lparen.location.range[0],
+          endIndex: newDef.rparen.location.range[1],
         },
       ];
     }
