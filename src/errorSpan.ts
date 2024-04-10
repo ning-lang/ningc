@@ -1,5 +1,5 @@
 import { BUILTIN_COMMANDS } from "./builtins";
-import { getCommandInputs } from "./funcInputs";
+import { getCommandInputs, getQueryInputs } from "./funcInputs";
 import { getCommandSignature } from "./funcSignature";
 import { ParseResult } from "./parser";
 import { stringifyCommand } from "./stringifyNingNode";
@@ -22,6 +22,7 @@ import {
   SquareTypeMismatchError,
   TypeErrorKind,
 } from "./typecheck";
+import { ParenthesizedExpression } from "./types/tysonTypeDict";
 
 const POSSIBLE_NAME_DEF_COMMAND_SIGNATURES: ReadonlySet<string> = new Set([
   BUILTIN_COMMANDS.let_.signature,
@@ -296,8 +297,18 @@ function getSpansOfReturnTypeMismatchError(
 function getSpansOfArgTypeMismatchError(
   error: ArgTypeMismatchError
 ): ErrorSpan[] {
-  // TODO
-  return [];
+  const { funcApplication } = error;
+  const parenthesizedArgs: ParenthesizedExpression[] =
+    funcApplication.kind === "command"
+      ? getCommandInputs(funcApplication)[0]
+      : getQueryInputs(funcApplication)[0];
+  return [
+    {
+      error,
+      startIndex: parenthesizedArgs[0].lparen.location.range[0],
+      endIndex: parenthesizedArgs[0].rparen.location.range[1],
+    },
+  ];
 }
 
 function getSpansOfSquareTypeMismatchError(
