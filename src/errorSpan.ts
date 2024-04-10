@@ -88,8 +88,8 @@ function getSpansOfGlobalDefNotFirstError(
   defs.sort((a, b) => a.location.range[0] - b.location.range[0]);
   return defs.map((def) => ({
     error,
-    startIndex: def.location.range[0],
-    endIndex: def.location.range[1],
+    startIndex: def.globalKw.location.range[0],
+    endIndex: def.globalKw.location.range[1],
   }));
 }
 
