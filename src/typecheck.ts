@@ -178,16 +178,15 @@ const LEGAL_QUERY_DEF_BODY_COMMAND_SIGNATURES: ReadonlySet<string> = new Set([
  * This set only includes "leaf" commands, not
  * commands like `if` which contain subcommands.
  */
-export const LEGAL_QUERY_DEF_BODY_MUTATING_LEAF_COMMAND_SIGNATURES: ReadonlySet<string> =
-  new Set([
-    BUILTIN_COMMANDS.assign.signature,
-    BUILTIN_COMMANDS.increase.signature,
-    BUILTIN_COMMANDS.listReplaceItem.signature,
-    BUILTIN_COMMANDS.listInsert.signature,
-    BUILTIN_COMMANDS.listDeleteItem.signature,
-    BUILTIN_COMMANDS.listDeleteAll.signature,
-    BUILTIN_COMMANDS.listAdd.signature,
-  ]);
+export const MUTATING_COMMAND_SIGNATURES: ReadonlySet<string> = new Set([
+  BUILTIN_COMMANDS.assign.signature,
+  BUILTIN_COMMANDS.increase.signature,
+  BUILTIN_COMMANDS.listReplaceItem.signature,
+  BUILTIN_COMMANDS.listInsert.signature,
+  BUILTIN_COMMANDS.listDeleteItem.signature,
+  BUILTIN_COMMANDS.listDeleteAll.signature,
+  BUILTIN_COMMANDS.listAdd.signature,
+]);
 
 class Typechecker {
   errors: NingTypeError[];
@@ -437,7 +436,7 @@ class Typechecker {
       return;
     }
 
-    if (!LEGAL_QUERY_DEF_BODY_MUTATING_LEAF_COMMAND_SIGNATURES.has(signature)) {
+    if (!MUTATING_COMMAND_SIGNATURES.has(signature)) {
       return;
     }
 
