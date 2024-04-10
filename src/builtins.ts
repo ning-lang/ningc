@@ -1,5 +1,5 @@
 import { SquareType } from "./typecheck";
-import * as ast from "./types/tysonTypeDict";
+import type * as ast from "./types/tysonTypeDict";
 
 export const UNTYPED_VAL_SENTINEL = "()";
 export const UNTYPED_REF_SENTINEL = "[]";

@@ -4,7 +4,7 @@ import {
   getFunctionDefSignature,
   getQuerySignature,
 } from "./funcSignature";
-import * as ast from "./types/tysonTypeDict";
+import type * as ast from "./types/tysonTypeDict";
 import { BUILTIN_COMMANDS, BUILTIN_QUERIES } from "./builtins";
 import { getNingNumberLiteralRegex, parseNingString } from "./literals";
 import { stringifyCommand, stringifyExpression } from "./stringifyNingNode";

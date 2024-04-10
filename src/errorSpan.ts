@@ -22,12 +22,7 @@ import {
   SquareTypeMismatchError,
   TypeErrorKind,
 } from "./typecheck";
-import {
-  Command,
-  CompoundExpression,
-  ParenthesizedExpression,
-  SquareBracketedIdentifierSequence,
-} from "./types/tysonTypeDict";
+import type * as ast from "./types/tysonTypeDict";
 
 const POSSIBLE_NAME_DEF_COMMAND_SIGNATURES: ReadonlySet<string> = new Set([
   BUILTIN_COMMANDS.let_.signature,
@@ -162,7 +157,10 @@ function getSpansOfIllegalCommandInGlobalDefError(
   return [getSpanOfCommand(error, error.command)];
 }
 
-function getSpanOfCommand(error: NingTypeError, command: Command): ErrorSpan {
+function getSpanOfCommand(
+  error: NingTypeError,
+  command: ast.Command
+): ErrorSpan {
   const { parts } = command;
   const startIndex =
     parts.length > 0
@@ -283,7 +281,7 @@ function getSpansOfArgTypeMismatchError(
   error: ArgTypeMismatchError
 ): ErrorSpan[] {
   const { funcApplication } = error;
-  const parenthesizedArgs: ParenthesizedExpression[] =
+  const parenthesizedArgs: ast.ParenthesizedExpression[] =
     funcApplication.kind === "command"
       ? getCommandInputs(funcApplication)[0]
       : getQueryInputs(funcApplication)[0];
@@ -300,7 +298,7 @@ function getSpansOfSquareTypeMismatchError(
   error: SquareTypeMismatchError
 ): ErrorSpan[] {
   const { funcApplication } = error;
-  const squares: SquareBracketedIdentifierSequence[] =
+  const squares: ast.SquareBracketedIdentifierSequence[] =
     funcApplication.kind === "command"
       ? getCommandInputs(funcApplication)[1]
       : getQueryInputs(funcApplication)[1];
@@ -330,14 +328,14 @@ function getSpansOfNameNotFoundError(error: NameNotFoundError): ErrorSpan[] {
 
 function getSpansOfNameNotFoundErrorForCommand(
   error: NameNotFoundError,
-  command: Command
+  command: ast.Command
 ): ErrorSpan[] {
   return [getSpanOfCommand(error, command)];
 }
 
 function getSpansOfNameNotFoundErrorForCompoundExpression(
   error: NameNotFoundError,
-  expr: CompoundExpression
+  expr: ast.CompoundExpression
 ): ErrorSpan[] {
   return [
     {
@@ -350,7 +348,7 @@ function getSpansOfNameNotFoundErrorForCompoundExpression(
 
 function getSpansOfNameNotFoundErrorForSquareBracketedIdentifierSequence(
   error: NameNotFoundError,
-  square: SquareBracketedIdentifierSequence
+  square: ast.SquareBracketedIdentifierSequence
 ): ErrorSpan[] {
   return [
     {

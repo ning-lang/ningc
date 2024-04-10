@@ -1,4 +1,4 @@
-import * as ast from "./types/tysonTypeDict";
+import type * as ast from "./types/tysonTypeDict";
 
 export function stringifyCommand(command: ast.Command): string {
   return "TODO IMPLEMENT stringifyCommand;";
