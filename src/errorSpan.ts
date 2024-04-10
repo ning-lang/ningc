@@ -109,6 +109,9 @@ function getSpansOfNameClashError(error: NameClashError): ErrorSpan[] {
         );
       }
 
+      // If the command has a signature in `POSSIBLE_NAME_DEF_COMMAND_SIGNATURES`,
+      // the new conflicting name will be in `squares[0]`.
+
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_args, squares] = getCommandInputs(newDef);
       const squareIdents = squares[0].identifiers;
@@ -153,8 +156,18 @@ function getSpansOfNameClashError(error: NameClashError): ErrorSpan[] {
 function getSpansOfIllegalCommandInGlobalDefError(
   error: IllegalCommandInGlobalDefError
 ): ErrorSpan[] {
-  // TODO
-  return [];
+  const { parts } = error.command;
+  const startIndex =
+    parts.length > 0
+      ? parts[0].location.range[0]
+      : error.command.semicolon.location.range[0];
+  return [
+    {
+      error,
+      startIndex,
+      endIndex: error.command.semicolon.location.range[1],
+    },
+  ];
 }
 
 function getSpansOfIllegalCommandInQueryDefError(
