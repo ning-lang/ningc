@@ -305,8 +305,8 @@ function getSpansOfArgTypeMismatchError(
   return [
     {
       error,
-      startIndex: parenthesizedArgs[0].lparen.location.range[0],
-      endIndex: parenthesizedArgs[0].rparen.location.range[1],
+      startIndex: parenthesizedArgs[error.argIndex].lparen.location.range[0],
+      endIndex: parenthesizedArgs[error.argIndex].rparen.location.range[1],
     },
   ];
 }
