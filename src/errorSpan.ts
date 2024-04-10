@@ -111,7 +111,7 @@ function getSpansOfNameClashError(error: NameClashError): ErrorSpan[] {
       }
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const [_args, squares] = getCommandInputs(newDef);
+      const [_parenthesizedArgs, squares] = getCommandInputs(newDef);
       return [
         {
           error,
@@ -197,7 +197,7 @@ function getSpansOfQueryCommandMutatesGlobalVariableError(
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_args, squares] = getCommandInputs(error.command);
+  const [_parenthesizedArgs, squares] = getCommandInputs(error.command);
   return [
     {
       error,
@@ -236,7 +236,7 @@ function getSpansOfReassignedImmutableVariableError(
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_args, squares] = getCommandInputs(error.command);
+  const [_parenthesizedArgs, squares] = getCommandInputs(error.command);
   return [
     {
       error,

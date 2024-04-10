@@ -418,7 +418,8 @@ class Typechecker {
   checkCommandDoesNotMutateGlobaVariables(command: ast.Command): void {
     const signature = getCommandSignature(command);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_args, squares, blockCommands] = getCommandInputs(command);
+    const [_parenthesizedArgs, squares, blockCommands] =
+      getCommandInputs(command);
 
     if (signature === BUILTIN_COMMANDS.if_.signature) {
       this.checkBlockCommandDoesNotMutateGlobalVariables(blockCommands[0]);
@@ -656,7 +657,8 @@ class Typechecker {
     elementType: ast.NingType
   ): void {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_args, [square], _blockCommands] = getCommandInputs(command);
+    const [_parenthesizedArgs, [square], _blockCommands] =
+      getCommandInputs(command);
     const name = stringifyIdentifierSequence(square.identifiers);
     this.checkListDefAndRegisterIfNotTaken(name, elementType, command);
   }
