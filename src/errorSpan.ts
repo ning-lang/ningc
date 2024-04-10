@@ -22,7 +22,10 @@ import {
   SquareTypeMismatchError,
   TypeErrorKind,
 } from "./typecheck";
-import { ParenthesizedExpression } from "./types/tysonTypeDict";
+import {
+  ParenthesizedExpression,
+  SquareBracketedIdentifierSequence,
+} from "./types/tysonTypeDict";
 
 const POSSIBLE_NAME_DEF_COMMAND_SIGNATURES: ReadonlySet<string> = new Set([
   BUILTIN_COMMANDS.let_.signature,
@@ -314,8 +317,18 @@ function getSpansOfArgTypeMismatchError(
 function getSpansOfSquareTypeMismatchError(
   error: SquareTypeMismatchError
 ): ErrorSpan[] {
-  // TODO
-  return [];
+  const { funcApplication } = error;
+  const squares: SquareBracketedIdentifierSequence[] =
+    funcApplication.kind === "command"
+      ? getCommandInputs(funcApplication)[1]
+      : getQueryInputs(funcApplication)[1];
+  return [
+    {
+      error,
+      startIndex: squares[error.squareIndex].lsquare.location.range[0],
+      endIndex: squares[error.squareIndex].rsquare.location.range[1],
+    },
+  ];
 }
 
 function getSpansOfNameNotFoundError(error: NameNotFoundError): ErrorSpan[] {
