@@ -10,6 +10,7 @@ import {
   GlobalDefNotFirstError,
   IllegalCommandInGlobalDefError,
   IllegalCommandInQueryDefError,
+  LEGAL_QUERY_DEF_BODY_MUTATING_LEAF_COMMAND_SIGNATURES,
   MultipleGlobalDefsError,
   NameClashError,
   NameNotFoundError,
@@ -109,14 +110,15 @@ function getSpansOfNameClashError(error: NameClashError): ErrorSpan[] {
         );
       }
 
-      // If the command has a signature in `POSSIBLE_NAME_DEF_COMMAND_SIGNATURES`,
-      // the new conflicting name will be in `squares[0]`.
-
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_args, squares] = getCommandInputs(newDef);
       return [
         {
           error,
+          // If the command has a signature in `POSSIBLE_NAME_DEF_COMMAND_SIGNATURES`,
+          // there will only be one square in the command,
+          // so we can safely assume the offending square is
+          // `squares[0]`.
           startIndex: squares[0].lsquare.location.range[0],
           endIndex: squares[0].rsquare.location.range[1],
         },
@@ -185,8 +187,28 @@ function getSpansOfIllegalCommandInQueryDefError(
 function getSpansOfQueryCommandMutatesGlobalVariableError(
   error: QueryCommandMutatesGlobalVariableError
 ): ErrorSpan[] {
-  // TODO
-  return [];
+  // Sanity check
+  const signature = getCommandSignature(error.command);
+  if (!LEGAL_QUERY_DEF_BODY_MUTATING_LEAF_COMMAND_SIGNATURES.has(signature)) {
+    throw new Error(
+      "Impossible: Got QueryCommandMutatesGlobalVariableError with a command that is not a legal query definition body mutating command. The command was: " +
+        stringifyCommand(error.command)
+    );
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_args, squares] = getCommandInputs(error.command);
+  return [
+    {
+      error,
+      // If the command has a signature in `LEGAL_QUERY_DEF_BODY_MUTATING_LEAF_COMMAND_SIGNATURES`,
+      // there will only be one square in the command,
+      // so we can safely assume the offending square is
+      // `squares[0]`.
+      startIndex: squares[0].lsquare.location.range[0],
+      endIndex: squares[0].rsquare.location.range[1],
+    },
+  ];
 }
 
 function getSpansOfQueryDefBodyLacksInevitableReturnError(

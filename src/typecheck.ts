@@ -178,7 +178,7 @@ const LEGAL_QUERY_DEF_BODY_COMMAND_SIGNATURES: ReadonlySet<string> = new Set([
  * This set only includes "leaf" commands, not
  * commands like `if` which contain subcommands.
  */
-const LEGAL_QUERY_DEF_BODY_MUTATING_LEAF_COMMAND_SIGNATURES: ReadonlySet<string> =
+export const LEGAL_QUERY_DEF_BODY_MUTATING_LEAF_COMMAND_SIGNATURES: ReadonlySet<string> =
   new Set([
     BUILTIN_COMMANDS.assign.signature,
     BUILTIN_COMMANDS.increase.signature,
