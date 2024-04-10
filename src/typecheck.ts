@@ -134,7 +134,10 @@ export interface SquareTypeMismatchError {
 
 export interface NameNotFoundError {
   kind: TypeErrorKind.NameNotFound;
-  funcApplication: ast.Command | ast.CompoundExpression;
+  nodeWithUnrecognizedSignature:
+    | ast.Command
+    | ast.CompoundExpression
+    | ast.SquareBracketedIdentifierSequence;
 }
 
 export type NameDef =
@@ -1244,7 +1247,7 @@ class Typechecker {
     if (typeInfo === null) {
       this.errors.push({
         kind: TypeErrorKind.NameNotFound,
-        funcApplication: expr,
+        nodeWithUnrecognizedSignature: expr,
       });
       return MALTYPED;
     }
@@ -1528,6 +1531,11 @@ class Typechecker {
       }
     }
 
+    this.errors.push({
+      kind: TypeErrorKind.NameNotFound,
+      nodeWithUnrecognizedSignature: square,
+    });
+
     return MALTYPED;
   }
 
@@ -1563,7 +1571,7 @@ class Typechecker {
 
     this.errors.push({
       kind: TypeErrorKind.NameNotFound,
-      funcApplication: command,
+      nodeWithUnrecognizedSignature: command,
     });
   }
 

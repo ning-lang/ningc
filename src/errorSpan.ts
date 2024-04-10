@@ -125,8 +125,8 @@ function getSpansOfNameClashError(error: NameClashError): ErrorSpan[] {
           // there will only be one square in the command,
           // so we can safely assume the offending square is
           // `squares[0]`.
-          startIndex: squares[0].lsquare.location.range[0],
-          endIndex: squares[0].rsquare.location.range[1],
+          startIndex: squares[0].location.range[0],
+          endIndex: squares[0].location.range[1],
         },
       ];
     }
@@ -202,8 +202,8 @@ function getSpansOfQueryCommandMutatesGlobalVariableError(
       // there will only be one square in the command,
       // so we can safely assume the offending square is
       // `squares[0]`.
-      startIndex: squares[0].lsquare.location.range[0],
-      endIndex: squares[0].rsquare.location.range[1],
+      startIndex: squares[0].location.range[0],
+      endIndex: squares[0].location.range[1],
     },
   ];
 }
@@ -241,8 +241,8 @@ function getSpansOfReassignedImmutableVariableError(
       // there will only be one square in the command,
       // so we can safely assume the offending square is
       // `squares[0]`.
-      startIndex: squares[0].lsquare.location.range[0],
-      endIndex: squares[0].rsquare.location.range[1],
+      startIndex: squares[0].location.range[0],
+      endIndex: squares[0].location.range[1],
     },
   ];
 }
@@ -314,14 +314,16 @@ function getSpansOfSquareTypeMismatchError(
 }
 
 function getSpansOfNameNotFoundError(error: NameNotFoundError): ErrorSpan[] {
-  const { funcApplication } = error;
-  switch (funcApplication.kind) {
+  const { nodeWithUnrecognizedSignature: node } = error;
+  switch (node.kind) {
     case "command":
-      return getSpansOfNameNotFoundErrorForCommand(error, funcApplication);
+      return getSpansOfNameNotFoundErrorForCommand(error, node);
     case "compound_expression":
-      return getSpansOfNameNotFoundErrorForCompoundExpression(
+      return getSpansOfNameNotFoundErrorForCompoundExpression(error, node);
+    case "square_bracketed_identifier_sequence":
+      return getSpansOfNameNotFoundErrorForSquareBracketedIdentifierSequence(
         error,
-        funcApplication
+        node
       );
   }
 }
@@ -342,6 +344,19 @@ function getSpansOfNameNotFoundErrorForCompoundExpression(
       error,
       startIndex: expr.location.range[0],
       endIndex: expr.location.range[1],
+    },
+  ];
+}
+
+function getSpansOfNameNotFoundErrorForSquareBracketedIdentifierSequence(
+  error: NameNotFoundError,
+  square: SquareBracketedIdentifierSequence
+): ErrorSpan[] {
+  return [
+    {
+      error,
+      startIndex: square.location.range[0],
+      endIndex: square.location.range[1],
     },
   ];
 }
