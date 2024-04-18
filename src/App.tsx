@@ -385,6 +385,7 @@ export class App extends React.Component<{}, State> {
     }
 
     this.handleSmartEnterIfNeeded(event);
+    this.handleSmartTabIfNeeded(event);
   }
 
   handleSmartEnterIfNeeded(event: KeyboardEvent): void {
@@ -418,8 +419,37 @@ export class App extends React.Component<{}, State> {
         selectionStart + 1 + appliedIndentationSpaceCount;
       textarea.selectionEnd = textarea.selectionStart;
     });
+  }
 
-    textarea.selectionStart += 1;
+  handleSmartTabIfNeeded(event: KeyboardEvent): void {
+    const textarea = this.codeInputTextareaRef.current;
+    if (
+      !(
+        textarea !== null &&
+        event.code === "Tab" &&
+        this.isCodeInputTextareaFocused
+      )
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    const { selectionStart, selectionEnd } = textarea;
+    const prefix = this.state.code.slice(0, selectionStart);
+    const suffix = this.state.code.slice(selectionEnd);
+    const goalIndentationSpaceCount = guessIndentationSpacesAtEndOf(prefix);
+    const column = getColumnAtEndOf(prefix);
+    const appliedIndentationSpaceCount =
+      column < goalIndentationSpaceCount
+        ? goalIndentationSpaceCount - column
+        : INDENT_SIZE - (column % INDENT_SIZE);
+
+    const newCode = prefix + " ".repeat(appliedIndentationSpaceCount) + suffix;
+    this.updateCodeAndDependents(newCode, () => {
+      textarea.focus();
+      textarea.selectionStart = selectionStart + appliedIndentationSpaceCount;
+      textarea.selectionEnd = textarea.selectionStart;
+    });
   }
 
   onKeyUp(event: KeyboardEvent): void {
@@ -741,3 +771,13 @@ function getLeadingSpaceCount(s: string): number {
 }
 
 function noOp(): void {}
+
+function getColumnAtEndOf(s: string): number {
+  const lastNewlineIndex = s.lastIndexOf("\n");
+
+  if (lastNewlineIndex === -1) {
+    return s.length;
+  }
+
+  return s.length - lastNewlineIndex - 1;
+}
