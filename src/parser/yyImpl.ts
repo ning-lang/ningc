@@ -1,30 +1,19 @@
 import { Yy, TextLocation } from "../types/tysonTypeDict";
 
-export function getYyImpl(): Yy {
-  let previousLocation = {
-    line: 0,
-    column: 0,
-    index: 0,
-  };
+const START_LOCATION: TextLocation = {
+  line: 0,
+  column: 0,
+  index: 0,
+};
 
-  let currentLocation = {
-    line: 0,
-    column: 0,
-    index: 0,
-  };
+export function getYyImpl(): Yy {
+  let previousLocation = START_LOCATION;
+  let currentLocation = START_LOCATION;
 
   return {
     reset(): void {
-      previousLocation = {
-        line: 0,
-        column: 0,
-        index: 0,
-      };
-      currentLocation = {
-        line: 0,
-        column: 0,
-        index: 0,
-      };
+      previousLocation = START_LOCATION;
+      currentLocation = START_LOCATION;
     },
 
     recordTokenLocationBasedOnCurrentMatch(): void {
