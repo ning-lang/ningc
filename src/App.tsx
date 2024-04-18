@@ -51,7 +51,9 @@ export class App extends React.Component<{}, State> {
 
     this.isCodeInputTextareaFocused = false;
 
-    const initialCode = getInitialCodeFromLocalStorage();
+    const initialCode = removeEachLinesTrailingSpacesAndTabs(
+      getInitialCodeFromLocalStorage()
+    );
     const parseResult = parse(initialCode);
     const typecheckResult = parseResult.parseSucceeded
       ? typecheck(parseResult.value)
@@ -822,4 +824,8 @@ function getColumnAtEndOf(s: string): number {
   }
 
   return s.length - lastNewlineIndex - 1;
+}
+
+function removeEachLinesTrailingSpacesAndTabs(s: string): string {
+  return s.replaceAll(/[ \t]+(?=\n|$)/g, "");
 }
