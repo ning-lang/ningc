@@ -448,7 +448,7 @@ function highlight(code: string): React.ReactElement[] {
 
     if (!wasLastNonWhitespaceTokenCommandOrQueryKeyword) {
       const parenthesizedIdentifierSequenceMatch = remainingCode.match(
-        /^\(\s*(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+)(?:\s*(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+))*\s*\)/
+        /^\(\s*(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+)(?:\s+(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+))*\s*\)/
       );
       if (parenthesizedIdentifierSequenceMatch !== null) {
         out.push({
@@ -464,7 +464,7 @@ function highlight(code: string): React.ReactElement[] {
     }
 
     const squareMatch = remainingCode.match(
-      /^\[\s*(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+)(?:\s*(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+))*\s*\]/
+      /^\[\s*(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+)(?:\s+(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+))*\s*\]/
     );
     if (squareMatch !== null) {
       out.push({
@@ -490,7 +490,7 @@ function highlight(code: string): React.ReactElement[] {
 
     if (wasLastNonWhitespaceTokenATypeKeyword) {
       const zeroOrMoreIdentifiersAndRightParamMatch = remainingCode.match(
-        /^(?:(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+)\s*)*\)/
+        /^(?:(?:^|\s+)(?:NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+))*\)/
       );
       if (zeroOrMoreIdentifiersAndRightParamMatch !== null) {
         out.push({
