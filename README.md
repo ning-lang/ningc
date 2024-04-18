@@ -13,6 +13,9 @@ It is still in the alpha phase, so many features are yet to be implemented. Chec
   - [Expressions](#expressions)
   - [Defining commands](#defining-commands)
   - [Defining queries](#defining-queries)
+- [Roadmap](#roadmap)
+  - [Done](#done)
+  - [Todo](#todo)
 
 ## About Ning
 
@@ -191,3 +194,34 @@ Query bodies may only contain the following types of commands:
 - `return ()`
 
 This rule exists so that queries will never have side effects.
+
+## Roadmap
+
+### Done
+
+- Interpreter
+- Static analyser
+- Syntax highlighting
+- Error underlining
+
+### Todo
+
+- More descriptive error reporting
+
+  Currently, there is only a red wavy underline--no
+  actual description of the error.
+
+- Image library display
+
+  Currently, the user has no way of knowing
+  what images are available to them.
+
+- User image uploads
+
+  Currently, the user can only use the default
+  (stock) images, which are rather uninteresting.
+
+- Support sound effects
+- Fullscreen support
+- Touchscreen support
+- Project sharing
