@@ -147,7 +147,7 @@ class ProgramImpl implements Program {
   update(): void {
     const updateCommandDef = this.userCommandDefs.get(UPDATE_COMMAND_SIGNATURE);
     if (updateCommandDef === undefined) {
-      throw new Error("Could not find `update` command definition.");
+      return;
     }
     this.evalUserCommandUsingArgVals(updateCommandDef, []);
   }
@@ -157,7 +157,7 @@ class ProgramImpl implements Program {
 
     const renderCommandDef = this.userCommandDefs.get(RENDER_COMMAND_SIGNATURE);
     if (renderCommandDef === undefined) {
-      throw new Error("Could not find `render` command definition.");
+      return;
     }
     this.evalUserCommandUsingArgVals(renderCommandDef, []);
 
