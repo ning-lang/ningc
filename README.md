@@ -1,46 +1,193 @@
-# Getting Started with Create React App
+# Ning Playground
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is a playground for the Ning programming language.
+It is still in the alpha phase, so many features are yet to be implemented. Check out the demo [**here**](https://ning-lang.github.io/playground)!
 
-## Available Scripts
+## Contents
 
-In the project directory, you can run:
+- [About Ning](#about-ning)
+- [Language details](#language-details)
+  - [Variables](#variables)
+  - [List](#lists)
+  - [Commands](#commands)
+  - [Expressions](#expressions)
+  - [Defining commands](#defining-commands)
+  - [Defining queries](#defining-queries)
 
-### `npm start`
+## About Ning
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Ning is a simple programming language inspired by [Scratch](https://scratch.mit.edu).
+Note that Ning is not affiliated with Scratch or MIT in any way.
+It is more or less what you might get when you convert Scratch to a text-based programming language,
+replace the sprite/costume system with a render function,
+and add static typechecking.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+The easiest way to learn is to check out the [demo](https://ning-lang.github.io/playground).
 
-### `npm test`
+## Language details
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+This is a boring overview of the language.
+We do not recommend you read it.
+Instead, we recommend that you check out the [demo](https://ning-lang.github.io/playground) and learn by playing around with the editor.
 
-### `npm run build`
+### Variables
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Ning has three data types: booleans, numbers, and strings. All data types are immutable.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+A boolean is `true` or `false`. A number is a floating point value. It is either a real number, `Infinity`, `-Infinity`, or `NaN`. Strings are currently implemented a JavaScript strings (usually UTF-16), but we may transition to some other format (e.g., UTF-8) in the future.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+You can store data in variables:
 
-### `npm run eject`
+```ning
+Command (update) {
+    var [foo] = (123);
+    var [is awesome] = (true);
+    var [name] = ("John Doe");
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+    if (true) {
+        var [bar] = (42);
+    };
+}
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+All variables are block-scoped, except for those declared within a `Global`. You use `Global` to declare variables in the global scope:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```ning
+Global {
+    var [everyone can access me] = (123);
+}
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Command (update) {
+    var [foo] = ((everyone can access me) + (5));
+}
+```
 
-## Learn More
+The `Global` section may only contain the variable declarations and list declarations--no other types of commands (e.g., painting commands) are allowed.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+You can reassign variables with the `set [] to ()` command:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```ning
+Command (update) {
+    var [foo] = (123);
+    set [foo] to (456);
+}
+```
+
+If you replace `var` with `let`, the variable will become non-reassignable.
+
+```ning
+Command (update) {
+    let [you can't touch this] = (123);
+
+    // COMPILER ERROR: Cannot reassign `you can't touch this`
+    set [you can't touch this] to (456);
+}
+```
+
+### Lists
+
+You can store homogeneous collections by using lists:
+
+```ning
+Command (update) {
+    create string list [names];
+    add ("Art") to [names];
+    add ("Holly") to [names];
+    add ("Rei") to [names];
+
+    create number list [lucky numbers];
+    add (7) to [lucky numbers];
+    add (39) to [lucky numbers];
+
+    create boolean list [foo];
+    add (true) to [foo];
+    add (false) to [foo];
+}
+```
+
+Lists are not first-class data types. In other words, you cannot pass them around as values.
+As previously stated, there are only three data types in Ning: booleans, numbers, and strings.
+
+Lists are mutable.
+
+### Commands
+
+_Commands_ are analogous to what other programming languages call "statements".
+For example, `var [my lucky number] = (42);` is a command.
+A command has one or more _parts_ plus a semicolon.
+A command part can be either...
+
+- An identifier
+
+  Identifiers can include any character except whitespace, capital letters (A-Z), or reserved punctuation (`(){}[];"`).
+
+- A parenthesized expression
+- A square bracket separated identifier sequence (simply called "square" for short)
+- A block command
+
+In the `var [my lucky number] = (42);` example, there are 4 parts:
+
+1. The identifier `var`
+2. The square `[my lucky number]`
+3. The identifier `=`
+4. The parenthesized expression `(42)`
+
+In languages like JavaScript, C, and Python, a function call generally has the function name at the beginning, and then parenthesis-enclosed arguments at the end.
+In contrast, Ning allows you to interweave the command's name and it's argument, slightly closer to a Swift-like syntax.
+
+A commands identifiers determine the name, and the squares, parenthesized expressions, and block commands determine the arguments.
+For example, the `var [my lucky number] = (42);` example is a call to the function of the signature `var [] = ()` with the square argument `my lucky number` and the value argument `42`.
+
+### Expressions
+
+An expression can either be a string literal (e.g., `"hello"`), a number literal (e.g., `-42.5e6`), or a non-literal expression.
+A non-literal expression has one or more parts. A non-literal expression part can be either:
+
+- An identifier
+- A parenthesized expression
+- A square
+
+### Defining commands
+
+```ning
+Global {
+    create number list [foo];
+}
+
+// Below is an example of a user-defined command:
+Command (add (Number item) to foo 10 times) {
+    repeat (10) times {
+        add (item) to [foo];
+    };
+}
+```
+
+### Defining queries
+
+```ning
+Global {
+    var [x] = (123);
+}
+
+// Below is an example of a user-defined query:
+Number Query (sec of (Number theta) radians) {
+    return ((1) / (cos of (theta) radians));
+}
+
+Command (update) {
+    set [x] to (sec of (x) radians);
+}
+```
+
+Query bodies may only contain the following types of commands:
+
+- Variable declarations
+- List declarations
+- Local variable reassignments
+- Local list mutations
+- `repeat () times {}`
+- `if () {}`
+- `if () {} else {}`
+- `return ()`
+
+This rule exists so that queries will never have side effects.

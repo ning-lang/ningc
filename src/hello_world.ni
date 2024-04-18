@@ -1,13 +1,13 @@
-export const HELLO_WORLD_CODE = `// Write comments with two slashes,
+// Write comments with two slashes,
 // like this.
 
-// Declare global variables in the \`Global\` section:
+// Declare global variables in the `Global` section:
 Global {
     var [x] = (0);
     var [time] = (milliseconds since unix epoch);
     var [ball left] = (230);
 
-    // \`let\` is similar to \`var\`, except
+    // `let` is similar to `var`, except
     // the created variable is not reassignable.
     let [width] = (480);
     let [height] = (360);
@@ -35,4 +35,3 @@ Command (update) {
 
     set [time] to (current time);
 }
-`;
