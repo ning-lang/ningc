@@ -32,8 +32,8 @@ Command (update) {
         increase [ball left] by ((elapsed time) / (10));
     };
 
-    if (key ("left arrow") pressed?) {
-        reset ball
+    if (key ("space") pressed?) {
+        reset ball;
     };
 
     set [time] to (current time);
