@@ -445,7 +445,7 @@ function highlight(code: string): React.ReactElement[] {
     }
 
     const structuralKeywordMatch = remainingCode.match(
-      /^(?:Boolean|Number|String|Global|Query|Command|if|else|while|repeat|return)\b/
+      /^(?:Boolean|Number|String|Global|Query|Command|(?:(?:if|while|repeat|return)(?=\s*\())|(?:else(?=\s*\{))|(?:return(?=\s*;)))\b/
     );
     if (structuralKeywordMatch !== null) {
       out.push({
