@@ -527,7 +527,9 @@ function highlight(code: string): React.ReactElement[] {
       continue;
     }
 
-    const identifierMatch = remainingCode.match(/^[^\s()[\]{};A-Z"]+/);
+    const identifierMatch = remainingCode.match(
+      /^(?:NaN|Infinity|-Infinity|[^\s()[\]{};A-Z"]+)/
+    );
     if (identifierMatch !== null) {
       out.push({
         className:
