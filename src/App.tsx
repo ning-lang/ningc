@@ -386,6 +386,7 @@ export class App extends React.Component<{}, State> {
 
     this.handleSmartEnterIfNeeded(event);
     this.handleSmartTabIfNeeded(event);
+    this.handleSmartRCurlyIfNeeded(event);
   }
 
   handleSmartEnterIfNeeded(event: KeyboardEvent): void {
@@ -400,7 +401,6 @@ export class App extends React.Component<{}, State> {
       return;
     }
 
-    event.preventDefault();
     const { selectionStart, selectionEnd } = textarea;
     const prefix = this.state.code.slice(0, selectionStart);
     const suffix = this.state.code.slice(selectionEnd);
@@ -413,6 +413,7 @@ export class App extends React.Component<{}, State> {
 
     const newCode =
       prefix + "\n" + " ".repeat(appliedIndentationSpaceCount) + suffix;
+    event.preventDefault();
     this.updateCodeAndDependents(newCode, () => {
       textarea.focus();
       textarea.selectionStart =
@@ -433,7 +434,6 @@ export class App extends React.Component<{}, State> {
       return;
     }
 
-    event.preventDefault();
     const { selectionStart, selectionEnd } = textarea;
     const prefix = this.state.code.slice(0, selectionStart);
     const suffix = this.state.code.slice(selectionEnd);
@@ -445,9 +445,51 @@ export class App extends React.Component<{}, State> {
         : INDENT_SIZE - (column % INDENT_SIZE);
 
     const newCode = prefix + " ".repeat(appliedIndentationSpaceCount) + suffix;
+    event.preventDefault();
     this.updateCodeAndDependents(newCode, () => {
       textarea.focus();
       textarea.selectionStart = selectionStart + appliedIndentationSpaceCount;
+      textarea.selectionEnd = textarea.selectionStart;
+    });
+  }
+
+  handleSmartRCurlyIfNeeded(event: KeyboardEvent): void {
+    const textarea = this.codeInputTextareaRef.current;
+    if (
+      !(
+        textarea !== null &&
+        event.code === "BracketRight" &&
+        this.isCodeInputTextareaFocused
+      )
+    ) {
+      return;
+    }
+
+    const { selectionStart, selectionEnd } = textarea;
+    const prefix = this.state.code.slice(0, selectionStart);
+    const suffix = this.state.code.slice(selectionEnd);
+
+    if (!(/(?:\n|^)\s*$/.test(prefix) && /^\s*(?:\n|$)/.test(suffix))) {
+      return;
+    }
+    const strippedPrefix = prefix.replace(/[\t ]+$/, "");
+
+    const goalIndentationSpaceCount = Math.max(
+      0,
+      guessIndentationSpacesAtEndOf(prefix) - INDENT_SIZE
+    );
+
+    const newCode =
+      strippedPrefix + " ".repeat(goalIndentationSpaceCount) + "}" + suffix;
+
+    event.preventDefault();
+    this.updateCodeAndDependents(newCode, () => {
+      textarea.focus();
+      textarea.selectionStart = (
+        strippedPrefix +
+        " ".repeat(goalIndentationSpaceCount) +
+        "}"
+      ).length;
       textarea.selectionEnd = textarea.selectionStart;
     });
   }
