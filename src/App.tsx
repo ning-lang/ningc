@@ -6,6 +6,7 @@ import { ExecutionEnvironment, Program, getUncheckedProgram } from "./program";
 import { NingKey, codeToKey } from "./key";
 import { HELLO_WORLD_CODE } from "./helloWorldCode";
 import { getErrorSpans as getErrorLocationBoundaries } from "./errorSpan";
+import { INDENT_SIZE } from "./stringifyNingNode";
 
 const LOCAL_STORAGE_CODE_KEY = "NingPlayground.UserCode";
 const DEFAULT_CANVAS_DIMENSIONS = [480, 360];
@@ -28,6 +29,8 @@ export class App extends React.Component<{}, State> {
   mouseDown: boolean;
   keysPressed: Set<NingKey>;
 
+  isCodeInputTextareaFocused: boolean;
+
   placeholder_background: HTMLImageElement;
   placeholder_paddle: HTMLImageElement;
   placeholder_ball: HTMLImageElement;
@@ -45,6 +48,8 @@ export class App extends React.Component<{}, State> {
     this.mouseClientY = 0;
     this.mouseDown = false;
     this.keysPressed = new Set();
+
+    this.isCodeInputTextareaFocused = false;
 
     const initialCode = getInitialCodeFromLocalStorage();
     const parseResult = parse(initialCode);
@@ -73,6 +78,10 @@ export class App extends React.Component<{}, State> {
     this.onCodeChanged = this.onCodeChanged.bind(this);
     this.onCodeInputTextareaScrolled =
       this.onCodeInputTextareaScrolled.bind(this);
+    this.onCodeInputTextareaFocused =
+      this.onCodeInputTextareaFocused.bind(this);
+    this.onCodeInputTextareaBlurred =
+      this.onCodeInputTextareaBlurred.bind(this);
     this.onRunButtonClicked = this.onRunButtonClicked.bind(this);
 
     this.onMouseMove = this.onMouseMove.bind(this);
@@ -171,6 +180,8 @@ export class App extends React.Component<{}, State> {
               value={this.state.code}
               onInput={this.onCodeChanged}
               onScroll={this.onCodeInputTextareaScrolled}
+              onFocus={this.onCodeInputTextareaFocused}
+              onBlur={this.onCodeInputTextareaBlurred}
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
@@ -237,6 +248,14 @@ export class App extends React.Component<{}, State> {
 
     underlineBackdrop.scrollTop = textarea.scrollTop;
     underlineBackdrop.scrollLeft = textarea.scrollLeft;
+  }
+
+  onCodeInputTextareaFocused(): void {
+    this.isCodeInputTextareaFocused = true;
+  }
+
+  onCodeInputTextareaBlurred(): void {
+    this.isCodeInputTextareaFocused = false;
   }
 
   onRunButtonClicked(): void {
@@ -355,6 +374,43 @@ export class App extends React.Component<{}, State> {
     if (keyName !== null) {
       this.keysPressed.add(keyName);
     }
+
+    this.handleSmartEnterIfNeeded(event);
+  }
+
+  handleSmartEnterIfNeeded(event: KeyboardEvent): void {
+    const textarea = this.codeInputTextareaRef.current;
+    if (
+      !(
+        textarea !== null &&
+        event.code === "Enter" &&
+        this.isCodeInputTextareaFocused
+      )
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    const { selectionStart, selectionEnd } = textarea;
+    const prefix = this.state.code.slice(0, selectionStart);
+    const suffix = this.state.code.slice(selectionEnd);
+    const goalIndentationSpaceCount = guessIndentationSpacesAtEndOf(prefix);
+    const spaceCountAfterCursorBeforeNonspace = getLeadingSpaceCount(suffix);
+    const appliedIndentationSpaceCount = Math.max(
+      0,
+      goalIndentationSpaceCount - spaceCountAfterCursorBeforeNonspace
+    );
+
+    const newCode =
+      prefix + "\n" + " ".repeat(appliedIndentationSpaceCount) + suffix;
+    this.setState({ code: newCode }, () => {
+      textarea.focus();
+      textarea.selectionStart =
+        selectionStart + 1 + appliedIndentationSpaceCount;
+      textarea.selectionEnd = textarea.selectionStart;
+    });
+
+    textarea.selectionStart += 1;
   }
 
   onKeyUp(event: KeyboardEvent): void {
@@ -647,4 +703,30 @@ function underlineErrors(
       </span>
     );
   });
+}
+
+function guessIndentationSpacesAtEndOf(code: string): number {
+  let braceScore = 0;
+  for (let i = 0; i < code.length; ++i) {
+    if (code.charAt(i) === "{") {
+      ++braceScore;
+      continue;
+    }
+
+    if (code.charAt(i) === "}") {
+      --braceScore;
+      continue;
+    }
+  }
+
+  return Math.max(0, INDENT_SIZE * braceScore);
+}
+
+function getLeadingSpaceCount(s: string): number {
+  for (let i = 0; i < s.length; ++i) {
+    if (s.charAt(i) !== " ") {
+      return i;
+    }
+  }
+  return s.length;
 }
