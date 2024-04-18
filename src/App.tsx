@@ -109,7 +109,7 @@ export class App extends React.Component<{}, State> {
     return (
       <div className="App">
         <div className="TopBar">
-          <h2 className="NingLogo">ning</h2>
+          <img src="./ning_logo.png" alt="Ning logo" className="NingLogo" />
         </div>
 
         <div className="LeftPanel">
