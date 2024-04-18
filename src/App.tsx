@@ -211,16 +211,25 @@ export class App extends React.Component<{}, State> {
   }
 
   onCodeChanged(event: React.ChangeEvent<HTMLTextAreaElement>): void {
-    const code = event.target.value;
+    this.updateCodeAndDependents(event.target.value);
+  }
+
+  updateCodeAndDependents(
+    code: string,
+    onSetStateFinished: () => void = noOp
+  ): void {
     const parseResult = parse(code);
     const typeErrors = parseResult.parseSucceeded
       ? typecheck(parseResult.value)
       : [];
-    this.setState({
-      code,
-      parseResultCache: parseResult,
-      typeErrorsCache: typeErrors,
-    });
+    this.setState(
+      {
+        code,
+        parseResultCache: parseResult,
+        typeErrorsCache: typeErrors,
+      },
+      onSetStateFinished
+    );
 
     saveCodeToLocalStorage(code);
   }
@@ -403,7 +412,7 @@ export class App extends React.Component<{}, State> {
 
     const newCode =
       prefix + "\n" + " ".repeat(appliedIndentationSpaceCount) + suffix;
-    this.setState({ code: newCode }, () => {
+    this.updateCodeAndDependents(newCode, () => {
       textarea.focus();
       textarea.selectionStart =
         selectionStart + 1 + appliedIndentationSpaceCount;
@@ -730,3 +739,5 @@ function getLeadingSpaceCount(s: string): number {
   }
   return s.length;
 }
+
+function noOp(): void {}
