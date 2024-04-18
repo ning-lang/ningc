@@ -30,7 +30,7 @@ The easiest way to learn is to check out the [demo](https://ning-lang.github.io/
 
 ## Examples
 
-Several examples can be found in the `examples` directory.
+Several examples can be found in the [`examples`](/examples/) directory.
 You can try pasting them into the editor in the [demo](https://ning-lang.github.io/playground) to see what they do.
 
 ## Language details
