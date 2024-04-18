@@ -57,7 +57,6 @@ export function parse(src: string): ParseResult {
     } else {
       const start = wrappedParser.yy.getPreviousTextLocation();
       const end = wrappedParser.yy.getCurrentTextLocation();
-      console.log({ start, end });
       return {
         parseSucceeded: false,
         lexSucceeded: true,

@@ -15,7 +15,6 @@ export function getYyImpl(): Yy {
 
   return {
     reset(): void {
-      console.log("RESET");
       previousLocation = {
         line: 0,
         column: 0,
@@ -41,18 +40,11 @@ export function getYyImpl(): Yy {
         }
       }
 
-      console.log({
-        match,
-        curLoc: currentLocation,
-        newCurLoc: { line, column, index },
-        prevLoc: previousLocation,
-      });
       previousLocation = currentLocation;
       currentLocation = { line, column, index };
     },
 
     getPreviousTextLocation(): TextLocation {
-      console.log({ getPrevLoc: previousLocation });
       return previousLocation;
     },
 
