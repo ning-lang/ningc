@@ -206,6 +206,7 @@ This rule exists so that queries will never have side effects.
 
 ### Todo
 
+- Line numbers in the editor
 - More descriptive error reporting
 
   Currently, there is only a red wavy underline--no
@@ -224,4 +225,5 @@ This rule exists so that queries will never have side effects.
 - Support sound effects
 - Fullscreen support
 - Touchscreen support
+- Editor minimap
 - Project sharing
