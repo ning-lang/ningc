@@ -6,8 +6,9 @@ Global {
     let [paddle margin] = (paddle width);
     let [ball width] = (paddle width);
     let [ball height] = (ball width);
-    let [ball speed magnitude] = ((ball width) * (10));
-
+    let [ball speed magnitude] = ((ball width) * (20));
+    let [max absolute ball direction in degrees] = (50);
+    
     let [min paddle y] = (0);
     let [max paddle y] = ((height) - (paddle height));
 
@@ -101,9 +102,18 @@ Number Query ((Number degrees) degrees in radians) {
 Command (reset ball) {
     set [ball left] to (((width) / (2)) - ((ball width) / (2)));
     set [ball top] to (((height) / (2)) - ((ball height) / (2)));
-    let [angle] = ((random integer from (0) up to but not including (360)) degrees in radians);
+    let [absolute angle] = ((random integer from (0) up to but not including (max absolute ball direction in degrees)) degrees in radians);
+    let [sign] = ((1) - ((random integer from (0) up to but not including (2)) * (2)));
+    let [angle] = ((sign) * (absolute angle));
     set [x speed] to ((cos of (angle) radians) * (ball speed magnitude));
     set [y speed] to ((sin of (angle) radians) * (ball speed magnitude));
+
+    // If we leave it like this, the x speed will always be positive,
+    // so to add some variety...
+
+    if ((0) == (random integer from (0) up to but not including (2))) {
+        set [x speed] to ((-1) * (x speed));
+    };
 }
 
 Command (if ball is out of bounds, update score and reset ball) {
