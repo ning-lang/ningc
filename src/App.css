@@ -37,7 +37,7 @@ body {
 .NingLogo {
   color: #fff;
   margin-left: var(--right-panel-padding);
-  --height: calc(0.5 * var(--top-bar-height));
+  --height: calc(0.8 * var(--top-bar-height));
   height: var(--height);
   margin-top: calc(0.5 * (var(--top-bar-height) - var(--height)));
   padding: 0;
