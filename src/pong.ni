@@ -6,8 +6,9 @@ Global {
     let [paddle margin] = (paddle width);
     let [ball width] = (paddle width);
     let [ball height] = (ball width);
-    let [ball speed magnitude] = ((ball width) * (20));
+    let [ball initial speed] = ((ball width) * (10));
     let [max absolute ball direction in degrees] = (50);
+    let [ball acceleration rate] = (1.2);
     
     let [min paddle y] = (0);
     let [max paddle y] = ((height) - (paddle height));
@@ -105,8 +106,8 @@ Command (reset ball) {
     let [absolute angle] = ((random integer from (0) up to but not including (max absolute ball direction in degrees)) degrees in radians);
     let [sign] = ((1) - ((random integer from (0) up to but not including (2)) * (2)));
     let [angle] = ((sign) * (absolute angle));
-    set [x speed] to ((cos of (angle) radians) * (ball speed magnitude));
-    set [y speed] to ((sin of (angle) radians) * (ball speed magnitude));
+    set [x speed] to ((cos of (angle) radians) * (ball initial speed));
+    set [y speed] to ((sin of (angle) radians) * (ball initial speed));
 
     // If we leave it like this, the x speed will always be positive,
     // so to add some variety...
@@ -131,11 +132,9 @@ Command (if ball is out of bounds, update score and reset ball) {
 }
 
 Command (if ball is colliding with paddle, bounce) {
-    if (ball is touching left paddle?) {
-        set [x speed] to (abs (x speed));
-    };
-    if (ball is touching right paddle?) {
-        set [x speed] to ((-1) * (abs (x speed)));
+    if ((ball is colliding with left paddle?) or (ball is colliding with right paddle?)) {
+        set [x speed] to ((-1) * (x speed));
+        increase ball speed;
     };
 }
 
@@ -153,6 +152,10 @@ Boolean Query (ball is touching left paddle?) {
     return ((in horizontal bounds?) and (in vertical bounds?));
 }
 
+Boolean Query (ball is colliding with left paddle?) {
+    return ((ball is touching left paddle?) and ((x speed) < (0)));
+}
+
 Boolean Query (ball is touching right paddle?) {
     let [ball right] = ((ball left) + (ball width));
     let [ball bottom] = ((ball top) + (ball height));
@@ -167,14 +170,20 @@ Boolean Query (ball is touching right paddle?) {
     return ((in horizontal bounds?) and (in vertical bounds?));
 }
 
+Boolean Query (ball is colliding with right paddle?) {
+    return ((ball is touching right paddle?) and ((x speed) > (0)));
+}
+
 Command (if ball is colliding with top or bottom wall, bounce) {
     let [ball bottom] = ((ball top) + (ball height));
-    let [is touching top wall?] = ((ball top) <= (0));
-    if (is touching top wall?) {
-        set [y speed] to (abs (y speed));
+    let [colliding with top wall?] = (((ball top) <= (0)) and ((y speed) < (0)));
+    let [colliding with bottom wall?] = (((ball bottom) >= (height)) and ((y speed) > (0)));
+    if ((colliding with top wall?) or (colliding with bottom wall?)) {
+        set [y speed] to ((-1) * (y speed));
     };
-    let [is touching bottom wall?] = ((ball bottom) >= (height));
-    if (is touching bottom wall?) {
-        set [y speed] to ((-1) * (abs (y speed)));
-    };
+}
+
+Command (increase ball speed) {
+    set [x speed] to ((ball acceleration rate) * (x speed));
+    set [y speed] to ((ball acceleration rate) * (y speed));
 }
