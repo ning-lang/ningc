@@ -6,6 +6,7 @@ It is still in the alpha phase, so many features are yet to be implemented. Chec
 ## Contents
 
 - [About Ning](#about-ning)
+- [Examples](#examples)
 - [Language details](#language-details)
   - [Variables](#variables)
   - [List](#lists)
@@ -26,6 +27,11 @@ replace the sprite/costume system with a render function,
 and add static typechecking.
 
 The easiest way to learn is to check out the [demo](https://ning-lang.github.io/playground).
+
+## Examples
+
+Several examples can be found in the `examples` directory.
+You can try pasting them into the editor in the [demo](https://ning-lang.github.io/playground) to see what they do.
 
 ## Language details
 
