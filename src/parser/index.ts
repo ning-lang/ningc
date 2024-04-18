@@ -1,37 +1,105 @@
-import { JisonUnexpectedTokenError } from "../jison";
-import { TysonTypeDict } from "../types/tysonTypeDict";
+import {
+  JisonLexError,
+  JisonTokenLocation,
+  JisonUnexpectedTokenError,
+} from "../jison";
+import { TextLocation, TysonTypeDict, Yy } from "../types/tysonTypeDict";
 import {
   parser as generatedParser,
   NingParserGeneratedByJison,
 } from "./parser.generated";
+import { getYyImpl } from "./yyImpl";
+
+interface WrappedParser extends NingParserGeneratedByJison {
+  yy: Yy;
+}
 
 const wrappedParser = wrapParser(generatedParser);
 
-export type ParseResult = ParseOk | ParseErr;
+export type ParseResult = ParseOk | ParseErr | LexErr;
 
 export interface ParseOk {
-  succeeded: true;
+  parseSucceeded: true;
   value: TysonTypeDict["file"];
 }
 
 export interface ParseErr {
-  succeeded: false;
-  error: JisonUnexpectedTokenError;
+  parseSucceeded: false;
+  lexSucceeded: true;
+  jisonError: JisonUnexpectedTokenError;
+  errorLocation: JisonTokenLocation;
+}
+
+export interface LexErr {
+  parseSucceeded: false;
+  lexSucceeded: false;
+  jisonError: JisonLexError;
+  errorLocation: TextLocation;
+  nextNewlineOrEofAfterErrorLocation: TextLocation;
 }
 
 export function parse(src: string): ParseResult {
   try {
     const value = wrappedParser.parse(src);
-    return { succeeded: true, value };
-  } catch (error) {
-    return { succeeded: false, error: error as JisonUnexpectedTokenError };
+    return { parseSucceeded: true, value };
+  } catch (e) {
+    const error = e as JisonUnexpectedTokenError | JisonLexError;
+    if (error.hash.token === null) {
+      const errorLocation = wrappedParser.yy.getCurrentTextLocation();
+      return {
+        parseSucceeded: false,
+        lexSucceeded: false,
+        jisonError: error as JisonLexError,
+        errorLocation,
+        nextNewlineOrEofAfterErrorLocation:
+          getNextNewlineOrEofAfterErrorLocation(src, errorLocation),
+      };
+    } else {
+      const start = wrappedParser.yy.getPreviousTextLocation();
+      const end = wrappedParser.yy.getCurrentTextLocation();
+      console.log({ start, end });
+      return {
+        parseSucceeded: false,
+        lexSucceeded: true,
+        jisonError: error as JisonUnexpectedTokenError,
+        errorLocation: {
+          first_line: start.line,
+          last_line: end.line,
+          first_column: start.column,
+          last_column: end.column,
+          range: [start.index, end.index],
+        },
+      };
+    }
   }
 }
 
-function wrapParser(
-  rawParser: NingParserGeneratedByJison
-): NingParserGeneratedByJison {
+function wrapParser(rawParser: NingParserGeneratedByJison): WrappedParser {
   (rawParser.lexer as any).options = (rawParser.lexer as any).options || {};
   (rawParser.lexer as any).options.ranges = true;
-  return rawParser;
+  rawParser.yy = rawParser.yy || {};
+  Object.assign(rawParser.yy as any, getYyImpl());
+  const boundParse = rawParser.parse.bind(rawParser);
+  rawParser.parse = (src: string): any => {
+    (rawParser.yy as Yy).reset();
+    return boundParse(src);
+  };
+  return rawParser as NingParserGeneratedByJison & { yy: Yy };
+}
+
+function getNextNewlineOrEofAfterErrorLocation(
+  src: string,
+  errorLocation: TextLocation
+): TextLocation {
+  let index = errorLocation.index;
+  let column = errorLocation.column;
+  while (index < src.length && src.charAt(index) !== "\n") {
+    ++index;
+    ++column;
+  }
+  return {
+    line: errorLocation.line,
+    column,
+    index,
+  };
 }

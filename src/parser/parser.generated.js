@@ -1105,56 +1105,74 @@ var parser = (function () {
       ) {
         var YYSTATE = YY_START;
         switch ($avoiding_name_collisions) {
-          case 0 /* skip whitespace */:
+          case 0:
+            /* skip whitespace */ yy.recordTokenLocationBasedOnCurrentMatch();
             break;
-          case 1 /* skip comments */:
+          case 1:
+            /* skip comments */ yy.recordTokenLocationBasedOnCurrentMatch();
             break;
           case 2:
+            yy.recordTokenLocationBasedOnCurrentMatch();
             return "LPAREN";
             break;
           case 3:
+            yy.recordTokenLocationBasedOnCurrentMatch();
             return "RPAREN";
             break;
           case 4:
+            yy.recordTokenLocationBasedOnCurrentMatch();
             return "LSQUARE";
             break;
           case 5:
+            yy.recordTokenLocationBasedOnCurrentMatch();
             return "RSQUARE";
             break;
           case 6:
+            yy.recordTokenLocationBasedOnCurrentMatch();
             return "LCURLY";
             break;
           case 7:
+            yy.recordTokenLocationBasedOnCurrentMatch();
             return "RCURLY";
             break;
           case 8:
+            yy.recordTokenLocationBasedOnCurrentMatch();
             return "SEMICOLON";
             break;
           case 9:
+            yy.recordTokenLocationBasedOnCurrentMatch();
             return "STRING_LITERAL";
             break;
           case 10:
+            yy.recordTokenLocationBasedOnCurrentMatch();
             return "COMMAND_KW";
             break;
           case 11:
+            yy.recordTokenLocationBasedOnCurrentMatch();
             return "QUERY_KW";
             break;
           case 12:
+            yy.recordTokenLocationBasedOnCurrentMatch();
             return "GLOBAL_KW";
             break;
           case 13:
+            yy.recordTokenLocationBasedOnCurrentMatch();
             return "NUMBER_KW";
             break;
           case 14:
+            yy.recordTokenLocationBasedOnCurrentMatch();
             return "STRING_KW";
             break;
           case 15:
+            yy.recordTokenLocationBasedOnCurrentMatch();
             return "BOOLEAN_KW";
             break;
           case 16:
+            yy.recordTokenLocationBasedOnCurrentMatch();
             return "IDENTIFIER";
             break;
           case 17:
+            yy.recordTokenLocationBasedOnCurrentMatch();
             return 5;
             break;
         }

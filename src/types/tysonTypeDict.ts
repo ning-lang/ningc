@@ -2,7 +2,19 @@ import { JisonTokenLocation } from "../jison";
 
 export declare const yy: Yy;
 
-interface Yy {}
+export interface Yy {
+  reset(): void;
+
+  getPreviousTextLocation(): TextLocation;
+  getCurrentTextLocation(): TextLocation;
+  recordTokenLocationBasedOnCurrentMatch(): void;
+}
+
+export interface TextLocation {
+  readonly line: number;
+  readonly column: number;
+  readonly index: number;
+}
 
 export interface TysonTypeDict extends TokenTypeDict, NodeTypeDict {}
 

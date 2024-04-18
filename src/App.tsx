@@ -48,7 +48,7 @@ export class App extends React.Component<{}, State> {
 
     const initialCode = getInitialCodeFromLocalStorage();
     const parseResult = parse(initialCode);
-    const typecheckResult = parseResult.succeeded
+    const typecheckResult = parseResult.parseSucceeded
       ? typecheck(parseResult.value)
       : [];
     this.state = {
@@ -184,7 +184,7 @@ export class App extends React.Component<{}, State> {
             className="RunButton"
             disabled={
               !(
-                this.state.parseResultCache.succeeded &&
+                this.state.parseResultCache.parseSucceeded &&
                 this.state.typeErrorsCache.length === 0
               )
             }
@@ -202,7 +202,7 @@ export class App extends React.Component<{}, State> {
   onCodeChanged(event: React.ChangeEvent<HTMLTextAreaElement>): void {
     const code = event.target.value;
     const parseResult = parse(code);
-    const typeErrors = parseResult.succeeded
+    const typeErrors = parseResult.parseSucceeded
       ? typecheck(parseResult.value)
       : [];
     this.setState({
@@ -242,7 +242,7 @@ export class App extends React.Component<{}, State> {
   onRunButtonClicked(): void {
     const typeErrors = this.state.typeErrorsCache;
     const parseResult = this.state.parseResultCache;
-    if (!(parseResult.succeeded && typeErrors.length === 0)) {
+    if (!(parseResult.parseSucceeded && typeErrors.length === 0)) {
       return;
     }
 
@@ -380,12 +380,12 @@ export class App extends React.Component<{}, State> {
 function highlight(code: string): React.ReactElement[] {
   const parseResult = parse(code);
 
-  if (!parseResult.succeeded) {
-    console.log({ parseError: parseResult.error });
+  if (!parseResult.parseSucceeded) {
+    console.log("parseResult", { parseResult });
   } else {
     const typeErrors = typecheck(parseResult.value);
     if (typeErrors.length > 0) {
-      console.log({ typeErrors });
+      console.log("typeErrors", { typeErrors });
     }
   }
 

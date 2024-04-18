@@ -1,24 +1,24 @@
 %lex
 
 %%
-\s+ /* skip whitespace */
-\/\/[^\n]* /* skip comments */
-"(" return "LPAREN";
-")" return "RPAREN";
-"[" return "LSQUARE";
-"]" return "RSQUARE";
-"{" return "LCURLY";
-"}" return "RCURLY";
-";" return "SEMICOLON";
-\"(?:[^"{}]|\{0x[0-9a-fA-F]+\})*\" return "STRING_LITERAL";
-"Command" return "COMMAND_KW";
-"Query" return "QUERY_KW";
-"Global" return "GLOBAL_KW";
-"Number" return "NUMBER_KW";
-"String" return "STRING_KW";
-"Boolean" return "BOOLEAN_KW";
-NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+ return "IDENTIFIER"
-<<EOF>> return 'EOF';
+\s+ /* skip whitespace */ yy.recordTokenLocationBasedOnCurrentMatch();
+\/\/[^\n]* /* skip comments */ yy.recordTokenLocationBasedOnCurrentMatch();
+"(" yy.recordTokenLocationBasedOnCurrentMatch(); return "LPAREN";
+")" yy.recordTokenLocationBasedOnCurrentMatch(); return "RPAREN";
+"[" yy.recordTokenLocationBasedOnCurrentMatch(); return "LSQUARE";
+"]" yy.recordTokenLocationBasedOnCurrentMatch(); return "RSQUARE";
+"{" yy.recordTokenLocationBasedOnCurrentMatch(); return "LCURLY";
+"}" yy.recordTokenLocationBasedOnCurrentMatch(); return "RCURLY";
+";" yy.recordTokenLocationBasedOnCurrentMatch(); return "SEMICOLON";
+\"(?:[^"{}]|\{0x[0-9a-fA-F]+\})*\" yy.recordTokenLocationBasedOnCurrentMatch(); return "STRING_LITERAL";
+"Command" yy.recordTokenLocationBasedOnCurrentMatch(); return "COMMAND_KW";
+"Query" yy.recordTokenLocationBasedOnCurrentMatch(); return "QUERY_KW";
+"Global" yy.recordTokenLocationBasedOnCurrentMatch(); return "GLOBAL_KW";
+"Number" yy.recordTokenLocationBasedOnCurrentMatch(); return "NUMBER_KW";
+"String" yy.recordTokenLocationBasedOnCurrentMatch(); return "STRING_KW";
+"Boolean" yy.recordTokenLocationBasedOnCurrentMatch(); return "BOOLEAN_KW";
+NaN|Infinity|[-]Infinity|[^\s()[\]{};A-Z"]+ yy.recordTokenLocationBasedOnCurrentMatch(); return "IDENTIFIER"
+<<EOF>> yy.recordTokenLocationBasedOnCurrentMatch(); return 'EOF';
 
 /lex
 

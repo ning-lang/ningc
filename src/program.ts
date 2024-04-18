@@ -941,7 +941,6 @@ class ProgramImpl implements Program {
   }
 
   createListInTopStackEntry(name: string, kind: ast.NingType): void {
-    console.log({ name, kind });
     this.stack[this.stack.length - 1].lists.set(name, { kind, items: [] });
   }
 

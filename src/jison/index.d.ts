@@ -10,7 +10,7 @@ export class Parser implements ParserGeneratedByJison {
 
 export interface ParserGeneratedByJison {
   lexer: Scanner;
-  yy: any;
+  yy: unknown;
 
   generate(): string;
   parse(program: string): any;
@@ -21,7 +21,7 @@ export function print(line: string): void;
 export interface Scanner<TokenType = string> {
   yytext: string;
   yyleng: number;
-  yylloc: JisonSymbolLocation;
+  yylloc: JisonTokenLocation;
   yylineno: number;
 
   lex(): TokenType;
@@ -47,7 +47,15 @@ export interface JisonUnexpectedTokenError<TokenType = string> extends Error {
     text: string | undefined;
     token: TokenType;
     line: number;
-    loc: JisonSymbolLocation;
+    loc: JisonTokenLocation;
     expected: TokenType[];
+  };
+}
+
+export interface JisonLexError extends Error {
+  hash: {
+    text: string | undefined;
+    token: null;
+    line: number;
   };
 }

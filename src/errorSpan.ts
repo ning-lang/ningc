@@ -1,7 +1,8 @@
 import { BUILTIN_COMMANDS } from "./builtins";
 import { getCommandInputs, getQueryInputs } from "./funcInputs";
 import { getCommandSignature } from "./funcSignature";
-import { ParseResult } from "./parser";
+import { JisonLexError, JisonUnexpectedTokenError } from "./jison";
+import { LexErr, ParseErr, ParseResult } from "./parser";
 import { stringifyCommand } from "./stringifyNingNode";
 import {
   ArgTypeMismatchError,
@@ -32,7 +33,7 @@ const POSSIBLE_NAME_DEF_COMMAND_SIGNATURES: ReadonlySet<string> = new Set([
 ]);
 
 export interface ErrorSpan {
-  error: NingTypeError;
+  error: ParseErr | LexErr | NingTypeError;
   startIndex: number;
   endIndex: number;
 }
@@ -41,13 +42,35 @@ export function getErrorSpans(
   parseResult: ParseResult,
   typeErrors: readonly NingTypeError[]
 ): ErrorSpan[] {
-  if (!parseResult.succeeded) {
-    // TODO: We need to modify the Jison lexer
-    // to provide location info.
-    return [];
+  if (!parseResult.parseSucceeded) {
+    if (parseResult.lexSucceeded) {
+      return getErrorSpansFromParseError(parseResult);
+    } else {
+      return getErrorSpansFromLexError(parseResult);
+    }
   }
 
   return typeErrors.flatMap(getSpansOfTypeError);
+}
+
+function getErrorSpansFromParseError(error: ParseErr): ErrorSpan[] {
+  return [
+    {
+      startIndex: error.errorLocation.range[0],
+      endIndex: error.errorLocation.range[1],
+      error,
+    },
+  ];
+}
+
+function getErrorSpansFromLexError(error: LexErr): ErrorSpan[] {
+  return [
+    {
+      startIndex: error.errorLocation.index,
+      endIndex: error.nextNewlineOrEofAfterErrorLocation.index,
+      error,
+    },
+  ];
 }
 
 function getSpansOfTypeError(error: NingTypeError): ErrorSpan[] {
