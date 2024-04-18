@@ -382,7 +382,7 @@ export class App extends React.Component<{}, State> {
     this.syncCodeInputScroll();
 
     const keyName = this.getNingKeyName(event.code);
-    if (keyName !== null) {
+    if (keyName !== null && !this.isCodeInputTextareaFocused) {
       this.keysPressed.add(keyName);
     }
 
