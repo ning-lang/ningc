@@ -1,7 +1,6 @@
 import { BUILTIN_COMMANDS } from "./builtins";
 import { getCommandInputs, getQueryInputs } from "./funcInputs";
 import { getCommandSignature } from "./funcSignature";
-import { JisonLexError, JisonUnexpectedTokenError } from "./jison";
 import { LexErr, ParseErr, ParseResult } from "./parser";
 import { stringifyCommand } from "./stringifyNingNode";
 import {
@@ -67,7 +66,7 @@ function getErrorSpansFromLexError(error: LexErr): ErrorSpan[] {
   return [
     {
       startIndex: error.errorLocation.index,
-      endIndex: error.nextNewlineOrEofAfterErrorLocation.index,
+      endIndex: error.nextWhitespaceOrEofAfterErrorLocation.index,
       error,
     },
   ];

@@ -35,7 +35,7 @@ export interface LexErr {
   lexSucceeded: false;
   jisonError: JisonLexError;
   errorLocation: TextLocation;
-  nextNewlineOrEofAfterErrorLocation: TextLocation;
+  nextWhitespaceOrEofAfterErrorLocation: TextLocation;
 }
 
 export function parse(src: string): ParseResult {
@@ -51,8 +51,8 @@ export function parse(src: string): ParseResult {
         lexSucceeded: false,
         jisonError: error as JisonLexError,
         errorLocation,
-        nextNewlineOrEofAfterErrorLocation:
-          getNextNewlineOrEofAfterErrorLocation(src, errorLocation),
+        nextWhitespaceOrEofAfterErrorLocation:
+          getNextWhitespaceOrEofAfterErrorLocation(src, errorLocation),
       };
     } else {
       const start = wrappedParser.yy.getPreviousTextLocation();
@@ -86,13 +86,13 @@ function wrapParser(rawParser: NingParserGeneratedByJison): WrappedParser {
   return rawParser as NingParserGeneratedByJison & { yy: Yy };
 }
 
-function getNextNewlineOrEofAfterErrorLocation(
+function getNextWhitespaceOrEofAfterErrorLocation(
   src: string,
   errorLocation: TextLocation
 ): TextLocation {
   let index = errorLocation.index;
   let column = errorLocation.column;
-  while (index < src.length && src.charAt(index) !== "\n") {
+  while (index < src.length && !/^\s$/.test(src.charAt(index))) {
     ++index;
     ++column;
   }
