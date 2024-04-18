@@ -378,17 +378,6 @@ export class App extends React.Component<{}, State> {
 }
 
 function highlight(code: string): React.ReactElement[] {
-  const parseResult = parse(code);
-
-  if (!parseResult.parseSucceeded) {
-    console.log("parseResult", { parseResult });
-  } else {
-    const typeErrors = typecheck(parseResult.value);
-    if (typeErrors.length > 0) {
-      console.log("typeErrors", { typeErrors });
-    }
-  }
-
   interface SpanBuilder {
     className: string;
     code: string;
