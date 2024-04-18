@@ -1,13 +1,10 @@
+// Pong with random canvas height.
+
 Global {
     create number list [height factors];
-    add (1) to [height factors];
-    add (1.5) to [height factors];
-    add (0.5) to [height factors];
-    let [height factor index] = (random integer from (0) up to but not including (length of [height factors]));
-    let [height factor] = (item (height factor index) of [height factors]);
+    var [screen was initialized?] = (false);
     let [width] = (480);
-    // let [height] = ((360) + (length of [height factors]));
-    let [height] = ((360) * (height factor));
+    var [height] = (360);
     let [paddle width] = (20);
     let [paddle height] = ((height) / (5));
     let [paddle margin] = (paddle width);
@@ -44,6 +41,7 @@ Command (render) {
 }
 
 Command (update) {
+    initialize screen if needed;
     let [current time] = (milliseconds since unix epoch);
     if ((last time) == (0)) {
         set [last time] to (current time);
@@ -174,4 +172,21 @@ Command (if ball is colliding with top or bottom wall, bounce) {
     if (is touching bottom wall?) {
         set [y speed] to ((-1) * (abs (y speed)));
     };
+}
+
+Command (initialize screen if needed) {
+    if (screen was initialized?) {
+        return;
+    };
+
+    set [screen was initialized?] to (true);
+    
+    delete all of [height factors];
+    add (1) to [height factors];
+    add (1.5) to [height factors];
+    add (0.5) to [height factors];
+    
+    let [height factor index] = (random integer from (0) up to but not including (length of [height factors]));
+    let [height factor] = (item (height factor index) of [height factors]);
+    set [height] to ((360) * (height factor));
 }
