@@ -229,6 +229,17 @@ This rule exists so that queries will never have side effects.
   (stock) images, which are rather uninteresting.
 
 - Support sound effects
+- Lift restrictions on commands in `Global` section
+
+  The signatures of commands in the `Global` body
+  are currently
+  restricted to a subset of those that are
+  available in query definition bodies.
+  There is no reason for this.
+  The full set of commands available in query
+  definition bodies should be available in
+  the `Global` body.
+
 - Fullscreen support
 - Touchscreen support
 - Editor minimap
