@@ -244,3 +244,4 @@ This rule exists so that queries will never have side effects.
 - Touchscreen support
 - Editor minimap
 - Project sharing
+- Smart parenthesis and square bracket support in code editor
