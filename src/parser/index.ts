@@ -90,8 +90,7 @@ function getNextWhitespaceOrEofAfterErrorLocation(
   src: string,
   errorLocation: TextLocation
 ): TextLocation {
-  let index = errorLocation.index;
-  let column = errorLocation.column;
+  let { index, column } = errorLocation;
   while (index < src.length && !/^\s$/.test(src.charAt(index))) {
     ++index;
     ++column;

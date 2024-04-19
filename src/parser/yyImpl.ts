@@ -20,7 +20,6 @@ export function getYyImpl(): Yy {
       const { match } = (this as any).lexer;
       let { line, column, index } = currentLocation;
       for (let i = 0; i < match.length; ++i) {
-        ++index;
         if (match[i] === "\n") {
           ++line;
           column = 0;
@@ -28,6 +27,7 @@ export function getYyImpl(): Yy {
           ++column;
         }
       }
+      index += match.length;
 
       previousLocation = currentLocation;
       currentLocation = { line, column, index };
