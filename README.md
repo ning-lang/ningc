@@ -212,6 +212,7 @@ This rule exists so that queries will never have side effects.
 
 ### Todo
 
+- Check image names during static analysis
 - Line numbers in the editor
 - More descriptive error reporting
 
